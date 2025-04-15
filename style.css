@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background: #aec6cf;
+    color: #ededed;
+}
+
+.header {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 0px 10%;
+    background-color: #85aab8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+}
+
+.navbar a {
+    font-size: 18px;
+    color: #09395F;
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 35px;
+    transition: .2s;
+}
+
+.navbar a:hover {
+    color: #aec6cf;
+}
+
+.home {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0px 15% 60px;
+    min-height: 75vh;
+    flex-wrap: nowrap;
+}
+
+.home-content {
+    flex: 1;
+    max-width: 600px;
+    width: 100%;
+}
+
+.home-content h1 {
+    font-size: 42px;
+    font-weight: 700;
+    color: #09395F;
+    line-height: 1.2;
+}
+
+.home-content h3 {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 20px 0 20px;
+}
+
+.home-content .btn-box {
+    display: inline-block;
+    padding: 12px 0px;
+    justify-content: space-between;
+    width: 345px;
+    height: 80px;
+}
+
+.btn-box a { 
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 250px;
+    height: 100%;
+    background: #09395F;
+    border: 2px solid #09395F;
+    border-radius: 8px;
+    font-size: 19px;
+    color: #ededed;
+    text-decoration: none;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.btn-box a:hover {
+    color: #85aab8;
+    transition: .5s;
+}
+
+.image {
+    display: flex;
+    justify-content: flex-end;
+    background: green;
+  }
+  
+  .image img {
+    width: auto;
+    height: 500px;
+  }
+
+
+  @media (max-width: 768px) {
+    .home {
+      flex-direction: column;
+      padding: 160px 5% 60px;
+      text-align: center;
+    }
+  
+    .btn-box {
+      justify-content: center;
+    }
+  
+    .image {
+      justify-content: center;
+      margin-top: 30px;
+    }
+  
+    .image img {
+      width: 90%;
+      max-width: 400px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .home {
+      padding-top: 130px;
+    }
+  
+    .home-content h1 {
+      font-size: 28px;
+    }
+  
+    .home-content h3 {
+      font-size: 18px;
+    }
+  
+    .btn-box {
+      width: 100%;
+      height: auto;
+    }
+  
+    .btn-box a {
+      width: 90%;
+      padding: 14px 0;
+      font-size: 16px;
+    }
+  
+    .image img {
+      height: auto;
+    }
+  }
+  
+  
+  
