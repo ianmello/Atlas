@@ -4,26 +4,32 @@ import requests
 import os
 from dotenv import load_dotenv
 import warnings
-import datetime
+import re
+from geopy.distance import geodesic
 
 app = Flask(__name__)
 
-# Configurações (mantenha as mesmas do seu código)
 warnings.filterwarnings("ignore")
 load_dotenv()
 
-# ... (Cole TODAS as suas funções existentes aqui: get_exchange_rate, get_flights, etc)
-
 EXCHANGE_API_URL = "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/CotacaoMoedaDia(moeda=@moeda,dataCotacao=@dataCotacao)"
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"  # Corrigido typo "completions"
-
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 FLIGHT_API_URL = "https://test.api.amadeus.com/v2/shopping/flight-offers"
 
+chat_context = {}
+
+CITY_COORDINATES = {
+    "sao paulo": (-23.5505, -46.6333),
+    "campinas": (-22.9099, -47.0626),
+    "rio de janeiro": (-22.9068, -43.1729),
+    "curitiba": (-25.4284, -49.2733),
+    "belo horizonte": (-19.9167, -43.9345)
+}
+
 def get_exchange_rate(currency: str = "USD") -> float:
-    """Obtém a cotação atual da moeda para BRL"""
     try:
-        today = datetime.now().strftime("%m-%d-%Y")
+        today = datetime.datetime.now().strftime("%m-%d-%Y")
         params = {
             "@moeda": f"'{currency}'",
             "@dataCotacao": f"'{today}'",
@@ -32,32 +38,37 @@ def get_exchange_rate(currency: str = "USD") -> float:
         response = requests.get(EXCHANGE_API_URL, params=params)
         data = response.json()
         return float(data['value'][0]['cotacaoVenda'])
-    except Exception as e:
-        print(f"Erro ao obter câmbio: {e}")
-        return 5.0  # Fallback para dólar a R$5.00
+    except:
+        return 5.0
 
-def get_ai_response(prompt):
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "HTTP-Referer": "https://meu-planejador.com",
-        "X-Title": "Planejador de Viagens AI"
+def get_ai_response(messages):
+    headers = {"Content-Type": "application/json"}
+    system_prompt = {
+        "role": "system",
+        "content": (
+            "Você é um assistente especializado em criação de roteiros de viagens personalizados. "
+            "Responda apenas perguntas relacionadas a roteiros, locais turísticos, atividades, transporte e dicas de viagem. "
+            "Se a pergunta não for sobre isso, recuse educadamente."
+        )
     }
-    data = {
-        "model": "mistralai/mistral-7b-instruct",
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.7
-    }
+    full_messages = [system_prompt] + [{"role": "user", "content": m["content"]} for m in messages if m["role"] == "user"]
+    data = {"contents": [{"parts": [{"text": m["content"]} for m in full_messages]}]}
+
     try:
-        response = requests.post(OPENROUTER_URL, headers=headers, json=data)
+        response = requests.post(
+            f"{GEMINI_API_URL}?key={GEMINI_API_KEY}",
+            headers=headers,
+            json=data
+        )
         response.raise_for_status()
-        return response.json()
+        result = response.json()
+        return result['candidates'][0]['content']['parts'][0]['text']
     except Exception as e:
-        print(f"Erro no OpenRouter: {e}")
-        return None
+        print(f"Erro na API Gemini: {e}")
+        return "Erro ao gerar resposta."
 
-def get_flights(origin: str, destination: str, date: str):
+def buscar_codigo_iata(nome_destino: str) -> str:
     try:
-        # Autenticação (mantida igual)
         auth_url = "https://test.api.amadeus.com/v1/security/oauth2/token"
         auth_data = {
             "grant_type": "client_credentials",
@@ -65,10 +76,36 @@ def get_flights(origin: str, destination: str, date: str):
             "client_secret": os.getenv("AMADEUS_CLIENT_SECRET")
         }
         auth_response = requests.post(auth_url, data=auth_data, verify=False)
-        auth_response.raise_for_status()
         token = auth_response.json().get("access_token")
 
-        # Busca de voos (mantida igual)
+        params = {
+            "keyword": nome_destino,
+            "subType": "CITY",
+            "max": 1
+        }
+        headers = {"Authorization": f"Bearer {token}"}
+        response = requests.get("https://test.api.amadeus.com/v1/reference-data/locations", headers=headers, params=params, verify=False)
+
+        results = response.json().get("data", [])
+        if results:
+            return results[0].get("iataCode", nome_destino[:3].upper())
+        else:
+            return nome_destino[:3].upper()
+    except Exception as e:
+        print(f"Erro ao buscar código IATA: {e}")
+        return nome_destino[:3].upper()
+
+def get_flights(origin: str, destination: str, date: str):
+    try:
+        auth_url = "https://test.api.amadeus.com/v1/security/oauth2/token"
+        auth_data = {
+            "grant_type": "client_credentials",
+            "client_id": os.getenv("AMADEUS_CLIENT_ID"),
+            "client_secret": os.getenv("AMADEUS_CLIENT_SECRET")
+        }
+        auth_response = requests.post(auth_url, data=auth_data, verify=False)
+        token = auth_response.json().get("access_token")
+
         params = {
             "originLocationCode": origin.upper(),
             "destinationLocationCode": destination.upper(),
@@ -77,74 +114,44 @@ def get_flights(origin: str, destination: str, date: str):
             "max": 5
         }
         headers = {"Authorization": f"Bearer {token}"}
-        
         response = requests.get(FLIGHT_API_URL, headers=headers, params=params, verify=False)
-        response.raise_for_status()
-        
-        flights_data = response.json()
-        
-        # Nova lógica de extração e conversão de preços
-        for flight in flights_data.get("data", []):
-            try:
-                # Extrai o preço total e moeda de forma mais robusta
-                price_info = flight.get("price", {})
-                total_price = str(price_info.get("grandTotal", price_info.get("total", "0")))
-                currency = price_info.get("currency", "USD")
-                
-                # Remove caracteres não numéricos
-                total_price = ''.join(c for c in total_price if c.isdigit() or c == '.')
-                
-                # Conversão para BRL
-                if currency and currency != "BRL":
-                    exchange_rate = get_exchange_rate(currency)
-                    flight["price"] = {
-                        "total_brl": round(float(total_price) * exchange_rate, 2),
-                        "original_value": total_price,
-                        "original_currency": currency,
-                        "currency": "BRL"
-                    }
-                else:
-                    flight["price"] = {
-                        "total_brl": round(float(total_price), 2),
-                        "currency": "BRL"
-                    }
-                    
-            except Exception as e:
-                print(f"Erro ao processar preço do voo: {e}")
-                flight["price"] = {
-                    "total_brl": "Preço não disponível",
-                    "currency": "BRL"
-                }
-        
-        return flights_data
-    
-    except Exception as e:
-        print(f"Erro na API de voos: {e}")
+        return response.json()
+    except:
         return {"data": []}
 
-def generate_travel_plan(destination: str, days: int, interests: list):
-    prompt = f"""
-    Você é um assistente de viagens brasileiro. Crie um roteiro em PORTUGUÊS para {destination} com {days} dias, focado em: {', '.join(interests)}.
-    
-    Formato:
-    ✈️ Roteiro para {destination}
-    ---
-    Dia 1: [Tema]
-    ☀️ Manhã: [Atividade 1 + detalhes]
-    🍽️ Almoço: [Sugestão]
-    🌆 Tarde: [Atividade 2]
-    🌃 Noite: [Atividade noturna + dica]
-    ---
-    Inclua dicas práticas como "melhor horário para visitar" e "o que levar".
-    """
-    response = get_ai_response(prompt)
-    return response["choices"][0]["message"]["content"] if response else "Erro ao gerar roteiro"
-
 def format_price(price_data):
-    """Formata o preço de forma consistente"""
     if isinstance(price_data.get("total_brl"), (int, float)):
         return f"R$ {price_data['total_brl']:,.2f}".replace(",", ".")
     return "Preço não disponível"
+
+def extrair_destino(texto: str) -> str:
+    try:
+        padroes = [
+            r'(?:para|em|no|na)\s+([A-Za-zÀ-ÿ\s]+?)(?:\s+com|\s+por|\s+durante|\s*$|,)',
+            r'roteiro\s+(?:de|para)\s+[A-Za-zÀ-ÿ\s]+?\s+(?:em|para)\s+([A-Za-zÀ-ÿ\s]+)'
+        ]
+        for padrao in padroes:
+            match = re.search(padrao, texto, re.IGNORECASE)
+            if match:
+                return match.group(1).strip()
+        return "Destino não informado"
+    except:
+        return "Destino não informado"
+
+def extrair_origem(texto: str) -> str:
+    padroes = [
+        r'saindo de\s+([A-Za-zÀ-ÿ\s]+)',
+        r'partindo de\s+([A-Za-zÀ-ÿ\s]+)',
+        r'desde\s+([A-Za-zÀ-ÿ\s]+)',
+        r'de\s+([A-Za-zÀ-ÿ\s]+)\s+(?:para|até)',
+        r'saindo do\s+([A-Za-zÀ-ÿ\s]+)',
+     
+    ]
+    for padrao in padroes:
+        match = re.search(padrao, texto, re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+    return "Origem não informada"
 
 
 @app.route('/')
@@ -153,104 +160,49 @@ def index():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    user_message = request.json.get('message', '')
-    
-    if any(palavra in user_message.lower() for palavra in ['roteiro', 'viagem', 'dias', 'planejar', 'semanas']):
-        destino = extrair_destino(user_message)
-        dias = extrair_dias(user_message)
-        interesses = extrair_interesses(user_message)
-        
-        # Gera o roteiro
-        resposta = f"✈️ Roteiro para {destino} ({dias} dias) - Foco em: {', '.join(interesses)}\n\n"
-        resposta += generate_travel_plan(destino, dias, interesses)
-        
-        # Adiciona informações de voos (exemplo com GRU como origem)
-        resposta += "\n\n✈️ Opções de Voos (Exemplo GRU -> {}):\n".format(destino[:3].upper())
-        flights = get_flights("GRU", destino[:3].upper(), datetime.datetime.now().strftime("%Y-%m-%d"))
-        
-        if flights and "data" in flights and flights["data"]:
-            for i, flight in enumerate(flights["data"][:3], 1):  # Mostra até 3 voos
-                price_info = flight.get("price", {})
-                resposta += f"\nVoo {i}:"
-                resposta += f"\n• Companhia: {flight['itineraries'][0]['segments'][0]['carrierCode']}"
-                resposta += f"\n• Partida: {flight['itineraries'][0]['segments'][0]['departure']['at'][11:16]}"
-                resposta += f"\n• Preço: {format_price(price_info)}"
-                if "original_value" in price_info:
-                    resposta += f" (Original: {price_info['original_value']} {price_info.get('original_currency', '')})"
+    user_message = request.json.get('message', '').strip()
+    user_id = request.remote_addr
+
+    if user_id not in chat_context:
+        chat_context[user_id] = []
+
+    chat_context[user_id].append({"role": "user", "content": user_message})
+    resposta = get_ai_response(chat_context[user_id])
+    chat_context[user_id].append({"role": "model", "content": resposta})
+
+    destino = extrair_destino(user_message)
+    origem = extrair_origem(user_message)
+
+    if origem == "Origem não informada":
+        return jsonify({'response': resposta + "\n\n✋ Por favor, informe a cidade de origem para que eu possa sugerir transportes ou voos."})
+
+    if destino.lower() != "destino não informado":
+        codigo_destino = buscar_codigo_iata(destino)
+        codigo_origem = buscar_codigo_iata(origem)
+        data_partida = datetime.datetime.now().strftime("%Y-%m-%d")
+
+        coord_origem = CITY_COORDINATES.get(origem.lower())
+        coord_destino = CITY_COORDINATES.get(destino.lower())
+        distancia_km = None
+        if coord_origem and coord_destino:
+            distancia_km = geodesic(coord_origem, coord_destino).km
+
+        if distancia_km and distancia_km < 200:
+            resposta += f" A distância entre {origem.title()} e {destino.title()} é de aproximadamente {distancia_km:.1f} km. Não há voos disponíveis, mas você pode ir de carro, ônibus ou trem."
         else:
-            resposta += "\nNenhum voo encontrado para esta rota no momento."
-            
-    else:
-        resposta = """Por favor, me diga sobre a viagem que quer planejar. Exemplos:
-        - "Quero um roteiro de 5 dias em Paris com museus e restaurantes"
-        - "Planeje 3 dias em São Paulo para compras e gastronomia"
-        - "2 dias em Roma com foco em história\""""
-    
+            voos = get_flights(codigo_origem, codigo_destino, data_partida)
+            if voos.get("data"):
+                resposta += f"\n\n✈️ Opções de voos de {origem} para {destino}:\n"
+                for i, voo in enumerate(voos["data"][:3], 1):
+                    segmento = voo["itineraries"][0]["segments"][0]
+                    horario = segmento["departure"]["at"][11:16]
+                    companhia = segmento["carrierCode"]
+                    preco = format_price(voo.get("price", {}))
+                    resposta += f"\n• Voo {i}: {companhia}, saída às {horario}, preço: {preco}"
+            else:
+                resposta += f"\n\n⚠️ Nenhum voo encontrado de {origem} para {destino} no momento."
+
     return jsonify({'response': resposta})
 
-import re
-
-def extrair_dias(texto: str) -> int:
-    """Extrai o número de dias do texto do usuário"""
-    try:
-        # Padrões para encontrar dias (ex: "3 dias", "por 5 dias", "durante 2 dias")
-        padroes = [
-            r'(\d+)\s*dias?',
-            r'por\s*(\d+)\s*dias?',
-            r'durante\s*(\d+)\s*dias?',
-            r'para\s*(\d+)\s*dias?'
-        ]
-        
-        for padrao in padroes:
-            match = re.search(padrao, texto, re.IGNORECASE)
-            if match:
-                return int(match.group(1))
-                
-        # Se não encontrar, retorna padrão 3 dias
-        return 3
-    except:
-        return 3  # Fallback
-
-def extrair_interesses(texto: str) -> list:
-    """Extrai interesses/tópicos do texto do usuário"""
-    try:
-        # Palavras-chave que indicam interesses
-        palavras_chave = {
-            'museus': ['museu', 'museus', 'galeria', 'galerias'],
-            'praias': ['praia', 'praias', 'mar', 'litoral'],
-            'compras': ['compras', 'shopping', 'lojas'],
-            'gastronomia': ['comida', 'restaurante', 'gastronomia', 'culinária'],
-            'história': ['história', 'histórico', 'monumento', 'monumentos'],
-            'natureza': ['natureza', 'parque', 'parques', 'trilha']
-        }
-        
-        interesses = []
-        texto = texto.lower()
-        
-        for interesse, palavras in palavras_chave.items():
-            if any(palavra in texto for palavra in palavras):
-                interesses.append(interesse)
-        
-        return interesses if interesses else ["pontos turísticos"]
-    except:
-        return ["pontos turísticos"]  # Fallback
-
-def extrair_destino(texto: str) -> str:
-    """Extrai o destino do texto do usuário"""
-    try:
-        # Padrões para encontrar o destino
-        padroes = [
-            r'(?:em|para|no|na|em)\s+([A-Za-zÀ-ÿ\s]+?)(?:\s+com|\s+por|\s+durante|\s*$|,)',
-            r'roteiro\s+(?:de|para)\s+[A-Za-zÀ-ÿ\s]+?\s+(?:em|para)\s+([A-Za-zÀ-ÿ\s]+)'
-        ]
-        
-        for padrao in padroes:
-            match = re.search(padrao, texto, re.IGNORECASE)
-            if match:
-                return match.group(1).strip()
-                
-        return "Rio de Janeiro"  # Default
-    except:
-        return "Rio de Janeiro"  # Fallback
 if __name__ == '__main__':
     app.run(debug=True)
