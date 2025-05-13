@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Histórico de Buscas - Assistente de Viagens</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #3c78d8;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid #4285f4;
+        }
+        .data {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        .mensagem {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+        .detalhes {
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        .tag {
+            display: inline-block;
+            background: #e3f2fd;
+            padding: 3px 8px;
+            border-radius: 12px;
+            margin-right: 5px;
+            font-size: 0.85em;
+        }
+        .empty {
+            text-align: center;
+            padding: 50px 0;
+            color: #888;
+        }
+        .btn {
+            background: #4285f4;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 15px;
+        }
+        .btn-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧳 Histórico de Buscas</h1>
+    
+    <div class="btn-container">
+        <a href="/" class="btn">Voltar para o Chat</a>
+    </div>
+    
+    {% if historico|length == 0 %}
+    <div class="empty">
+        <p>Você ainda não fez nenhuma busca.</p>
+        <p>Converse com o assistente para planejar sua viagem!</p>
+    </div>
+    {% else %}
+        {% for busca in historico|sort(attribute='timestamp', reverse=true) %}
+        <div class="card">
+            <div class="data">{{ busca.timestamp }}</div>
+            <div class="mensagem">{{ busca.mensagem }}</div>
+            <div class="detalhes">
+                {% if busca.origem != "Origem não informada" %}
+                <p><strong>De:</strong> <span class="tag">{{ busca.origem }}</span></p>
+                {% endif %}
+                
+                {% if busca.destino != "Destino não informado" %}
+                <p><strong>Para:</strong> <span class="tag">{{ busca.destino }}</span></p>
+                {% endif %}
+                
+                {% if busca.datas.data_inicio %}
+                <p><strong>Período:</strong> {{ busca.datas.data_inicio }} 
+                {% if busca.datas.data_fim %} a {{ busca.datas.data_fim }}{% endif %}
+                {% if busca.datas.duracao %} ({{ busca.datas.duracao }} dias){% endif %}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+    
+    <div class="btn-container">
+        <a href="/" class="btn">Voltar para o Chat</a>
+    </div>
+</body>
+</html> 

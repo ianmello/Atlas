@@ -1,4 +1,6 @@
-openai
-requests
-python-dotenv
-Flask
+Flask==2.3.3
+Werkzeug==2.3.7
+python-dotenv==1.0.0
+requests==2.31.0
+geopy==2.4.1
+Flask-Session==0.5.0

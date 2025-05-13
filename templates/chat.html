@@ -2,82 +2,312 @@
 <html>
 <head>
     <title>Assistente de Viagens</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #4285f4;
+            --primary-dark: #3367d6;
+            --secondary-color: #fbbc05;
+            --text-color: #333;
+            --light-bg: #f9f9f9;
+            --border-radius: 10px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
             margin: 0 auto;
             padding: 20px;
+            color: var(--text-color);
+            background-color: #f5f5f5;
         }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            font-size: 1.8rem;
+        }
+        
+        .header-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            margin-left: 15px;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .header-links a i {
+            margin-right: 5px;
+        }
+        
         #chat-container {
-            border: 1px solid #ccc;
-            border-radius: 10px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
             height: 500px;
             overflow-y: auto;
             padding: 15px;
             margin-bottom: 15px;
-            background: #f9f9f9;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
         }
+        
+        .input-container {
+            display: flex;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
         #user-input {
-            width: 70%;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
+            flex: 1;
+            padding: 12px 15px;
+            border-radius: var(--border-radius);
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            transition: border-color 0.3s;
         }
-        button {
-            padding: 10px 15px;
-            background: #4285f4;
+        
+        #user-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.1);
+        }
+        
+        .send-btn {
+            background: var(--primary-color);
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: var(--border-radius);
+            padding: 0 20px;
+            margin-left: 10px;
             cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
         }
+        
+        .send-btn:hover {
+            background: var(--primary-dark);
+        }
+        
+        .message {
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+            margin: 8px 0;
+            max-width: 80%;
+            position: relative;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+        
         .user-message {
             background: #e3f2fd;
-            padding: 8px 12px;
-            border-radius: 10px;
-            margin: 5px 0;
-            max-width: 70%;
-            float: right;
-            clear: both;
+            color: #0d47a1;
+            margin-left: auto;
+            border-bottom-right-radius: 0;
         }
+        
         .bot-message {
-            background: #f1f1f1;
-            padding: 8px 12px;
-            border-radius: 10px;
-            margin: 5px 0;
-            max-width: 70%;
-            float: left;
-            clear: both;
+            background: var(--light-bg);
+            color: #333;
+            margin-right: auto;
+            border-bottom-left-radius: 0;
+        }
+        
+        .bot-message a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .bot-message a:hover {
+            text-decoration: underline;
+        }
+        
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 15px 0;
+            gap: 10px;
+        }
+        
+        .suggestion-chip {
+            background: #f0f4f8;
+            color: var(--primary-color);
+            border: 1px solid #d0d9e1;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .suggestion-chip:hover {
+            background: #e3f2fd;
+            border-color: var(--primary-color);
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+        }
+        
+        .dot {
+            background-color: #888;
+            border-radius: 50%;
+            width: 8px;
+            height: 8px;
+            margin: 0 3px;
+            animation: bounce 1.5s infinite;
+        }
+        
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        .new-chat-btn {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .new-chat-btn:hover {
+            background-color: var(--primary-dark);
+            transform: scale(1.05);
+        }
+        
+        .new-chat-btn i {
+            font-size: 1.2rem;
+        }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-5px); }
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>✈️ Assistente de Viagens AI</h1>
-    <div id="chat-container"></div>
-    <div>
+    <header>
+        <h1>✈️ Assistente de Viagens AI</h1>
+        <div class="header-links">
+            <a href="/historico"><i class="fas fa-history"></i> Histórico</a>
+        </div>
+    </header>
+    
+    <div id="chat-container">
+        <button class="new-chat-btn" onclick="startNewChat()" title="Iniciar nova conversa">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+    
+    <div class="input-container">
         <input type="text" id="user-input" placeholder="Digite sua mensagem... (Ex: Roteiro de 3 dias em São Paulo com parques)">
-        <button onclick="sendMessage()">Enviar</button>
+        <button class="send-btn" onclick="sendMessage()">Enviar</button>
+    </div>
+    
+    <div class="suggestions">
+        <div class="suggestion-chip" onclick="useSuggestion('Quero viajar de São Paulo para o Rio de Janeiro em outubro')">SP → Rio em outubro</div>
+        <div class="suggestion-chip" onclick="useSuggestion('Roteiro de 5 dias em Salvador saindo de Brasília')">5 dias em Salvador</div>
+        <div class="suggestion-chip" onclick="useSuggestion('Dicas de restaurantes em Curitiba')">Restaurantes em Curitiba</div>
+        <div class="suggestion-chip" onclick="useSuggestion('Pontos turísticos em Fortaleza')">Turismo em Fortaleza</div>
     </div>
 
     <script>
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('user-input');
+        let isWaitingForResponse = false;
+        
+        function showLoading() {
+            const loading = document.createElement('div');
+            loading.className = 'loading';
+            loading.id = 'loading-indicator';
+            
+            for (let i = 0; i < 3; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                loading.appendChild(dot);
+            }
+            
+            chatContainer.appendChild(loading);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function hideLoading() {
+            const loading = document.getElementById('loading-indicator');
+            if (loading) {
+                loading.remove();
+            }
+        }
 
-        function addMessage(sender, message) {
+        function addMessage(type, message) {
             const messageDiv = document.createElement('div');
-            messageDiv.className = sender + '-message';
-            messageDiv.innerHTML = message.replace(/\n/g, '<br>');
+            messageDiv.className = `message ${type}-message`;
+            
+            // Processar formatação especial
+            const formattedMessage = message
+                .replace(/\n/g, '<br>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>');
+                
+            messageDiv.innerHTML = formattedMessage;
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
         function sendMessage() {
             const message = userInput.value.trim();
-            if (message === '') return;
+            if (message === '' || isWaitingForResponse) return;
             
             addMessage('user', message);
             userInput.value = '';
+            
+            isWaitingForResponse = true;
+            showLoading();
             
             fetch('/chat', {
                 method: 'POST',
@@ -88,7 +318,38 @@
             })
             .then(response => response.json())
             .then(data => {
+                hideLoading();
                 addMessage('bot', data.response);
+                isWaitingForResponse = false;
+            })
+            .catch(error => {
+                hideLoading();
+                addMessage('bot', "Desculpe, ocorreu um erro ao processar sua solicitação. Por favor, tente novamente.");
+                isWaitingForResponse = false;
+                console.error('Erro:', error);
+            });
+        }
+        
+        function useSuggestion(text) {
+            userInput.value = text;
+            userInput.focus();
+        }
+        
+        function startNewChat() {
+            // Limpar a conversa atual
+            chatContainer.innerHTML = '<button class="new-chat-btn" onclick="startNewChat()" title="Iniciar nova conversa"><i class="fas fa-plus"></i></button>';
+            
+            // Limpar o contexto no servidor
+            fetch('/new_chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }).then(() => {
+                // Exibir mensagem de boas-vindas
+                setTimeout(() => {
+                    addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Hotéis e clima<br><br>Basta me dizer para onde quer ir! 😊");
+                }, 500);
             });
         }
 
@@ -100,7 +361,11 @@
         });
 
         // Mensagem inicial
-        addMessage('bot', "Olá! Sou seu assistente de viagens. Me diga sobre o roteiro que deseja, por exemplo:<br><br>'Quero um roteiro de 4 dias em Paris com museus'<br>'Planeje 2 dias em Nova York com compras'");
+        window.onload = function() {
+            setTimeout(() => {
+                addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Hotéis e clima<br><br>Basta me dizer para onde quer ir! 😊");
+            }, 500);
+        }
     </script>
 </body>
 </html>
