@@ -352,7 +352,7 @@ def index():
     # Cria ou recupera ID de sessão
     if not session.get("id"):
         session["id"] = str(uuid.uuid4())
-    return render_template('chat.html')
+    return render_template('index.html')
 
 @app.route('/historico')
 def historico():
