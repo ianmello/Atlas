@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Qual é o seu próximo destino?</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
   <style>
     * {
       margin: 0;
@@ -20,9 +22,9 @@
 
     .logo {
     position: absolute;
-    top: 20px;
+    top: 5px;
     left: 20px;
-    height: 60px; /* ou ajuste conforme o tamanho da sua logo */
+    height: 120px; /* ou ajuste conforme o tamanho da sua logo */
     z-index: 2;
     user-select: none;
   }
@@ -124,21 +126,31 @@
     'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1470&q=80',
     'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?fm=jpg&q=60&w=3000',
     'https://images.unsplash.com/photo-1498307833015-e7b400441eb8?fm=jpg&q=60&w=3000',
-    'https://images.unsplash.com/photo-1528164344705-47542687000d?fm=jpg&q=60&w=3000'
+    'https://images.unsplash.com/photo-1528164344705-47542687000d?fm=jpg&q=60&w=3000',
+    'https://images.unsplash.com/photo-1499678329028-101435549a4e?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    'https://images.unsplash.com/photo-1747593555870-b6923886e785?q=80&w=2071&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    'https://images.unsplash.com/photo-1516306580123-e6e52b1b7b5f?q=80&w=2126&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+
   ];
 
   const placeholderTexts = [
     "Explore lugares fantásticos...",
     "Descubra cidades incríveis...",
     "Encontre paisagens maravilhosas...",
-    "Faça sua viagem dos sonhos..."
+    "Faça sua viagem dos sonhos...",
+    "Viva experiências inesqueciveis...",
+    "O mundo te espera, apenas faça...",
+    "Transforme seu sonho em um roteiro...",
   ];
 
   const themeColors = [
     { text: "#FFF5EB", box: "rgba(0, 0, 0, 0.6)" },
     { text: "#ffffff", box: "rgba(63, 121, 132, 0.6)" },
     { text: "#ffffff", box: "rgba(0, 0, 0, 0.6)" },
-    { text: "#f5f5dc", box: "rgba(50, 50, 50, 0.4)" }
+    { text: "#f5f5dc", box: "rgba(50, 50, 50, 0.4)" },
+    { text: "#ffffff", box: "rgba(0, 0, 0, 0.6)" },
+    { text: "#0A1E37", box: "rgba(0, 0, 0, 0.3)" },
+    { text: "#ffffff", box: "rgba(0, 0, 0, 0.4s)" },
   ];
 
   let current = 0;

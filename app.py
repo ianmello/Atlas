@@ -863,7 +863,7 @@ def index():
         session["id"] = str(uuid.uuid4())
     # Limpa dados de conversa anterior
     session["nova_conversa"] = True
-    return render_template('chat.html')
+    return render_template('index.html')
 
 @app.route('/historico')
 def historico():
