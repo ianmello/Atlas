@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, session
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for
 import datetime
 import requests
 import os
@@ -9,14 +9,28 @@ import re
 from geopy.distance import geodesic
 from flask_session import Session
 import uuid
-from datetime import timedelta
+from datetime import timedelta, datetime, date
+from models import db, Conversation, Message, generate_conversation_title
 
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = True
 app.config["SESSION_TYPE"] = "filesystem"
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=1)
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///atlas.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.secret_key = os.getenv("SECRET_KEY", "chave_secreta_temporaria")
+
+db.init_app(app)
 Session(app)
+
+# Criar as tabelas do banco de dados
+with app.app_context():
+    try:
+        print("Criando/verificando banco de dados...")
+        db.create_all()
+        print("Banco de dados criado/verificado com sucesso!")
+    except Exception as e:
+        print(f"Erro ao criar banco de dados: {e}")
 
 warnings.filterwarnings("ignore")
 load_dotenv()
@@ -96,7 +110,7 @@ CITY_IATA_CODES = {
 
 def get_exchange_rate(currency: str = "USD") -> float:
     try:
-        today = datetime.datetime.now().strftime("%m-%d-%Y")
+        today = datetime.now().strftime("%m-%d-%Y")
         params = {
             "@moeda": f"'{currency}'",
             "@dataCotacao": f"'{today}'",
@@ -233,10 +247,10 @@ def get_flights(origin: str, destination: str, date: str):
             
         # Verifica se a data está no formato correto
         try:
-            datetime.datetime.strptime(date, "%Y-%m-%d")
+            datetime.strptime(date, "%Y-%m-%d")
         except ValueError:
             print(f"Formato de data inválido: {date}")
-            data_atual = datetime.datetime.now() + timedelta(days=7)
+            data_atual = datetime.now() + timedelta(days=7)
             date = data_atual.strftime("%Y-%m-%d")
         
         print(f"Buscando voos: {origin} -> {destination}, data: {date}")
@@ -268,6 +282,9 @@ def get_flights(origin: str, destination: str, date: str):
         headers = {"Authorization": f"Bearer {token}"}
         response = requests.get(FLIGHT_API_URL, headers=headers, params=params, verify=False)
         
+        print(f"[DEBUG] Resposta da API de voos: {response.status_code}")
+        print(f"[DEBUG] Conteúdo da resposta: {response.text[:500]}...")  # Primeiros 500 caracteres
+        
         if response.status_code != 200:
             print(f"Erro na API de voos: {response.status_code} - {response.text}")
             return {"data": []}
@@ -286,6 +303,12 @@ def get_flights(origin: str, destination: str, date: str):
                 if "data" in alt_result and alt_result["data"]:
                     print("Busca invertida encontrou voos!")
                     return alt_result
+        
+        # Formata os preços antes de retornar
+        if "data" in result:
+            for voo in result["data"]:
+                if "price" in voo:
+                    voo["price"]["formatted"] = format_price(voo["price"])
         
         return result
     except Exception as e:
@@ -333,7 +356,7 @@ def buscar_hoteis(cidade_codigo: str):
         
         # Busca os preços dos hotéis
         # Define o período para busca de preços (7 dias a partir de hoje)
-        hoje = datetime.datetime.now()
+        hoje = datetime.now()
         data_checkin = (hoje + timedelta(days=7)).strftime("%Y-%m-%d")
         data_checkout = (hoje + timedelta(days=10)).strftime("%Y-%m-%d")
         
@@ -401,12 +424,12 @@ def obter_previsao_tempo(cidade: str, data_inicio=None, data_fim=None):
         
         # Filtra apenas os dias relevantes se datas fornecidas
         if data_inicio and data_fim:
-            data_inicio = datetime.datetime.strptime(data_inicio, "%Y-%m-%d")
-            data_fim = datetime.datetime.strptime(data_fim, "%Y-%m-%d")
+            data_inicio = datetime.strptime(data_inicio, "%Y-%m-%d")
+            data_fim = datetime.strptime(data_fim, "%Y-%m-%d")
             previsao_filtrada = []
             
             for p in data.get("list", []):
-                data_previsao = datetime.datetime.fromtimestamp(p.get("dt"))
+                data_previsao = datetime.fromtimestamp(p.get("dt"))
                 if data_inicio <= data_previsao <= data_fim and data_previsao.hour == 12:  # previsão do meio-dia
                     previsao_filtrada.append({
                         "data": data_previsao.strftime("%d/%m"),
@@ -535,7 +558,7 @@ def extrair_datas(texto: str):
             else:  # Formato "15/01"
                 mes = match_inicio.group(3).zfill(2)
             
-            ano_atual = datetime.datetime.now().year
+            ano_atual = datetime.now().year
             resultado["data_inicio"] = f"{ano_atual}-{mes}-{dia}"
         
         # Processar data de fim
@@ -547,7 +570,7 @@ def extrair_datas(texto: str):
             else:  # Formato "15/01"
                 mes = match_fim.group(3).zfill(2)
             
-            ano_atual = datetime.datetime.now().year
+            ano_atual = datetime.now().year
             resultado["data_fim"] = f"{ano_atual}-{mes}-{dia}"
     
     # Se não encontrou período específico, tenta extrair a duração
@@ -557,8 +580,8 @@ def extrair_datas(texto: str):
         
         if match_duracao:
             dias = int(match_duracao.group(1))
-            hoje = datetime.datetime.now()
-            data_inicio = hoje + timedelta(days=7)  # Assume viagem uma semana à frente
+            hoje = datetime.now()
+            data_inicio = hoje + timedelta(days=7)
             data_fim = data_inicio + timedelta(days=dias)
             
             resultado["data_inicio"] = data_inicio.strftime("%Y-%m-%d")
@@ -819,7 +842,7 @@ def salvar_historico(sessao_id, dados_busca, é_nova_conversa=False):
             historico = []
         
         # Adiciona a nova busca com timestamp e ID único
-        dados_busca["timestamp"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        dados_busca["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         dados_busca["id"] = str(uuid.uuid4())
         historico.append(dados_busca)
         
@@ -856,6 +879,14 @@ def carregar_conversa_por_id(sessao_id, conversa_id):
         print(f"Erro ao carregar conversa: {e}")
         return None
 
+def format_message_content(content):
+    """Formata o conteúdo da mensagem para HTML"""
+    content = content.replace('\n', '<br>')
+    content = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', content)
+    content = re.sub(r'\*(.*?)\*', r'<em>\1</em>', content)
+    content = content.replace('  ', '&nbsp;&nbsp;')
+    return content
+
 @app.route('/')
 def index():
     # Cria ou recupera ID de sessão
@@ -863,218 +894,253 @@ def index():
         session["id"] = str(uuid.uuid4())
     # Limpa dados de conversa anterior
     session["nova_conversa"] = True
+    return render_template('index.html')
+
+@app.route('/chat')
+def chat_page():
+    # Cria ou recupera ID de sessão
+    if not session.get("id"):
+        session["id"] = str(uuid.uuid4())
     return render_template('chat.html')
 
 @app.route('/historico')
 def historico():
-    # Carrega o histórico da sessão atual
-    sessao_id = session.get("id")
-    if not sessao_id:
-        return render_template('historico.html', historico=[])
-    
-    historico_buscas = carregar_historico(sessao_id)
-    return render_template('historico.html', historico=historico_buscas)
+    try:
+        user_id = session.get("id")
+        print(f"Acessando histórico para usuário: {user_id}")
+        
+        if not user_id:
+            print("Usuário não autenticado, redirecionando para index")
+            return redirect(url_for('index'))
+        
+        conversations = Conversation.query.filter_by(user_id=user_id).order_by(Conversation.timestamp.desc()).all()
+        print(f"Encontradas {len(conversations)} conversas")
+        
+        for conv in conversations:
+            print(f"Conversa {conv.id}: {conv.title} ({len(conv.messages)} mensagens)")
+        
+        return render_template('historico.html', conversations=conversations)
+    except Exception as e:
+        print(f"Erro ao carregar histórico: {e}")
+        return render_template('historico.html', conversations=[])
 
-@app.route('/carregar_conversa/<conversa_id>', methods=['GET'])
-def carregar_conversa(conversa_id):
-    """Carrega uma conversa específica e inicia uma nova sessão com seus dados"""
-    sessao_id = session.get("id")
-    if not sessao_id:
-        return jsonify({"status": "error", "message": "Sessão inválida"})
+@app.route('/conversation/<int:conversation_id>')
+def view_conversation(conversation_id):
+    user_id = session.get("id")
+    if not user_id:
+        return redirect(url_for('index'))
     
-    conversa = carregar_conversa_por_id(sessao_id, conversa_id)
-    if not conversa:
-        return jsonify({"status": "error", "message": "Conversa não encontrada"})
+    conversation = Conversation.query.get_or_404(conversation_id)
+    if conversation.user_id != user_id:
+        return redirect(url_for('historico'))
     
-    # Inicia uma nova conversa com os dados da conversa carregada
-    session["destino"] = conversa.get("destino")
-    session["origem"] = conversa.get("origem")
-    if conversa.get("datas"):
-        session["data_inicio"] = conversa["datas"].get("data_inicio")
-        session["data_fim"] = conversa["datas"].get("data_fim")
+    # Atualiza a sessão com os dados desta conversa
+    session["conversation_id"] = conversation.id
+    session["origem"] = conversation.origin
+    session["destino"] = conversation.destination
+    session["data_inicio"] = conversation.start_date
+    session["data_fim"] = conversation.end_date
     
-    # Limpa o contexto atual do usuário
-    if sessao_id in chat_context:
-        chat_context[sessao_id] = []
-    
-    session["nova_conversa"] = True
-    
-    return jsonify({
-        "status": "success", 
-        "message": "Conversa carregada com sucesso",
-        "conversa": conversa
-    })
+    return render_template('chat.html', conversation=conversation)
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    user_message = request.json.get('message', '').strip()
-    user_id = session.get("id", request.remote_addr)
-    
-    # Verifica se é uma nova conversa ou continuação
-    é_nova_conversa = session.get("nova_conversa", True)
-    session["nova_conversa"] = False  # Próximas mensagens não serão novas
-    
-    if user_id not in chat_context:
-        chat_context[user_id] = []
-
-    chat_context[user_id].append({"role": "user", "content": user_message})
-    resposta = get_ai_response(chat_context[user_id])
-    chat_context[user_id].append({"role": "model", "content": resposta})
-
-    # Extrai informações da mensagem atual
-    destino_atual = extrair_destino(user_message)
-    origem_atual = extrair_origem(user_message)
-    datas = extrair_datas(user_message)
-    
-    # Armazena informações na sessão se forem encontradas
-    if destino_atual != "Destino não informado":
-        session["destino"] = destino_atual
-    
-    if origem_atual != "Origem não informada":
-        session["origem"] = origem_atual
-    
-    if datas.get("data_inicio"):
-        session["data_inicio"] = datas.get("data_inicio")
-    
-    if datas.get("data_fim"):
-        session["data_fim"] = datas.get("data_fim")
-    
-    # Usa informações da sessão se não forem encontradas na mensagem atual
-    destino = destino_atual
-    if destino == "Destino não informado" and session.get("destino"):
-        destino = session.get("destino")
-    
-    origem = origem_atual
-    if origem == "Origem não informada" and session.get("origem"):
-        origem = session.get("origem")
-    
-    # Atualiza datas com informações da sessão se necessário
-    data_inicio = datas.get("data_inicio") or session.get("data_inicio")
-    data_fim = datas.get("data_fim") or session.get("data_fim")
-    datas_completas = {"data_inicio": data_inicio, "data_fim": data_fim}
-
-    dados_busca = {
-        "mensagem": user_message,
-        "destino": destino,
-        "origem": origem,
-        "datas": datas_completas
-    }
-
-    # Salva no histórico apenas se for uma nova conversa
-    salvar_historico(user_id, dados_busca, é_nova_conversa)
-
-    # Verifica se tem origem (atual ou da sessão)
-    if origem == "Origem não informada":
-        return jsonify({'response': resposta + "\n\n✋ Por favor, informe a cidade de origem para que eu possa sugerir transportes ou voos."})
-
-    info_adicional = ""
-
-    if destino != "Destino não informado":
-        # Obtém códigos IATA para origem e destino
-        codigo_origem = buscar_codigo_iata(origem)
-        codigo_destino = buscar_codigo_iata(destino)
+    try:
+        user_message = request.json.get('message', '').strip()
+        user_id = session.get("id")
         
-        # Registra os códigos para depuração
-        print(f"Origem: {origem} -> {codigo_origem}")
-        print(f"Destino: {destino} -> {codigo_destino}")
+        print(f"Processando mensagem do usuário {user_id}")
         
-        # Define a data de partida
-        data_partida = data_inicio if data_inicio else (datetime.datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+        if not user_id:
+            print("ID de sessão não encontrado, gerando novo ID")
+            user_id = str(uuid.uuid4())
+            session["id"] = user_id
         
-        # Busca previsão do tempo
-        previsao = obter_previsao_tempo(destino, data_inicio, data_fim)
-        if previsao:
-            info_adicional += f"\n\n🌤️ Previsão do tempo para {destino.title()}:\n"
-            for p in previsao:
-                info_adicional += f"• {p['data']}: {p['temperatura']}°C, {p['descricao']}\n"
+        # Verifica se é uma nova conversa
+        conversation_id = session.get("conversation_id")
+        print(f"ID da conversa atual: {conversation_id}")
+        
+        # Força nova conversa se vier da página inicial
+        initial_message = request.json.get('initial_message', False)
+        if initial_message:
+            print("Mensagem inicial detectada, forçando nova conversa")
+            conversation_id = None
+            session.pop("conversation_id", None)
+        
+        if not conversation_id:
+            print("Iniciando nova conversa")
+            # Limpa o contexto anterior
+            if user_id in chat_context:
+                chat_context[user_id] = []
+                
+            # Extrai origem e destino da mensagem
+            destino = extrair_destino(user_message)
+            origem = extrair_origem(user_message)
+            datas = extrair_datas(user_message)
+            
+            print(f"Origem: {origem}")
+            print(f"Destino: {destino}")
+            print(f"Datas: {datas}")
+            
+            # Converte strings de data para objetos date
+            start_date = datas.get("data_inicio")
+            end_date = datas.get("data_fim")
+            
+            if start_date:
+                start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+            if end_date:
+                end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+                
+            # Cria uma nova conversa
+            conversation = Conversation(
+                title=generate_conversation_title(user_message),
+                user_id=user_id,
+                origin=origem if origem != "Origem não informada" else None,
+                destination=destino if destino != "Destino não informado" else None,
+                start_date=start_date,
+                end_date=end_date
+            )
+            
+            try:
+                print("Salvando nova conversa no banco de dados")
+                db.session.add(conversation)
+                db.session.commit()
+                session["conversation_id"] = conversation.id
+                print(f"Nova conversa criada com ID: {conversation.id}")
+            except Exception as e:
+                print(f"Erro ao salvar conversa: {e}")
+                db.session.rollback()
+                raise
+        else:
+            print(f"Continuando conversa existente: {conversation_id}")
+            conversation = Conversation.query.get(conversation_id)
+            if not conversation:
+                print("Conversa não encontrada no banco de dados")
+                return jsonify({"error": "Conversa não encontrada"}), 404
 
-        # Busca hotéis
-        hoteis = buscar_hoteis(codigo_destino)
-        if hoteis:
-            info_adicional += f"\n\n🏨 Opções de hotéis em {destino.title()}:\n"
-            for i, hotel in enumerate(hoteis, 1):
-                nome = hotel.get("name", "Hotel sem nome")
-                categoria = "⭐" * int(hotel.get("rating", 3))
-                preco = hotel.get("preco", "Preço não disponível")
-                info_adicional += f"• {nome} {categoria} - {preco}\n"
+        # Adiciona a mensagem do usuário
+        user_msg = Message(
+            content=user_message,
+            is_bot=False,
+            conversation_id=conversation.id
+        )
+        
+        try:
+            print("Salvando mensagem do usuário")
+            db.session.add(user_msg)
+            db.session.commit()
+        except Exception as e:
+            print(f"Erro ao salvar mensagem do usuário: {e}")
+            db.session.rollback()
+            raise
+        
+        # Processa a resposta do chatbot
+        if user_id not in chat_context:
+            chat_context[user_id] = []
 
-        # Calcula distância usando a API e sugere transporte
-        distancia_info = calcular_distancia(origem, destino)
-        if distancia_info is not None:
-            distancia_km = distancia_info["distancia_km"]
-            distancia_formatada = f"{distancia_km:.1f}".replace(".", ",")
-            tipo_rota = distancia_info["tipo_rota"]
+        chat_context[user_id].append({"role": "user", "content": user_message})
+        bot_response = get_ai_response(chat_context[user_id])
+        chat_context[user_id].append({"role": "model", "content": bot_response})
 
-            if tipo_rota == "curta":
-                info_adicional += (
-                    f"\n\n🚗 A distância entre {origem.title()} e {destino.title()} é de aproximadamente {distancia_formatada} km."
-                    f"\nRecomendamos transporte terrestre (carro, ônibus ou aplicativo de transporte)."
-                    f"\n✈️ Não há voos comerciais regulares para esta distância."
-                )
-            elif tipo_rota == "media":
-                info_adicional += (
-                    f"\n\n🚗 A distância entre {origem.title()} e {destino.title()} é de aproximadamente {distancia_formatada} km."
-                    f"\nO transporte terrestre (carro ou ônibus) costuma ser mais prático."
-                )
-                voos = get_flights(codigo_origem, codigo_destino, data_partida)
-                if voos.get("data"):
-                    info_adicional += (
-                        f"\n✈️ Existem voos disponíveis, mas normalmente não compensa para esta distância."
-                    )
-            else:  # tipo_rota == "longa"
-                voos = get_flights(codigo_origem, codigo_destino, data_partida)
-                if voos.get("data"):
-                    info_adicional += (
-                        f"\n\n✈️ A distância entre {origem.title()} e {destino.title()} é de {distancia_formatada} km."
-                        f"\nVeja as melhores opções de voos:"
-                    )
-                    for i, voo in enumerate(voos["data"][:3], 1):
-                        try:
-                            segmento = voo["itineraries"][0]["segments"][0]
-                            horario_partida = segmento["departure"]["at"][11:16]
-                            horario_chegada = segmento["arrival"]["at"][11:16]
-                            companhia = segmento["carrierCode"]
-                            duracao = segmento.get("duration", "").replace("PT", "").replace("H", "h ").replace("M", "m")
-                            preco = format_price(voo.get("price", {}))
-                            info_adicional += (
-                                f"\n• Voo {i}: {companhia}, {horario_partida}-{horario_chegada}, duração {duracao}, preço: {preco}"
-                            )
-                        except Exception as e:
-                            print(f"Erro ao processar voo {i}: {e}")
-                            continue
-                else:
-                    info_adicional += (
-                        f"\n\n⚠️ Nenhum voo encontrado de {origem.title()} para {destino.title()} na data {data_partida}."
-                        f"\nConsidere opções terrestres, como ônibus ou carro."
-                    )
-    resposta_final = resposta + info_adicional
-    return jsonify({'response': resposta_final})
-    
+        # Formata e adiciona a resposta do bot
+        formatted_response = format_message_content(bot_response)
+        bot_msg = Message(
+            content=formatted_response,
+            is_bot=True,
+            conversation_id=conversation.id
+        )
+        
+        try:
+            print("Salvando resposta do bot")
+            db.session.add(bot_msg)
+            db.session.commit()
+            print("Mensagens salvas com sucesso")
+        except Exception as e:
+            print(f"Erro ao salvar resposta do bot: {e}")
+            db.session.rollback()
+            raise
+
+        return jsonify({'response': formatted_response})
+        
+    except Exception as e:
+        print(f"Erro geral na rota de chat: {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/new_chat', methods=['POST'])
 def new_chat():
     """Inicia uma nova conversa, limpando o contexto anterior."""
-    user_id = session.get("id", request.remote_addr)
-    
-    # Limpa o contexto atual do usuário
-    if user_id in chat_context:
-        chat_context[user_id] = []
-    
-    # Limpa dados da sessão relacionados à viagem
-    session.pop("destino", None)
-    session.pop("origem", None)
-    session.pop("data_inicio", None)
-    session.pop("data_fim", None)
-    
-    # Marca que a próxima mensagem será de uma nova conversa
-    session["nova_conversa"] = True
-    
-    return jsonify({"status": "success", "message": "Nova conversa iniciada"})
+    try:
+        user_id = session.get("id")
+        print(f"Iniciando nova conversa para usuário {user_id}")
+        
+        if not user_id:
+            print("ID de sessão não encontrado, gerando novo ID")
+            user_id = str(uuid.uuid4())
+            session["id"] = user_id
+        
+        # Limpa o contexto atual do usuário
+        if user_id in chat_context:
+            print("Limpando contexto do chat")
+            chat_context[user_id] = []
+        
+        # Limpa dados da sessão relacionados à viagem
+        print("Limpando dados da sessão")
+        session.pop("conversation_id", None)
+        session.pop("destino", None)
+        session.pop("origem", None)
+        session.pop("data_inicio", None)
+        session.pop("data_fim", None)
+        
+        print("Nova conversa iniciada com sucesso")
+        return jsonify({"status": "success", "message": "Nova conversa iniciada"})
+        
+    except Exception as e:
+        print(f"Erro ao iniciar nova conversa: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/cambio', methods=['GET'])
 def cambio():
     moeda = request.args.get('moeda', 'USD')
     taxa = get_exchange_rate(moeda)
     return jsonify({'moeda': moeda, 'taxa': taxa})
+
+@app.route('/limpar_historico', methods=['POST'])
+def limpar_historico():
+    try:
+        user_id = session.get("id")
+        if not user_id:
+            return jsonify({"success": False, "error": "Usuário não autenticado"}), 401
+        
+        print(f"Limpando histórico para usuário: {user_id}")
+        
+        # Busca todas as conversas do usuário
+        conversations = Conversation.query.filter_by(user_id=user_id).all()
+        
+        # Deleta cada conversa (as mensagens serão deletadas automaticamente devido ao cascade)
+        for conv in conversations:
+            db.session.delete(conv)
+        
+        # Limpa o contexto do chat
+        if user_id in chat_context:
+            chat_context[user_id] = []
+        
+        # Limpa dados da sessão relacionados à conversa atual
+        session.pop("conversation_id", None)
+        session.pop("destino", None)
+        session.pop("origem", None)
+        session.pop("data_inicio", None)
+        session.pop("data_fim", None)
+        
+        # Commit das alterações
+        db.session.commit()
+        print(f"Histórico limpo com sucesso para usuário: {user_id}")
+        
+        return jsonify({"success": True})
+        
+    except Exception as e:
+        print(f"Erro ao limpar histórico: {e}")
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
     # Cria pasta para armazenar histórico de buscas

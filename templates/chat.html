@@ -240,6 +240,13 @@
     </header>
     
     <div id="chat-container">
+        {% if conversation %}
+            {% for message in conversation.messages %}
+                <div class="message {{ 'bot-message' if message.is_bot else 'user-message' }}">
+                    {{ message.content|safe }}
+                </div>
+            {% endfor %}
+        {% endif %}
         <button class="new-chat-btn" onclick="startNewChat()" title="Iniciar nova conversa">
             <i class="fas fa-plus"></i>
         </button>
@@ -261,6 +268,9 @@
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('user-input');
         let isWaitingForResponse = false;
+        
+        // Variável global definida pelo servidor
+        window.isExistingConversation = Boolean(document.querySelector('#chat-container .message'));
         
         function showLoading() {
             const loading = document.createElement('div');
@@ -287,14 +297,7 @@
         function addMessage(type, message) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}-message`;
-            
-            // Processar formatação especial
-            const formattedMessage = message
-                .replace(/\n/g, '<br>')
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>');
-                
-            messageDiv.innerHTML = formattedMessage;
+            messageDiv.innerHTML = message;
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
@@ -314,18 +317,27 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({message: message})
+                body: JSON.stringify({
+                    message: message,
+                    initial_message: Boolean(localStorage.getItem('pendingMessage'))
+                })
             })
             .then(response => response.json())
             .then(data => {
                 hideLoading();
-                addMessage('bot', data.response);
+                if (data.response) {
+                    addMessage('bot', data.response);
+                } else if (data.error) {
+                    addMessage('bot', "Desculpe, ocorreu um erro. Por favor, tente novamente.");
+                }
                 isWaitingForResponse = false;
+                localStorage.removeItem('pendingMessage');
             })
             .catch(error => {
                 hideLoading();
                 addMessage('bot', "Desculpe, ocorreu um erro ao processar sua solicitação. Por favor, tente novamente.");
                 isWaitingForResponse = false;
+                localStorage.removeItem('pendingMessage');
                 console.error('Erro:', error);
             });
         }
@@ -362,9 +374,16 @@
 
         // Mensagem inicial
         window.onload = function() {
-            setTimeout(() => {
-                addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Hotéis e clima<br><br>Basta me dizer para onde quer ir! 😊");
-            }, 500);
+            const pendingMessage = localStorage.getItem('pendingMessage');
+            if (pendingMessage) {
+                localStorage.removeItem('pendingMessage');
+                userInput.value = pendingMessage;
+                sendMessage();
+            } else if (!window.isExistingConversation) {
+                setTimeout(() => {
+                    addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Hotéis e clima<br><br>Basta me dizer para onde quer ir! 😊");
+                }, 500);
+            }
         }
     </script>
 </body>

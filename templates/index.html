@@ -19,14 +19,13 @@
     }
 
     .logo {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    height: 60px; /* ou ajuste conforme o tamanho da sua logo */
-    z-index: 2;
-    user-select: none;
-  }
-
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      height: 60px;
+      z-index: 2;
+      user-select: none;
+    }
 
     .background-layer {
       position: absolute;
@@ -55,6 +54,12 @@
       padding: 0 20px;
       text-align: center;
       z-index: 1;
+      opacity: 1;
+      transition: opacity 0.2s ease-out;
+    }
+
+    .container.fade-out {
+      opacity: 0;
     }
 
     h1 {
@@ -64,10 +69,26 @@
       line-height: 1.1;
       text-transform: uppercase;
       max-width: 700px;
+      margin-bottom: 10px;
+    }
+
+    #chat-container {
+      width: 100%;
+      max-width: 600px;
+      min-height: 220px;
+      margin: 30px auto 0;
+      background: rgba(0,0,0,0.25);
+      border-radius: 20px;
+      padding: 20px 10px 10px 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      overflow-y: auto;
+      max-height: 320px;
+      text-align: left;
+      display: none; /* Inicialmente oculto */
     }
 
     .search-box {
-      margin-top: 30px;
+      margin-top: 20px;
       width: 480px;
       max-width: 90vw;
       background: rgba(255, 255, 255, 0.25);
@@ -77,7 +98,13 @@
       align-items: center;
       color: #e3e3e3;
       font-size: 1rem;
-      transition: background-color 0.3s ease;
+      transition: all 0.3s ease;
+      z-index: 2;
+    }
+
+    .search-box:focus-within {
+      background: rgba(255, 255, 255, 0.35);
+      transform: scale(1.02);
     }
 
     .search-box input {
@@ -103,6 +130,67 @@
       font-size: 1.4rem;
       font-weight: bold;
       transform: rotate(-45deg);
+      transition: transform 0.3s ease;
+    }
+
+    .search-box button:hover {
+      transform: rotate(-45deg) scale(1.2);
+    }
+
+    /* Estilo das mensagens do chat */
+    .message {
+      padding: 10px 15px;
+      border-radius: 15px;
+      margin: 8px 0;
+      max-width: 90%;
+      word-wrap: break-word;
+      line-height: 1.4;
+      font-size: 1.08rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+      display: block;
+      clear: both;
+    }
+    .user-message {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      margin-left: auto;
+      margin-right: 0;
+      text-align: right;
+    }
+    .bot-message {
+      background: rgba(0,0,0,0.25);
+      color: #ffe;
+      margin-right: auto;
+      margin-left: 0;
+      text-align: left;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      margin: 8px 0;
+    }
+    .dot {
+      background-color: #fff;
+      border-radius: 50%;
+      width: 8px;
+      height: 8px;
+      margin: 0 3px;
+      display: inline-block;
+      animation: bounce 1.5s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-5px); }
+    }
+
+    @media (max-width: 700px) {
+      h1 { font-size: 2.2rem; }
+      #chat-container { max-width: 98vw; }
+      .search-box { width: 98vw; }
     }
   </style>
 </head>
@@ -113,13 +201,17 @@
 
 <div class="container" id="bg-container">
   <h1>QUAL SERÁ SEU<br>PRÓXIMO<br>DESTINO?</h1>
-  <form class="search-box" onsubmit="event.preventDefault(); alert('Buscar: ' + this.query.value);">
-    <input type="text" name="query" placeholder="Explore um destino" />
-    <button type="submit" aria-label="Buscar">&#8593;</button>
+  <div id="chat-container"></div>
+  <form class="search-box" id="chat-form" autocomplete="off">
+    <input type="text" id="user-input" name="query" placeholder="Explore um destino" autocomplete="off" />
+    <button type="submit" aria-label="Enviar" id="send-btn">&#8593;</button>
   </form>
 </div>
 
+<img src="{{ url_for('static', filename='atlas_logo.png') }}" alt="Logo" class="logo" />
+
 <script>
+  // BACKGROUND ANIMADO
   const backgrounds = [
     'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1470&q=80',
     'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?fm=jpg&q=60&w=3000',
@@ -149,6 +241,7 @@
   const searchBox = document.querySelector(".search-box");
   const input = searchBox.querySelector("input");
   const button = searchBox.querySelector("button");
+  const chatContainer = document.getElementById('chat-container');
 
   function typeWriter(text, element, speed = 75) {
     let i = 0;
@@ -189,10 +282,77 @@
   bgElements[activeIndex].style.backgroundImage = `url('${backgrounds[current]}')`;
   typeWriter(placeholderTexts[current], input);
   setInterval(changeBackground, 8000);
+
+  // CHATBOT
+  const userInput = document.getElementById('user-input');
+  const chatForm = document.getElementById('chat-form');
+  let isWaitingForResponse = false;
+
+  function showLoading() {
+    const loading = document.createElement('div');
+    loading.className = 'loading';
+    loading.id = 'loading-indicator';
+    for (let i = 0; i < 3; i++) {
+      const dot = document.createElement('span');
+      dot.className = 'dot';
+      loading.appendChild(dot);
+    }
+    chatContainer.appendChild(loading);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+
+  function hideLoading() {
+    const loading = document.getElementById('loading-indicator');
+    if (loading) loading.remove();
+  }
+
+  function addMessage(type, message) {
+    // Mostra o container de chat se estiver oculto
+    chatContainer.style.display = 'block';
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}-message`;
+    messageDiv.textContent = message;
+    chatContainer.appendChild(messageDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+
+  function redirectToChat(message) {
+    // Salva a mensagem no localStorage
+    localStorage.setItem('pendingMessage', message);
+    
+    // Redireciona imediatamente
+    window.location.href = '/chat';
+  }
+
+  function sendMessage() {
+    const message = userInput.value.trim();
+    if (message === '' || isWaitingForResponse) return;
+    addMessage('user', message);
+    userInput.value = '';
+    isWaitingForResponse = true;
+    showLoading();
+    redirectToChat(message);
+  }
+
+  chatForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    sendMessage();
+  });
+  userInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // Limpa o input quando a página é carregada ou quando o usuário volta para ela
+  window.addEventListener('pageshow', function(event) {
+    userInput.value = '';
+    // Remove a classe fade-out caso exista
+    container.classList.remove('fade-out');
+  });
 </script>
 
 </body>
-
-<img src="{{ url_for('static', filename='atlas_logo.png') }}" alt="Logo" class="logo" />
-
 </html>
