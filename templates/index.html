@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Qual é o seu próximo destino?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      height: 100%;
+      font-family: Arial, sans-serif;
+      color: white;
+      overflow: hidden;
+    }
+
+    .logo {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      height: 60px;
+      z-index: 2;
+      user-select: none;
+    }
+
+    .background-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      transition: opacity 1s ease-in-out;
+      z-index: -1;
+      opacity: 0;
+    }
+
+    .background-layer.active {
+      opacity: 1;
+    }
+
+    .container {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 0 20px;
+      text-align: center;
+      z-index: 1;
+      opacity: 1;
+      transition: opacity 0.1s ease-out;
+    }
+
+    .container.fade-out {
+      opacity: 0;
+    }
+
+    h1 {
+      font-weight: 900;
+      font-family: 'Poppins', sans-serif;
+      font-size: 4.5rem;
+      line-height: 1.1;
+      text-transform: uppercase;
+      max-width: 700px;
+      margin-bottom: 10px;
+    }
+
+    #chat-container {
+      width: 100%;
+      max-width: 600px;
+      min-height: 220px;
+      margin: 30px auto 0;
+      background: rgba(0,0,0,0.25);
+      border-radius: 20px;
+      padding: 20px 10px 10px 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      overflow-y: auto;
+      max-height: 320px;
+      text-align: left;
+      display: none;
+    }
+
+    .search-box {
+      margin-top: 20px;
+      width: 480px;
+      max-width: 90vw;
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 20px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: flex-start;
+      color: #e3e3e3;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      z-index: 2;
+    }
+
+    .search-box:focus-within {
+      background: rgba(255, 255, 255, 0.35);
+      transform: scale(1.02);
+    }
+
+    .search-box textarea {
+      background: transparent;
+      font-family: 'Poppins', sans-serif;
+      border: none;
+      outline: none;
+      flex: 1;
+      color: white;
+      font-size: 1.3rem;
+      font-weight: 400;
+      resize: none;
+      min-height: 40px;
+      max-height: 120px;
+      overflow-y: auto;
+      line-height: 1.5;
+      width: 100%;
+      word-wrap: break-word;
+      padding: 0;
+    }
+
+    .search-box textarea::placeholder {
+      color: #c7c7c7;
+    }
+
+    .search-box button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: white;
+      font-size: 1.4rem;
+      font-weight: bold;
+      transform: rotate(-45deg);
+      transition: transform 0.3s ease;
+      padding-left: 10px;
+      margin-top: 5px;
+    }
+
+    .search-box button:hover {
+      transform: rotate(-45deg) scale(1.2);
+    }
+
+    @media (max-width: 700px) {
+      h1 { font-size: 2.2rem; }
+      #chat-container { max-width: 98vw; }
+      .search-box { width: 98vw; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="bg1" class="background-layer active"></div>
+<div id="bg2" class="background-layer"></div>
+
+<div class="container" id="bg-container">
+  <h1>QUAL SERÁ SEU<br>PRÓXIMO<br>DESTINO?</h1>
+  <div id="chat-container"></div>
+  <form class="search-box" id="chat-form" autocomplete="off">
+    <textarea 
+      id="user-input" 
+      name="query" 
+      placeholder="Explore um destino" 
+      autocomplete="off"
+      rows="1"></textarea>
+    <button type="submit" aria-label="Enviar" id="send-btn">&#8593;</button>
+  </form>
+</div>
+
+<img src="{{ url_for('static', filename='atlas_logo.png') }}" alt="Logo" class="logo" />
+
+<script>
+  // BACKGROUND ANIMADO
+  const backgrounds = [
+    'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1470&q=80',
+    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?fm=jpg&q=60&w=3000',
+    'https://images.unsplash.com/photo-1498307833015-e7b400441eb8?fm=jpg&q=60&w=3000',
+    'https://images.unsplash.com/photo-1528164344705-47542687000d?fm=jpg&q=60&w=3000'
+  ];
+
+  const placeholderTexts = [
+    "Explore lugares fantásticos...",
+    "Descubra cidades incríveis...",
+    "Encontre paisagens maravilhosas...",
+    "Faça sua viagem dos sonhos..."
+  ];
+
+  const themeColors = [
+    { text: "#FFF5EB", box: "rgba(0, 0, 0, 0.6)" },
+    { text: "#ffffff", box: "rgba(63, 121, 132, 0.6)" },
+    { text: "#ffffff", box: "rgba(0, 0, 0, 0.6)" },
+    { text: "#f5f5dc", box: "rgba(50, 50, 50, 0.4)" }
+  ];
+
+  let current = 0;
+  let activeIndex = 0;
+  const bgElements = [document.getElementById('bg1'), document.getElementById('bg2')];
+  const container = document.getElementById('bg-container');
+  const h1 = container.querySelector("h1");
+  const searchBox = document.querySelector(".search-box");
+  const textarea = searchBox.querySelector("textarea");
+  const button = searchBox.querySelector("button");
+  const chatContainer = document.getElementById('chat-container');
+
+  function typeWriter(text, element, speed = 75) {
+    let i = 0;
+    element.placeholder = "";
+    const interval = setInterval(() => {
+      if (i < text.length) {
+        element.placeholder += text.charAt(i);
+        i++;
+      } else {
+        clearInterval(interval);
+      }
+    }, speed);
+  }
+
+  function changeBackground() {
+    const next = (current + 1) % backgrounds.length;
+    const nextBg = bgElements[1 - activeIndex];
+    const currentBg = bgElements[activeIndex];
+
+    nextBg.style.backgroundImage = `url('${backgrounds[next]}')`;
+    nextBg.classList.add('active');
+    currentBg.classList.remove('active');
+
+    current = next;
+    activeIndex = 1 - activeIndex;
+
+    const theme = themeColors[current];
+    h1.style.color = theme.text;
+    searchBox.style.backgroundColor = theme.box;
+    searchBox.style.color = theme.text;
+    textarea.style.color = theme.text;
+    textarea.style.caretColor = theme.text;
+    button.style.color = theme.text;
+
+    typeWriter(placeholderTexts[current], textarea);
+  }
+
+  function redirectToChat(message) {
+    localStorage.setItem('pendingMessage', message);
+    window.location.href = '/chat';
+  }
+
+  // Inicializa o primeiro background
+  bgElements[activeIndex].style.backgroundImage = `url('${backgrounds[current]}')`;
+  typeWriter(placeholderTexts[current], textarea);
+  setInterval(changeBackground, 8000);
+
+  // Auto-resize do textarea
+  textarea.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = (this.scrollHeight) + 'px';
+  });
+
+  // Handler do formulário
+  const chatForm = document.getElementById('chat-form');
+  chatForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const message = textarea.value.trim();
+    if (message) {
+      container.classList.add('fade-out');
+      redirectToChat(message);
+    }
+  });
+
+  // Handler do textarea para Enter
+  textarea.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      const message = this.value.trim();
+      if (message) {
+        container.classList.add('fade-out');
+        redirectToChat(message);
+      }
+    }
+  });
+
+  // Limpa o textarea quando a página é carregada
+  window.addEventListener('pageshow', function(event) {
+    textarea.value = '';
+    textarea.style.height = 'auto';
+    container.classList.remove('fade-out');
+  });
+</script>
+
+</body>
+</html>

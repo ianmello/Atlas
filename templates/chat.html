@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Atlas AI 🌏</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4285f4;
+            --primary-dark: #3367d6;
+            --secondary-color: #fbbc05;
+            --text-color: #333;
+            --light-bg: #f8f9fa;
+            --border-radius: 16px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(66, 133, 244, 0.1);
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .header-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            background: rgba(66, 133, 244, 0.1);
+        }
+        
+        .header-links a:hover {
+            background: rgba(66, 133, 244, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        #chat-container {
+            flex: 1;
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+            position: relative;
+            scroll-behavior: smooth;
+        }
+        
+        .message {
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            margin: 10px 0;
+            max-width: 80%;
+            position: relative;
+            animation: messageAppear 0.3s ease-out;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        @keyframes messageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .user-message {
+            background: linear-gradient(135deg, var(--primary-color), #5c9ce5);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .bot-message {
+            background: var(--light-bg);
+            color: var(--text-color);
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .input-container {
+            position: relative;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        #user-input {
+            flex: 1;
+            padding: 16px 20px;
+            border-radius: var(--border-radius);
+            border: 2px solid rgba(66, 133, 244, 0.1);
+            font-size: 1rem;
+            transition: var(--transition);
+            font-family: 'Inter', sans-serif;
+            resize: none;
+            min-height: 56px;
+            max-height: 150px;
+            line-height: 1.5;
+            background: white;
+            box-shadow: var(--shadow);
+        }
+        
+        #user-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+        }
+        
+        .send-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            width: 56px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+        }
+        
+        .send-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .suggestion-chip {
+            background: white;
+            color: var(--primary-color);
+            border: 2px solid rgba(66, 133, 244, 0.2);
+            border-radius: 25px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+        
+        .suggestion-chip:hover {
+            background: rgba(66, 133, 244, 0.1);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 15px 20px;
+            margin: 10px 0;
+            max-width: fit-content;
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            animation: bounce 1.5s infinite;
+        }
+        
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-8px); }
+        }
+        
+        .new-chat-btn {
+       position: fixed;
+       bottom: 30px;
+       right: 30px;
+       background: var(--primary-color);
+       color: white;
+       border: none;
+       border-radius: 50%;
+       width: 60px;
+       height: 60px;
+       display: inline-flex;
+       align-items: center;
+       justify-content: center;
+       cursor: pointer;
+       box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+       transition: var(--transition);
+       z-index: 1000;
+       padding: 0;
+       line-height: 0;
+    }
+        
+        .new-chat-btn:hover {
+            transform: scale(1.1) rotate(180deg);
+            background: var(--primary-dark);
+        }
+        .new-chat-btn i {
+       font-size: 24px;
+       line-height: 0;
+       margin: 0;
+       padding: 0;
+        }    
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            header {
+                padding: 15px 0;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .message {
+                max-width: 90%;
+                padding: 12px 16px;
+            }
+            
+            .new-chat-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+            }
+            
+            .suggestions {
+                gap: 8px;
+            }
+            
+            .suggestion-chip {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-globe-americas"></i> Atlas AI</h1>
+            <div class="header-links">
+                <a href="/historico"><i class="fas fa-history"></i> Histórico</a>
+            </div>
+        </header>
+        
+        <div id="chat-container">
+            {% if conversation %}
+                {% for message in conversation.messages %}
+                    <div class="message {{ 'bot-message' if message.is_bot else 'user-message' }}">
+                        {{ message.content|safe }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        
+        <div class="input-container">
+            <textarea id="user-input" 
+                     placeholder="Digite sua mensagem... (Ex: Roteiro de 3 dias em São Paulo com parques)"
+                     rows="1"
+                     oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';"
+                     maxlength="1000"></textarea>
+            <button class="send-btn" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+        
+        <div class="suggestions">
+            <div class="suggestion-chip" onclick="useSuggestion('Quero viajar de São Paulo para o Rio de Janeiro em outubro')">
+                SP → Rio em outubro
+            </div>
+            <div class="suggestion-chip" onclick="useSuggestion('Roteiro de 5 dias em Salvador saindo de Brasília')">
+                5 dias em Salvador
+            </div>
+            <div class="suggestion-chip" onclick="useSuggestion('Dicas de restaurantes em Curitiba')">
+                Restaurantes em Curitiba
+            </div>
+            <div class="suggestion-chip" onclick="useSuggestion('Pontos turísticos em Fortaleza')">
+                Turismo em Fortaleza
+            </div>
+        </div>
+        
+        <button class="new-chat-btn" onclick="startNewChat()" title="Iniciar nova conversa">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        let isWaitingForResponse = false;
+        
+        window.isExistingConversation = Boolean(document.querySelector('#chat-container .message'));
+        
+        function showLoading() {
+            const loading = document.createElement('div');
+            loading.className = 'loading';
+            loading.id = 'loading-indicator';
+            
+            for (let i = 0; i < 3; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                loading.appendChild(dot);
+            }
+            
+            chatContainer.appendChild(loading);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function hideLoading() {
+            const loading = document.getElementById('loading-indicator');
+            if (loading) {
+                loading.remove();
+            }
+        }
+
+        function addMessage(type, message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            messageDiv.innerHTML = message;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (message === '' || isWaitingForResponse) return;
+            
+            addMessage('user', message);
+            userInput.value = '';
+            userInput.style.height = 'auto';
+            
+            isWaitingForResponse = true;
+            showLoading();
+            
+            fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: message,
+                    initial_message: Boolean(localStorage.getItem('pendingMessage'))
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.response) {
+                    addMessage('bot', data.response);
+                } else if (data.error) {
+                    addMessage('bot', "Desculpe, ocorreu um erro. Por favor, tente novamente.");
+                }
+                isWaitingForResponse = false;
+                localStorage.removeItem('pendingMessage');
+            })
+            .catch(error => {
+                hideLoading();
+                addMessage('bot', "Desculpe, ocorreu um erro ao processar sua solicitação. Por favor, tente novamente.");
+                isWaitingForResponse = false;
+                localStorage.removeItem('pendingMessage');
+                console.error('Erro:', error);
+            });
+        }
+        
+        function useSuggestion(text) {
+            userInput.value = text;
+            userInput.focus();
+        }
+        
+        function startNewChat() {
+            chatContainer.innerHTML = '';
+            
+            fetch('/new_chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }).then(() => {
+                setTimeout(() => {
+                    addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Hotéis e clima<br><br>Basta me dizer para onde quer ir! 😊");
+                }, 500);
+            });
+            
+            // Readiciona o botão de nova conversa
+            const newChatBtn = document.createElement('button');
+            newChatBtn.className = 'new-chat-btn';
+            newChatBtn.onclick = startNewChat;
+            newChatBtn.title = 'Iniciar nova conversa';
+            newChatBtn.innerHTML = '<i class="fas fa-plus"></i>';
+            chatContainer.appendChild(newChatBtn);
+        }
+
+        // Auto-resize do textarea
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        // Permitir enviar com Enter (Shift+Enter para nova linha)
+        userInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Mensagem inicial
+        window.onload = function() {
+            const pendingMessage = localStorage.getItem('pendingMessage');
+            if (pendingMessage) {
+                localStorage.removeItem('pendingMessage');
+                userInput.value = pendingMessage;
+                sendMessage();
+            } else if (!window.isExistingConversation) {
+                setTimeout(() => {
+                    addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Hotéis e clima<br><br>Basta me dizer para onde quer ir! 😊");
+                }, 500);
+            }
+        }
+    </script>
+</body>
+</html>
