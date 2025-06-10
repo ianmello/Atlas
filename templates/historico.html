@@ -83,6 +83,7 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             overflow: hidden;
             cursor: pointer;
+            position: relative;
         }
 
         .conversation-card:hover {
@@ -259,6 +260,76 @@
         .btn-cancelar:hover {
             background: #5a6268;
         }
+
+        .new-chat-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+            transition: var(--transition);
+            z-index: 1000;
+            padding: 0;
+            line-height: 0;
+        }
+        
+        .new-chat-btn:hover {
+            transform: scale(1.1) rotate(180deg);
+            background: var(--primary-dark);
+        }
+
+        .new-chat-btn i {
+            font-size: 24px;
+            line-height: 0;
+            margin: 0;
+            padding: 0;
+        }
+
+        @media (max-width: 768px) {
+            .new-chat-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+            }
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+
+        .delete-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .delete-btn i {
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -266,7 +337,7 @@
         <header>
             <h1><i class="fas fa-history"></i> Histórico de Conversas</h1>
             <div class="header-links">
-                <a href="/chat"><i class="fas fa-home"></i> Início</a>
+                <a href="#" onclick="startNewChat()"><i class="fas fa-home"></i> Início</a>
                 {% if conversations|length > 0 %}
                 <a href="#" onclick="limparHistorico()" class="btn-limpar"><i class="fas fa-trash"></i> Limpar Histórico</a>
                 {% endif %}
@@ -278,7 +349,7 @@
             <i class="fas fa-comments"></i>
             <h2>Nenhuma conversa encontrada</h2>
             <p>Comece uma nova conversa para planejar sua próxima viagem!</p>
-            <a href="/" class="btn">
+            <a href="#" onclick="startNewChat()" class="btn">
                 <i class="fas fa-plus"></i>
                 Nova Conversa
             </a>
@@ -286,12 +357,15 @@
         {% else %}
         <div class="conversations-grid">
             {% for conv in conversations %}
-            <div class="conversation-card" onclick="window.location.href='/conversation/{{ conv.id }}'">
+            <div class="conversation-card">
                 <div class="card-header">
                     <div class="card-title">{{ conv.title }}</div>
                     <div class="card-timestamp"><i class="far fa-clock"></i> {{ conv.timestamp }}</div>
+                    <button class="delete-btn" data-conversation-id="{{ conv.id }}" title="Excluir conversa">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
-                <div class="card-content">
+                <div class="card-content" onclick="window.location.href='/conversation/{{ conv.id }}'">
                     <div class="card-details">
                         {% if conv.origin %}
                         <div class="detail-item">
@@ -318,6 +392,11 @@
         </div>
         {% endif %}
     </div>
+
+    <!-- Botão de novo chat -->
+    <button class="new-chat-btn" onclick="startNewChat()" title="Iniciar nova conversa">
+        <i class="fas fa-plus"></i>
+    </button>
 
     <!-- Modal de confirmação -->
     <div id="confirmacao-modal">
@@ -355,7 +434,7 @@
             fetch('/limpar_historico', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 }
             })
             .then(response => response.json())
@@ -374,6 +453,70 @@
                 fecharModal();
             });
         }
+
+        function startNewChat() {
+            // Chama a API para resetar o chat
+            fetch('/new_chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Redireciona para a página de chat
+                    window.location.href = '/chat';
+                } else {
+                    console.error('Erro ao iniciar novo chat:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+            });
+        }
+
+        function confirmarExclusaoConversa(conversationId) {
+            if (confirm('Tem certeza que deseja excluir esta conversa?')) {
+                fetch(`/excluir_conversa/${conversationId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove o card da conversa do DOM
+                        const card = document.querySelector(`.conversation-card`);
+                        if (card) {
+                            card.remove();
+                            
+                            // Se não houver mais conversas, recarrega a página para mostrar o estado vazio
+                            const remainingCards = document.querySelectorAll('.conversation-card');
+                            if (remainingCards.length === 0) {
+                                window.location.reload();
+                            }
+                        }
+                    } else {
+                        alert('Erro ao excluir conversa: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao excluir conversa');
+                });
+            }
+        }
+
+        // Adiciona handlers para os botões de delete
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const conversationId = btn.dataset.conversationId;
+                confirmarExclusaoConversa(conversationId);
+            });
+        });
     </script>
 </body>
 </html> 

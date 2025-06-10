@@ -108,6 +108,22 @@ CITY_IATA_CODES = {
     "bogotá": "BOG"
 }
 
+# Lista de palavras para descartar após a extração
+PALAVRAS_DESCARTAR = [
+    "para", "até", "e", "com", "por", "durante", "no", "na", "do", "da", "dos", "das", 
+    "de", "em", "ao", "aos", "às", "as", "os", "o", "a", "um", "uma", "uns", "umas"
+]
+
+def limpar_nome_cidade(texto):
+    palavras = texto.strip().split()
+    resultado = []
+    for palavra in palavras:
+        if palavra.lower() not in PALAVRAS_DESCARTAR:
+            resultado.append(palavra)
+        else:
+            break  # Para na primeira preposição/conector
+    return " ".join(resultado)
+
 def get_exchange_rate(currency: str = "USD") -> float:
     try:
         today = datetime.now().strftime("%m-%d-%Y")
@@ -121,91 +137,85 @@ def get_exchange_rate(currency: str = "USD") -> float:
         return float(data['value'][0]['cotacaoVenda'])
     except:
         return 5.0
-# ... existing code ...
+
 def get_ai_response(messages):
     try:
-        # Verifica se a última mensagem do usuário é sobre voos
+        # Verifica se a última mensagem do usuário tem origem e destino
         last_message = messages[-1]["content"].lower()
-        if any(word in last_message for word in ["voo", "voos", "passagem", "passagens", "voar"]):
-            # Extrai origem e destino
-            origem = extrair_origem(last_message)
-            destino = extrair_destino(last_message)
-            datas = extrair_datas(last_message)
+        print(f"[DEBUG] Analisando mensagem: {last_message}")
+        
+        # Extrai origem e destino
+        origem = extrair_origem(last_message)
+        destino = extrair_destino(last_message)
+        datas = extrair_datas(last_message)
+        
+        print(f"[DEBUG] Origem extraída: {origem}")
+        print(f"[DEBUG] Destino extraído: {destino}")
+        
+        # Se tem origem e destino válidos, busca voos
+        if origem != "Origem não informada" and destino != "Destino não informado":
+            print("[DEBUG] Buscando voos...")
+            # Busca os códigos IATA
+            origem_iata = buscar_codigo_iata(origem)
+            destino_iata = buscar_codigo_iata(destino)
+            print(f"[DEBUG] Códigos IATA: {origem_iata} -> {destino_iata}")
             
-            # Se tiver origem e destino, busca voos
-            if origem != "Origem não informada" and destino != "Destino não informado":
-                # Obtém códigos IATA
-                origem_iata = buscar_codigo_iata(origem)
-                destino_iata = buscar_codigo_iata(destino)
-                
-                # Define a data (usa data_inicio se disponível, senão usa data daqui 7 dias)
-                data_voo = datas.get("data_inicio") if datas.get("data_inicio") else (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
-                
-                # Busca voos
-                voos = get_flights(origem_iata, destino_iata, data_voo)
-                
-                if voos and voos.get("data"):
-                    # Formata a resposta com os voos encontrados
-                    voos_info = "\n\nEncontrei os seguintes voos:\n"
-                    for voo in voos["data"][:3]:  # Mostra até 3 voos
-                        preco = voo.get("price", {}).get("formatted", "Preço não disponível")
-                        voos_info += f"\n• Voo {voo.get('id', 'N/A')}: {preco}"
-                        
-                        # Adiciona informações dos segmentos
-                        for segment in voo.get("itineraries", [{}])[0].get("segments", []):
-                            departure = segment.get("departure", {})
-                            arrival = segment.get("arrival", {})
-                            voos_info += f"\n  Partida: {departure.get('iataCode')} às {departure.get('at', 'N/A')}"
-                            voos_info += f"\n  Chegada: {arrival.get('iataCode')} às {arrival.get('at', 'N/A')}"
-                            
-                        voos_info += "\n"
-                else:
-                    voos_info = "\n\nDesculpe, não encontrei voos disponíveis para essa rota e data."
+            voos = get_flights(origem_iata, destino_iata, datas.get('data_inicio'))
+            if voos and 'data' in voos and voos['data']:
+                print("[DEBUG] Voos encontrados")
+                return format_flights_response(voos['data'])
             else:
-                voos_info = "\n\nPara buscar voos, preciso saber a origem e o destino da viagem."
-        else:
-            voos_info = ""
-            
-        # Sistema base para o chatbot
-        system_prompt = {
-            "role": "system",
-            "content": (
-                "Você é um assistente especializado em criação de roteiros de viagens personalizados. "
-                "Responda apenas perguntas relacionadas a roteiros, locais turísticos, atividades, transporte e dicas de viagem. "
-                "Se a pergunta não for sobre isso, recuse educadamente. "
-                "Quando sugerir pontos turísticos, seja detalhado incluindo os melhores horários para visita, custos aproximados "
-                "e dicas úteis como o que vestir ou levar. Personalize suas respostas de acordo com a duração da viagem e preferências "
-                "do usuário. Inclua sugestões de restaurantes locais com pratos típicos que valem a pena experimentar."
-            )
-        }
+                print("[DEBUG] Nenhum voo encontrado")
         
-        # Prepara as mensagens para a API
-        full_messages = [system_prompt] + [{"role": "user", "content": m["content"]} for m in messages if m["role"] == "user"]
-        
-        # Faz a chamada para a API
+        # Continua com a resposta normal do Gemini
+        print("[DEBUG] Gerando resposta do Gemini...")
         headers = {"Content-Type": "application/json"}
-        data = {"contents": [{"parts": [{"text": m["content"]} for m in full_messages]}]}
-        
-        response = requests.post(
-            f"{GEMINI_API_URL}?key={GEMINI_API_KEY}",
-            headers=headers,
-            json=data
-        )
-        response.raise_for_status()
-        result = response.json()
-        
-        # Obtém a resposta base do modelo
-        base_response = result['candidates'][0]['content']['parts'][0]['text']
-        
-        # Adiciona informações de voos se disponíveis
-        if voos_info:
-            return base_response + voos_info
-        
-        return base_response
+        if GEMINI_API_KEY:
+            url = f"{GEMINI_API_URL}?key={GEMINI_API_KEY}"
+            data = {
+                "contents": [
+                    {"role": m["role"], "parts": [{"text": m["content"]}]} for m in messages
+                ]
+            }
+            response = requests.post(url, headers=headers, data=json.dumps(data))
+            if response.status_code == 200:
+                resposta = response.json()
+                try:
+                    return resposta["candidates"][0]["content"]["parts"][0]["text"]
+                except Exception as e:
+                    print(f"[ERROR] Erro ao extrair resposta do Gemini: {e}")
+                    return "Desculpe, não consegui gerar uma resposta agora."
+            else:
+                print(f"[ERROR] Erro na API Gemini: {response.status_code} - {response.text}")
+                return "Desculpe, não consegui gerar uma resposta agora."
+        else:
+            return "Desculpe, a chave da API Gemini não está configurada."
         
     except Exception as e:
-        print(f"Erro na API Gemini: {e}")
-        return "Erro ao gerar resposta. Por favor, tente novamente mais tarde."
+        print(f"[ERROR] Erro ao processar mensagem: {str(e)}")
+        return "Desculpe, ocorreu um erro ao processar sua mensagem."
+
+def format_flights_response(flights):
+    """Formata a resposta dos voos de forma mais amigável"""
+    if not flights:
+        return "Desculpe, não encontrei voos disponíveis para esta rota."
+    
+    response = "Encontrei os seguintes voos disponíveis:\n\n"
+    
+    for i, flight in enumerate(flights, 1):
+        response += f"• Voo {i}: R$ {format_price(flight['price'])}\n"
+        
+        # Formata cada segmento do voo
+        for segment in flight['itineraries'][0]['segments']:
+            departure = datetime.fromisoformat(segment['departure']['at'].replace('Z', '+00:00'))
+            arrival = datetime.fromisoformat(segment['arrival']['at'].replace('Z', '+00:00'))
+            
+            response += f"  Partida de {segment['departure']['iataCode']}: {departure.strftime('%d/%m/%Y às %H:%M')}\n"
+            response += f"  Chegada em {segment['arrival']['iataCode']}: {arrival.strftime('%d/%m/%Y às %H:%M')}\n"
+        
+        response += "\n"
+    
+    return response
 
 def buscar_codigo_iata(nome_destino: str) -> str:
     """Retorna o código IATA para a cidade especificada"""
@@ -285,81 +295,119 @@ def buscar_codigo_iata(nome_destino: str) -> str:
     except Exception as e:
         print(f"Erro ao buscar código IATA: {e}")
         return nome_destino[:3].upper()
+
 def get_flights(origin: str, destination: str, date: str):
     """Busca voos entre origem e destino na data especificada"""
     try:
         print(f"[DEBUG] get_flights chamada com: origem={origin}, destino={destination}, data={date}")
+        
+        # Verifica se as credenciais da API estão configuradas
+        client_id = os.getenv("AMADEUS_CLIENT_ID")
+        client_secret = os.getenv("AMADEUS_CLIENT_SECRET")
+        
+        if not client_id or not client_secret:
+            print("[ERROR] Credenciais da API Amadeus não configuradas")
+            return {"data": [], "error": "Credenciais da API não configuradas"}
+        
         # Verifica se os códigos são válidos
         if not origin or not destination:
-            print(f"Códigos IATA inválidos ou vazios: origem={origin}, destino={destination}")
-            return {"data": []}
+            print(f"[ERROR] Códigos IATA inválidos ou vazios: origem={origin}, destino={destination}")
+            return {"data": [], "error": "Códigos IATA inválidos"}
             
         # Garante que os códigos estão no formato correto (3 letras maiúsculas)
         origin = origin.strip().upper()
         destination = destination.strip().upper()
         
         if len(origin) != 3 or len(destination) != 3:
-            print(f"Códigos IATA com tamanho incorreto: origem={origin} ({len(origin)}), destino={destination} ({len(destination)})")
-            return {"data": []}
+            print(f"[ERROR] Códigos IATA com tamanho incorreto: origem={origin} ({len(origin)}), destino={destination} ({len(destination)})")
+            return {"data": [], "error": "Formato de código IATA inválido"}
             
         # Verifica se a data está no formato correto
         try:
-            datetime.strptime(date, "%Y-%m-%d")
+            parsed_date = datetime.strptime(date, "%Y-%m-%d")
+            # Verifica se a data não é no passado
+            if parsed_date.date() < datetime.now().date():
+                print(f"[ERROR] Data no passado: {date}")
+                data_atual = datetime.now() + timedelta(days=7)
+                date = data_atual.strftime("%Y-%m-%d")
+                print(f"[DEBUG] Ajustando para data futura: {date}")
         except ValueError:
-            print(f"Formato de data inválido: {date}")
+            print(f"[ERROR] Formato de data inválido: {date}")
             data_atual = datetime.now() + timedelta(days=7)
             date = data_atual.strftime("%Y-%m-%d")
+            print(f"[DEBUG] Usando data padrão: {date}")
         
-        print(f"Buscando voos: {origin} -> {destination}, data: {date}")
+        print(f"[DEBUG] Buscando voos: {origin} -> {destination}, data: {date}")
         
+        # Autenticação na API
         auth_url = "https://test.api.amadeus.com/v1/security/oauth2/token"
         auth_data = {
             "grant_type": "client_credentials",
-            "client_id": os.getenv("AMADEUS_CLIENT_ID"),
-            "client_secret": os.getenv("AMADEUS_CLIENT_SECRET")
+            "client_id": client_id,
+            "client_secret": client_secret
         }
-        auth_response = requests.post(auth_url, data=auth_data, verify=False)
+        
+        try:
+            auth_response = requests.post(auth_url, data=auth_data, verify=False, timeout=10)
+            auth_response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            print(f"[ERROR] Erro na autenticação com a API Amadeus: {str(e)}")
+            return {"data": [], "error": "Erro de autenticação na API"}
+            
         if auth_response.status_code != 200:
-            print(f"Erro na autenticação com a API Amadeus: {auth_response.text}")
-            return {"data": []}
+            print(f"[ERROR] Erro na autenticação com a API Amadeus: {auth_response.text}")
+            return {"data": [], "error": "Erro de autenticação na API"}
             
         token = auth_response.json().get("access_token")
         if not token:
-            print("Token de acesso não encontrado na resposta de autenticação")
-            return {"data": []}
+            print("[ERROR] Token de acesso não encontrado na resposta de autenticação")
+            return {"data": [], "error": "Token de acesso não encontrado"}
 
+        # Busca de voos
         params = {
             "originLocationCode": origin,
             "destinationLocationCode": destination,
             "departureDate": date,
             "adults": 1,
             "max": 5,
-            "currencyCode": "USD"  # Garante que os preços estejam em USD
+            "currencyCode": "USD"
         }
-        headers = {"Authorization": f"Bearer {token}"}
-        response = requests.get(FLIGHT_API_URL, headers=headers, params=params, verify=False)
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/json"
+        }
+        
+        try:
+            response = requests.get(FLIGHT_API_URL, headers=headers, params=params, verify=False, timeout=15)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            print(f"[ERROR] Erro na requisição de voos: {str(e)}")
+            return {"data": [], "error": "Erro na busca de voos"}
         
         print(f"[DEBUG] Resposta da API de voos: {response.status_code}")
-        print(f"[DEBUG] Conteúdo da resposta: {response.text[:500]}...")  # Primeiros 500 caracteres
+        print(f"[DEBUG] Conteúdo da resposta: {response.text[:500]}...")
         
         if response.status_code != 200:
-            print(f"Erro na API de voos: {response.status_code} - {response.text}")
-            return {"data": []}
+            print(f"[ERROR] Erro na API de voos: {response.status_code} - {response.text}")
+            return {"data": [], "error": "Erro na API de voos"}
             
         result = response.json()
         
         if "data" not in result or not result["data"]:
-            print(f"Resposta da API sem dados de voos: {result}")
+            print(f"[DEBUG] Resposta da API sem dados de voos: {result}")
             # Tentativa alternativa: inverter origem e destino para testar
             params["originLocationCode"], params["destinationLocationCode"] = params["destinationLocationCode"], params["originLocationCode"]
-            print(f"Tentando busca invertida: {params['originLocationCode']} -> {params['destinationLocationCode']}")
+            print(f"[DEBUG] Tentando busca invertida: {params['originLocationCode']} -> {params['destinationLocationCode']}")
             
-            alt_response = requests.get(FLIGHT_API_URL, headers=headers, params=params, verify=False)
-            if alt_response.status_code == 200:
-                alt_result = alt_response.json()
-                if "data" in alt_result and alt_result["data"]:
-                    print("Busca invertida encontrou voos!")
-                    return alt_result
+            try:
+                alt_response = requests.get(FLIGHT_API_URL, headers=headers, params=params, verify=False, timeout=15)
+                if alt_response.status_code == 200:
+                    alt_result = alt_response.json()
+                    if "data" in alt_result and alt_result["data"]:
+                        print("[DEBUG] Busca invertida encontrou voos!")
+                        return alt_result
+            except requests.exceptions.RequestException as e:
+                print(f"[ERROR] Erro na busca invertida: {str(e)}")
         
         # Formata os preços antes de retornar
         if "data" in result:
@@ -369,8 +417,9 @@ def get_flights(origin: str, destination: str, date: str):
         
         return result
     except Exception as e:
-        print(f"Erro ao buscar voos: {e}")
-        return {"data": []}
+        print(f"[ERROR] Erro ao buscar voos: {str(e)}")
+        return {"data": [], "error": str(e)}
+
 def buscar_hoteis(cidade_codigo: str):
     try:
         if not cidade_codigo or len(cidade_codigo.strip()) != 3:
@@ -461,6 +510,7 @@ def buscar_hoteis(cidade_codigo: str):
     except Exception as e:
         print(f"Erro ao buscar hotéis: {e}")
         return []
+
 def obter_previsao_tempo(cidade: str, data_inicio=None, data_fim=None):
     try:
         coords = CITY_COORDINATES.get(cidade.lower())
@@ -500,6 +550,7 @@ def obter_previsao_tempo(cidade: str, data_inicio=None, data_fim=None):
     except Exception as e:
         print(f"Erro ao obter previsão do tempo: {e}")
         return None
+
 def format_price(price_data):
     """Formata o preço do voo em reais com base no valor em dólares"""
     try:
@@ -533,49 +584,101 @@ def format_price(price_data):
 
 def extrair_destino(texto: str) -> str:
     try:
+        print(f"[DEBUG] Extraindo destino do texto: {texto}")
         padroes = [
-            r'(?:para|em|no|na)\s+([A-Za-zÀ-ÿ\s]+?)(?:\s+com|\s+por|\s+durante|\s*$|,)',
-            r'roteiro\s+(?:de|para)\s+[A-Za-zÀ-ÿ\s]+?\s+(?:em|para)\s+([A-Za-zÀ-ÿ\s]+)',
-            r'conhecer\s+([A-Za-zÀ-ÿ\s]+?)(?:\s+e|\s+com|\s+por|\s+durante|\s*$|,)',
-            r'visitar\s+([A-Za-zÀ-ÿ\s]+?)(?:\s+e|\s+com|\s+por|\s+durante|\s*$|,)'
+            # Padrão para "para [destino]"
+            r'(?:roteiro|viagem|viajar|ir)\s+para\s+([A-Za-zÀ-ÿ\s]+?)(?:\s+saindo|\s+partindo|\s+no dia|\s+em|\s+com|\s+por|\s+durante|\s*$|,)',
+            # Padrão para "em [destino]"
+            r'(?:roteiro|viagem|viajar)\s+(?:em|no|na|para)\s+([A-Za-zÀ-ÿ\s]+?)(?:\s+saindo|\s+partindo|\s+no dia|\s+em|\s+com|\s+por|\s+durante|\s*$|,)',
+            # Padrão para "conhecer [destino]"
+            r'conhecer\s+([A-Za-zÀ-ÿ\s]+?)(?:\s+saindo|\s+partindo|\s+no dia|\s+em|\s+com|\s+por|\s+durante|\s*$|,)',
+            # Padrão para "visitar [destino]"
+            r'visitar\s+([A-Za-zÀ-ÿ\s]+?)(?:\s+saindo|\s+partindo|\s+no dia|\s+em|\s+com|\s+por|\s+durante|\s*$|,)',
+            # Padrão para "para [destino] saindo de [origem]"
+            r'para\s+([A-Za-zÀ-ÿ\s]+?)\s+saindo\s+de',
+            # Padrão para "de [origem] para [destino]"
+            r'de\s+[A-Za-zÀ-ÿ\s]+?\s+para\s+([A-Za-zÀ-ÿ\s]+?)(?:\s+no dia|\s+em|\s+com|\s+por|\s+durante|\s*$|,)'
         ]
+        
+        # Lista de palavras que não podem ser destinos
+        palavras_invalidas = ['casal', 'familia', 'amigos', 'sozinho', 'grupo', 'dias', 'semanas', 'meses', 'voos', 'roteiro', 'viagem']
+        
         for padrao in padroes:
             match = re.search(padrao, texto, re.IGNORECASE)
             if match:
-                return match.group(1).strip()
+                destino = match.group(1).strip()
+                # Verifica se o destino encontrado não é uma palavra inválida
+                if destino.lower() not in palavras_invalidas:
+                    print(f"[DEBUG] Destino encontrado com padrão '{padrao}': {destino}")
+                    return destino
+                else:
+                    print(f"[DEBUG] Destino encontrado '{destino}' é uma palavra inválida, continuando busca...")
+                    continue
+                    
+        # Se não encontrou com os padrões principais, tenta encontrar qualquer menção a país/cidade conhecida
+        paises_cidades = [
+            'estados unidos', 'frança', 'italia', 'espanha', 'portugal', 'alemanha', 
+            'japão', 'china', 'brasil', 'argentina', 'chile', 'peru', 'mexico',
+            'são paulo', 'rio de janeiro', 'paris', 'londres', 'tokyo', 'nova york',
+            'miami', 'orlando', 'lisboa', 'madrid', 'barcelona', 'roma', 'los angeles',
+            'massachussets', 'campinas', 'sorocaba'
+        ]
+        
+        for local in paises_cidades:
+            if local in texto.lower():
+                print(f"[DEBUG] Destino encontrado por menção direta: {local}")
+                return local.title()
+                
+        print("[DEBUG] Nenhum destino válido encontrado")
         return "Destino não informado"
-    except:
+    except Exception as e:
+        print(f"[ERROR] Erro ao extrair destino: {str(e)}")
         return "Destino não informado"
-
-# Lista de palavras para descartar após a extração
-PALAVRAS_DESCARTAR = [
-    "para", "até", "e", "com", "por", "durante", "no", "na", "do", "da", "dos", "das", "de", "em", "ao", "aos", "às", "as", "os", "o", "a", "um", "uma", "uns", "umas"
-]
-
-def limpar_nome_cidade(texto):
-    palavras = texto.strip().split()
-    resultado = []
-    for palavra in palavras:
-        if palavra.lower() not in PALAVRAS_DESCARTAR:
-            resultado.append(palavra)
-        else:
-            break  # Para na primeira preposição/conector
-    return " ".join(resultado)
 
 def extrair_origem(texto: str) -> str:
-    padroes = [
-        r'saindo de\s+([A-Za-zÀ-ÿ\s]+?)(?:\s+e|\s+com|\s+por|\s+durante|\s*$|,)',
-        r'partindo de\s+([A-Za-zÀ-ÿ\s]+?)(?:\s+e|\s+com|\s+por|\s+durante|\s*$|,)',
-        r'desde\s+([A-Za-zÀ-ÿ\s]+?)(?:\s+e|\s+com|\s+por|\s+durante|\s*$|,)',
-        r'de\s+([A-Za-zÀ-ÿ\s]+)\s+(?:para|até)',
-        r'saindo do\s+([A-Za-zÀ-ÿ\s]+?)(?:\s+e|\s+com|\s+por|\s+durante|\s*$|,)',
-    ]
-    for padrao in padroes:
-        match = re.search(padrao, texto, re.IGNORECASE)
-        if match:
-            cidade = limpar_nome_cidade(match.group(1))
-            return cidade
-    return "Origem não informada"
+    try:
+        print(f"[DEBUG] Extraindo origem do texto: {texto}")
+        padroes = [
+            r'saindo de\s+([A-Za-zÀ-ÿ\s]+?)(?:\s+para|\s+no dia|\s+em|\s+e|\s+com|\s+por|\s+durante|\s*$|,)',
+            r'partindo de\s+([A-Za-zÀ-ÿ\s]+?)(?:\s+para|\s+no dia|\s+em|\s+e|\s+com|\s+por|\s+durante|\s*$|,)',
+            r'desde\s+([A-Za-zÀ-ÿ\s]+?)(?:\s+para|\s+no dia|\s+em|\s+e|\s+com|\s+por|\s+durante|\s*$|,)',
+            r'de\s+([A-Za-zÀ-ÿ\s]+?)\s+(?:para|até|no dia)',
+            # Padrão para "de [origem] para [destino]"
+            r'de\s+([A-Za-zÀ-ÿ\s]+?)\s+para\s+[A-Za-zÀ-ÿ\s]+'
+        ]
+        
+        # Lista de palavras que não podem ser origens
+        palavras_invalidas = ['casal', 'familia', 'amigos', 'sozinho', 'grupo', 'dias', 'semanas', 'meses', 'voos', 'roteiro', 'viagem']
+        
+        for padrao in padroes:
+            match = re.search(padrao, texto, re.IGNORECASE)
+            if match:
+                origem = limpar_nome_cidade(match.group(1))
+                # Verifica se a origem encontrada não é uma palavra inválida
+                if origem.lower() not in palavras_invalidas:
+                    print(f"[DEBUG] Origem encontrada com padrão '{padrao}': {origem}")
+                    return origem
+                else:
+                    print(f"[DEBUG] Origem encontrada '{origem}' é uma palavra inválida, continuando busca...")
+                    continue
+        
+        # Se não encontrou com os padrões principais, tenta encontrar qualquer menção a cidade brasileira conhecida
+        cidades_br = [
+            'são paulo', 'rio de janeiro', 'brasília', 'curitiba', 'florianópolis',
+            'salvador', 'recife', 'fortaleza', 'manaus', 'belém', 'porto alegre',
+            'belo horizonte', 'vitória', 'natal', 'joão pessoa', 'campinas', 'sorocaba'
+        ]
+        
+        for cidade in cidades_br:
+            if cidade in texto.lower():
+                print(f"[DEBUG] Origem encontrada por menção direta: {cidade}")
+                return cidade.title()
+                
+        print("[DEBUG] Nenhuma origem válida encontrada")
+        return "Origem não informada"
+    except Exception as e:
+        print(f"[ERROR] Erro ao extrair origem: {str(e)}")
+        return "Origem não informada"
 
 def extrair_datas(texto: str):
     meses = {
@@ -646,6 +749,7 @@ def extrair_datas(texto: str):
             resultado["duracao"] = dias
     
     return resultado
+
 def obter_coordenadas(cidade: str):
     """Obtém as coordenadas de uma cidade usando múltiplas abordagens para contornar falhas de DNS/conexão"""
     import time
@@ -877,6 +981,7 @@ def calcular_distancia(origem: str, destino: str):
     except Exception as e:
         print(f"Erro ao calcular distância: {e}")
         return None
+
 def salvar_historico(sessao_id, dados_busca, é_nova_conversa=False):
     """
     Salva uma entrada no histórico.
@@ -1017,14 +1122,11 @@ def chat():
         conversation_id = session.get("conversation_id")
         print(f"ID da conversa atual: {conversation_id}")
         
-        # Força nova conversa se vier da página inicial
+        # Força nova conversa se vier da página inicial ou se a flag estiver ativa
         initial_message = request.json.get('initial_message', False)
-        if initial_message:
-            print("Mensagem inicial detectada, forçando nova conversa")
-            conversation_id = None
-            session.pop("conversation_id", None)
+        is_new_conversation = initial_message or session.get("nova_conversa", False)
         
-        if not conversation_id:
+        if is_new_conversation:
             print("Iniciando nova conversa")
             # Limpa o contexto anterior
             if user_id in chat_context:
@@ -1064,6 +1166,9 @@ def chat():
                 db.session.commit()
                 session["conversation_id"] = conversation.id
                 print(f"Nova conversa criada com ID: {conversation.id}")
+                
+                # Limpa a flag de nova conversa
+                session.pop("nova_conversa", None)
             except Exception as e:
                 print(f"Erro ao salvar conversa: {e}")
                 db.session.rollback()
@@ -1147,13 +1252,17 @@ def new_chat():
         session.pop("origem", None)
         session.pop("data_inicio", None)
         session.pop("data_fim", None)
+        session.pop("nova_conversa", None)
+        
+        # Força uma nova conversa na próxima mensagem
+        session["nova_conversa"] = True
         
         print("Nova conversa iniciada com sucesso")
-        return jsonify({"status": "success", "message": "Nova conversa iniciada"})
+        return jsonify({"success": True, "message": "Nova conversa iniciada"})
         
     except Exception as e:
         print(f"Erro ao iniciar nova conversa: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/cambio', methods=['GET'])
 def cambio():
@@ -1196,6 +1305,46 @@ def limpar_historico():
         
     except Exception as e:
         print(f"Erro ao limpar histórico: {e}")
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/excluir_conversa/<int:conversation_id>', methods=['POST'])
+def excluir_conversa(conversation_id):
+    try:
+        user_id = session.get("id")
+        if not user_id:
+            return jsonify({"success": False, "error": "Usuário não autenticado"}), 401
+        
+        print(f"Excluindo conversa {conversation_id} do usuário {user_id}")
+        
+        # Busca a conversa
+        conversation = Conversation.query.get_or_404(conversation_id)
+        
+        # Verifica se a conversa pertence ao usuário
+        if conversation.user_id != user_id:
+            return jsonify({"success": False, "error": "Conversa não pertence ao usuário"}), 403
+        
+        # Se a conversa atual está sendo excluída, limpa a sessão
+        if session.get("conversation_id") == conversation_id:
+            session.pop("conversation_id", None)
+            session.pop("destino", None)
+            session.pop("origem", None)
+            session.pop("data_inicio", None)
+            session.pop("data_fim", None)
+            
+            # Limpa o contexto do chat se necessário
+            if user_id in chat_context:
+                chat_context[user_id] = []
+        
+        # Deleta a conversa (as mensagens serão deletadas automaticamente devido ao cascade)
+        db.session.delete(conversation)
+        db.session.commit()
+        
+        print(f"Conversa {conversation_id} excluída com sucesso")
+        return jsonify({"success": True})
+        
+    except Exception as e:
+        print(f"Erro ao excluir conversa: {e}")
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
 
