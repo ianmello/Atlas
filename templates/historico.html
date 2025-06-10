@@ -15,26 +15,18 @@
             --border-radius: 12px;
             --shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Poppins', sans-serif;
             background-color: var(--light-bg);
             color: var(--text-color);
             line-height: 1.6;
         }
-
         .container {
             max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
         }
-
         header {
             display: flex;
             justify-content: space-between;
@@ -43,7 +35,6 @@
             padding: 20px 0;
             border-bottom: 1px solid #eee;
         }
-
         h1 {
             color: var(--primary-color);
             font-size: 2rem;
@@ -52,7 +43,6 @@
             align-items: center;
             gap: 10px;
         }
-
         .header-links a {
             color: var(--primary-color);
             text-decoration: none;
@@ -64,18 +54,15 @@
             border-radius: var(--border-radius);
             transition: all 0.3s ease;
         }
-
         .header-links a:hover {
             background-color: var(--primary-light);
         }
-
         .conversations-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
             margin-bottom: 40px;
         }
-
         .conversation-card {
             background: white;
             border-radius: var(--border-radius);
@@ -85,51 +72,86 @@
             cursor: pointer;
             position: relative;
         }
-
         .conversation-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
-
         .card-header {
             background: var(--primary-color);
             color: white;
-            padding: 15px 20px;
+            padding: 15px 20px 10px 20px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-height: 40px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            border-bottom: none;
         }
-
         .card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 5px;
+            flex: 1 1 auto;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-
+        .card-subheader {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--primary-color);
+            color: white;
+            padding: 0 20px 10px 20px;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #e8f0fe;
+        }
         .card-timestamp {
-            font-size: 0.85rem;
-            opacity: 0.9;
+            opacity: 0.95;
+            white-space: nowrap;
         }
-
+        .delete-btn {
+            position: static;
+            margin-left: 10px;
+            flex-shrink: 0;
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+        .delete-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+        .delete-btn i {
+            font-size: 16px;
+        }
         .card-content {
             padding: 20px;
         }
-
         .card-details {
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
-
         .detail-item {
             display: flex;
             align-items: center;
             gap: 8px;
             font-size: 0.9rem;
         }
-
         .detail-item i {
             color: var(--primary-color);
             width: 20px;
         }
-
         .tag {
             display: inline-block;
             background: var(--primary-light);
@@ -139,7 +161,6 @@
             font-size: 0.85rem;
             font-weight: 500;
         }
-
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -147,23 +168,19 @@
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
         }
-
         .empty-state i {
             font-size: 3rem;
             color: var(--primary-color);
             margin-bottom: 20px;
         }
-
         .empty-state h2 {
             color: var(--text-color);
             margin-bottom: 10px;
         }
-
         .empty-state p {
             color: #666;
             margin-bottom: 20px;
         }
-
         .btn {
             display: inline-flex;
             align-items: center;
@@ -176,35 +193,22 @@
             font-weight: 500;
             transition: all 0.3s ease;
         }
-
         .btn:hover {
             background: #3367d6;
             transform: translateY(-2px);
         }
-
         @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-
-            h1 {
-                font-size: 1.5rem;
-            }
-
-            .conversations-grid {
-                grid-template-columns: 1fr;
-            }
+            .container { padding: 10px; }
+            h1 { font-size: 1.5rem; }
+            .conversations-grid { grid-template-columns: 1fr; }
         }
-
         .btn-limpar {
             color: #dc3545 !important;
             margin-left: 15px;
         }
-        
         .btn-limpar:hover {
             background-color: #ffebee !important;
         }
-        
         #confirmacao-modal {
             display: none;
             position: fixed;
@@ -217,7 +221,6 @@
             justify-content: center;
             align-items: center;
         }
-        
         .modal-content {
             background: white;
             padding: 30px;
@@ -226,14 +229,12 @@
             max-width: 400px;
             width: 90%;
         }
-        
         .modal-buttons {
             display: flex;
             justify-content: center;
             gap: 15px;
             margin-top: 20px;
         }
-        
         .modal-btn {
             padding: 8px 20px;
             border-radius: 6px;
@@ -242,25 +243,20 @@
             font-weight: 500;
             transition: all 0.3s ease;
         }
-        
         .btn-confirmar {
             background: #dc3545;
             color: white;
         }
-        
         .btn-confirmar:hover {
             background: #c82333;
         }
-        
         .btn-cancelar {
             background: #6c757d;
             color: white;
         }
-        
         .btn-cancelar:hover {
             background: #5a6268;
         }
-
         .new-chat-btn {
             position: fixed;
             bottom: 30px;
@@ -281,19 +277,16 @@
             padding: 0;
             line-height: 0;
         }
-        
         .new-chat-btn:hover {
             transform: scale(1.1) rotate(180deg);
             background: var(--primary-dark);
         }
-
         .new-chat-btn i {
             font-size: 24px;
             line-height: 0;
             margin: 0;
             padding: 0;
         }
-
         @media (max-width: 768px) {
             .new-chat-btn {
                 bottom: 20px;
@@ -301,34 +294,6 @@
                 width: 50px;
                 height: 50px;
             }
-        }
-
-        .delete-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: transparent;
-            border: none;
-            color: white;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            z-index: 2;
-        }
-
-        .delete-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.1);
-        }
-
-        .delete-btn i {
-            font-size: 16px;
         }
     </style>
 </head>
@@ -357,15 +322,17 @@
         {% else %}
         <div class="conversations-grid">
             {% for conv in conversations %}
-            <div class="conversation-card">
+            <div class="conversation-card" onclick="window.location.href='/conversation/{{ conv.id }}'">
                 <div class="card-header">
                     <div class="card-title">{{ conv.title }}</div>
-                    <div class="card-timestamp"><i class="far fa-clock"></i> {{ conv.timestamp }}</div>
-                    <button class="delete-btn" data-conversation-id="{{ conv.id }}" title="Excluir conversa">
+                </div>
+                <div class="card-subheader">
+                    <div class="card-timestamp"><i class="far fa-clock"></i> {{ conv.timestamp.strftime('%d/%m/%Y') if conv.timestamp else '' }}</div>
+                    <button class="delete-btn" data-conversation-id="{{ conv.id }}" title="Excluir conversa" onclick="event.stopPropagation();confirmarExclusaoConversa(this.dataset.conversationId)">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
-                <div class="card-content" onclick="window.location.href='/conversation/{{ conv.id }}'">
+                <div class="card-content">
                     <div class="card-details">
                         {% if conv.origin %}
                         <div class="detail-item">
@@ -373,14 +340,12 @@
                             <span class="tag">{{ conv.origin }}</span>
                         </div>
                         {% endif %}
-                        
                         {% if conv.destination %}
                         <div class="detail-item">
                             <i class="fas fa-plane-arrival"></i>
                             <span class="tag">{{ conv.destination }}</span>
                         </div>
                         {% endif %}
-
                         <div class="detail-item">
                             <i class="fas fa-comments"></i>
                             <span class="tag">{{ conv.messages|length }} mensagens</span>
@@ -416,7 +381,6 @@
             card.addEventListener('mouseenter', () => {
                 card.style.transform = 'translateY(-5px)';
             });
-            
             card.addEventListener('mouseleave', () => {
                 card.style.transform = 'translateY(0)';
             });
@@ -425,17 +389,13 @@
         function limparHistorico() {
             document.getElementById('confirmacao-modal').style.display = 'flex';
         }
-        
         function fecharModal() {
             document.getElementById('confirmacao-modal').style.display = 'none';
         }
-        
         function confirmarLimpar() {
             fetch('/limpar_historico', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                headers: { 'Content-Type': 'application/json' }
             })
             .then(response => response.json())
             .then(data => {
@@ -449,50 +409,35 @@
                 console.error('Erro:', error);
                 alert('Erro ao limpar histórico');
             })
-            .finally(() => {
-                fecharModal();
-            });
+            .finally(() => { fecharModal(); });
         }
-
         function startNewChat() {
-            // Chama a API para resetar o chat
             fetch('/new_chat', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                headers: { 'Content-Type': 'application/json' }
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Redireciona para a página de chat
                     window.location.href = '/chat';
                 } else {
                     console.error('Erro ao iniciar novo chat:', data.error);
                 }
             })
-            .catch(error => {
-                console.error('Erro:', error);
-            });
+            .catch(error => { console.error('Erro:', error); });
         }
-
         function confirmarExclusaoConversa(conversationId) {
             if (confirm('Tem certeza que deseja excluir esta conversa?')) {
                 fetch(`/excluir_conversa/${conversationId}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
+                    headers: { 'Content-Type': 'application/json' }
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Remove o card da conversa do DOM
                         const card = document.querySelector(`.conversation-card`);
                         if (card) {
                             card.remove();
-                            
-                            // Se não houver mais conversas, recarrega a página para mostrar o estado vazio
                             const remainingCards = document.querySelectorAll('.conversation-card');
                             if (remainingCards.length === 0) {
                                 window.location.reload();
@@ -508,8 +453,6 @@
                 });
             }
         }
-
-        // Adiciona handlers para os botões de delete
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', (event) => {
                 event.stopPropagation();
@@ -519,4 +462,4 @@
         });
     </script>
 </body>
-</html> 
+</html>

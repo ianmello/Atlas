@@ -140,35 +140,13 @@ def get_exchange_rate(currency: str = "USD") -> float:
 
 def get_ai_response(messages):
     try:
-        # Verifica se a última mensagem do usuário tem origem e destino
         last_message = messages[-1]["content"].lower()
-        print(f"[DEBUG] Analisando mensagem: {last_message}")
-        
-        # Extrai origem e destino
         origem = extrair_origem(last_message)
         destino = extrair_destino(last_message)
         datas = extrair_datas(last_message)
-        
-        print(f"[DEBUG] Origem extraída: {origem}")
-        print(f"[DEBUG] Destino extraído: {destino}")
-        
-        # Se tem origem e destino válidos, busca voos
-        if origem != "Origem não informada" and destino != "Destino não informado":
-            print("[DEBUG] Buscando voos...")
-            # Busca os códigos IATA
-            origem_iata = buscar_codigo_iata(origem)
-            destino_iata = buscar_codigo_iata(destino)
-            print(f"[DEBUG] Códigos IATA: {origem_iata} -> {destino_iata}")
-            
-            voos = get_flights(origem_iata, destino_iata, datas.get('data_inicio'))
-            if voos and 'data' in voos and voos['data']:
-                print("[DEBUG] Voos encontrados")
-                return format_flights_response(voos['data'])
-            else:
-                print("[DEBUG] Nenhum voo encontrado")
-        
-        # Continua com a resposta normal do Gemini
-        print("[DEBUG] Gerando resposta do Gemini...")
+
+        roteiro = ""
+        # Sempre gera um roteiro com Gemini primeiro
         headers = {"Content-Type": "application/json"}
         if GEMINI_API_KEY:
             url = f"{GEMINI_API_URL}?key={GEMINI_API_KEY}"
@@ -181,40 +159,49 @@ def get_ai_response(messages):
             if response.status_code == 200:
                 resposta = response.json()
                 try:
-                    return resposta["candidates"][0]["content"]["parts"][0]["text"]
+                    roteiro = resposta["candidates"][0]["content"]["parts"][0]["text"]
                 except Exception as e:
-                    print(f"[ERROR] Erro ao extrair resposta do Gemini: {e}")
-                    return "Desculpe, não consegui gerar uma resposta agora."
+                    roteiro = "Desculpe, não consegui gerar um roteiro agora."
             else:
-                print(f"[ERROR] Erro na API Gemini: {response.status_code} - {response.text}")
-                return "Desculpe, não consegui gerar uma resposta agora."
+                roteiro = "Desculpe, não consegui gerar um roteiro agora."
         else:
-            return "Desculpe, a chave da API Gemini não está configurada."
-        
+            roteiro = "Desculpe, a chave da API Gemini não está configurada."
+
+        # Se tem origem e destino válidos, busca voos e adiciona ao roteiro
+        if origem != "Origem não informada" and destino != "Destino não informado":
+            origem_iata = buscar_codigo_iata(origem)
+            destino_iata = buscar_codigo_iata(destino)
+            voos = get_flights(origem_iata, destino_iata, datas.get('data_inicio'))
+            if voos and 'data' in voos and voos['data']:
+                roteiro += "\n\n---\n\n" + format_flights_response(voos['data'])
+
+        return roteiro
+
     except Exception as e:
         print(f"[ERROR] Erro ao processar mensagem: {str(e)}")
         return "Desculpe, ocorreu um erro ao processar sua mensagem."
 
 def format_flights_response(flights):
-    """Formata a resposta dos voos de forma mais amigável"""
+    """Formata a resposta dos voos de forma mais amigável, mostrando conexões"""
     if not flights:
         return "Desculpe, não encontrei voos disponíveis para esta rota."
     
     response = "Encontrei os seguintes voos disponíveis:\n\n"
     
     for i, flight in enumerate(flights, 1):
-        response += f"• Voo {i}: R$ {format_price(flight['price'])}\n"
-        
-        # Formata cada segmento do voo
-        for segment in flight['itineraries'][0]['segments']:
+        response += f"• Voo {i}: {format_price(flight['price'])}\n"
+        segments = flight['itineraries'][0]['segments']
+        for idx, segment in enumerate(segments):
             departure = datetime.fromisoformat(segment['departure']['at'].replace('Z', '+00:00'))
             arrival = datetime.fromisoformat(segment['arrival']['at'].replace('Z', '+00:00'))
-            
-            response += f"  Partida de {segment['departure']['iataCode']}: {departure.strftime('%d/%m/%Y às %H:%M')}\n"
-            response += f"  Chegada em {segment['arrival']['iataCode']}: {arrival.strftime('%d/%m/%Y às %H:%M')}\n"
-        
+            if idx == 0:
+                response += f"  Partida de {segment['departure']['iataCode']}: {departure.strftime('%d/%m/%Y às %H:%M')}\n"
+                response += f"  Chegada em {segment['arrival']['iataCode']}: {arrival.strftime('%d/%m/%Y às %H:%M')}\n"
+            else:
+                response += f"  --- CONEXÃO ---\n"
+                response += f"  Partida de {segment['departure']['iataCode']}: {departure.strftime('%d/%m/%Y às %H:%M')}\n"
+                response += f"  Chegada em {segment['arrival']['iataCode']}: {arrival.strftime('%d/%m/%Y às %H:%M')}\n"
         response += "\n"
-    
     return response
 
 def buscar_codigo_iata(nome_destino: str) -> str:
@@ -272,6 +259,8 @@ def buscar_codigo_iata(nome_destino: str) -> str:
             "frança": "CDG",
             "estados unidos": "JFK",  # Nova York, EUA
             "eua": "JFK",
+            "irlanda": "DUB",
+            "dublin": "DUB",
             "italia": "FCO",  # Roma, Itália
             "itália": "FCO",
             "japao": "HND",  # Tóquio, Japão
