@@ -29,6 +29,7 @@
             color: var(--text-color);
             line-height: 1.6;
             min-height: 100vh;
+            padding-bottom: 120px;
         }
         
         .container {
@@ -37,7 +38,8 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            height: 100vh;
+            min-height: calc(100vh - 80px);
+            margin-top: 80px;
         }
         
         header {
@@ -45,7 +47,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 20px 0;
-            margin-bottom: 20px;
+            margin-bottom: 5px;
             border-bottom: 2px solid rgba(66, 133, 244, 0.1);
         }
         
@@ -81,7 +83,7 @@
             background: white;
             border-radius: var(--border-radius);
             padding: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 5px;
             overflow-y: auto;
             box-shadow: var(--shadow);
             position: relative;
@@ -125,14 +127,17 @@
         
         .input-container {
             position: relative;
-            margin-bottom: 20px;
+            margin-bottom: 5px;
             display: flex;
             gap: 10px;
+            align-items: flex-start;
         }
         
         #user-input {
             flex: 1;
+            width: 100%;
             padding: 16px 20px;
+            padding-right: 50px;
             border-radius: var(--border-radius);
             border: 2px solid rgba(66, 133, 244, 0.1);
             font-size: 1rem;
@@ -144,6 +149,7 @@
             line-height: 1.5;
             background: white;
             box-shadow: var(--shadow);
+            overflow: hidden;
         }
         
         #user-input:focus {
@@ -153,30 +159,33 @@
         }
         
         .send-btn {
-            background: var(--primary-color);
-            color: white;
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            background: transparent;
+            color: var(--primary-color);
             border: none;
-            border-radius: var(--border-radius);
-            width: 56px;
             cursor: pointer;
             font-size: 1.2rem;
             transition: var(--transition);
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: var(--shadow);
+            padding: 8px;
+            border-radius: 50%;
+            z-index: 1;
         }
         
         .send-btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
+            background: rgba(66, 133, 244, 0.1);
+            transform: scale(1.1);
         }
         
         .suggestions {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 0;
         }
         
         .suggestion-chip {
@@ -223,48 +232,54 @@
         }
         
         .new-chat-btn {
-       position: fixed;
-       bottom: 30px;
-       right: 30px;
-       background: var(--primary-color);
-       color: white;
-       border: none;
-       border-radius: 50%;
-       width: 60px;
-       height: 60px;
-       display: inline-flex;
-       align-items: center;
-       justify-content: center;
-       cursor: pointer;
-       box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
-       transition: var(--transition);
-       z-index: 1000;
-       padding: 0;
-       line-height: 0;
-    }
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            width: 56px;
+            height: 56px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+            flex-shrink: 0;
+        }
         
         .new-chat-btn:hover {
-            transform: scale(1.1) rotate(180deg);
             background: var(--primary-dark);
+            transform: translateY(-2px);
         }
         .new-chat-btn i {
-       font-size: 24px;
-       line-height: 0;
-       margin: 0;
-       padding: 0;
+            font-size: 24px;
+            line-height: 0;
+            margin: 0;
+            padding: 0;
         }    
         
         @media (max-width: 768px) {
+            body {
+                padding-bottom: 100px;
+            }
             .container {
                 padding: 10px;
+                margin-top: 60px;
+                min-height: calc(100vh - 60px);
             }
             
             header {
                 padding: 15px 0;
+                margin-bottom: 5px;
             }
             
             h1 {
                 font-size: 1.5rem;
+            }
+            
+            .chat-title {
+                font-size: 1rem;
             }
             
             .message {
@@ -281,6 +296,7 @@
             
             .suggestions {
                 gap: 8px;
+                margin-bottom: 0;
             }
             
             .suggestion-chip {
@@ -288,12 +304,78 @@
                 font-size: 0.85rem;
             }
         }
+        .navbar {
+          width: 100vw;
+          height: 80px;
+          background: rgba(0,0,0,0.45);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          z-index: 10;
+          padding: 0 40px;
+          box-sizing: border-box;
+        }
+        .navbar-logo img {
+          height: 100px;
+          max-height: 130px;
+          width: auto;
+          display: block;
+        }
+        .navbar-links {
+          display: flex;
+          gap: 24px;
+        }
+        .navbar-link {
+          color: #fff;
+          font-family: 'Poppins', sans-serif;
+          font-weight: 600;
+          font-size: 1.1rem;
+          text-decoration: none;
+          padding: 8px 18px;
+          border-radius: 8px;
+          transition: background 0.2s;
+        }
+        .navbar-link:hover {
+          background: rgba(255,255,255,0.12);
+        }
+        @media (max-width: 700px) {
+          .navbar { padding: 0 10px; height: 60px; }
+          .navbar-logo img { height: 50px; }
+          .navbar-link { font-size: 0.95rem; padding: 6px 10px; }
+        }
+        .chat-title {
+            color: #555;
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-top: 5px;
+            text-align: center;
+            min-height: 1.5em;
+            overflow: hidden;
+            white-space: nowrap;
+            animation: typeWriter 1s steps(40, end);
+        }
+        @keyframes typeWriter {
+            from { width: 0 }
+            to { width: 100% }
+        }
     </style>
 </head>
 <body>
+    <nav class="navbar">
+      <div class="navbar-logo">
+        <img src="{{ url_for('static', filename='atlas_logo.png') }}" alt="Atlas Logo" />
+      </div>
+      <div class="navbar-links">
+        <a href="#" class="navbar-link">Login</a>
+        <a href="#" class="navbar-link">Cadastre-se</a>
+      </div>
+    </nav>
     <div class="container">
         <header>
             <h1><i class="fas fa-globe-americas"></i> Atlas AI</h1>
+            {% if conversation %}
+            <h2 class="chat-title">{{ conversation.title }}</h2>
+            {% endif %}
             <div class="header-links">
                 <a href="/historico"><i class="fas fa-history"></i> Histórico</a>
             </div>
@@ -310,34 +392,35 @@
         </div>
         
         <div class="input-container">
-            <textarea id="user-input" 
-                     placeholder="Digite sua mensagem... (Ex: Roteiro de 3 dias em São Paulo com parques)"
-                     rows="1"
-                     oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';"
-                     maxlength="1000"></textarea>
-            <button class="send-btn" onclick="sendMessage()">
-                <i class="fas fa-paper-plane"></i>
+            <div style="position: relative; flex: 1;">
+                <textarea id="user-input" 
+                         placeholder="Digite sua mensagem... (Ex: Roteiro de 3 dias em São Paulo com parques)"
+                         rows="1"
+                         oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';"
+                         maxlength="1000"></textarea>
+                <button class="send-btn" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <button class="new-chat-btn" onclick="startNewChat()">
+                <i class="fas fa-plus"></i>
             </button>
         </div>
         
         <div class="suggestions">
-            <div class="suggestion-chip" onclick="useSuggestion('Quero viajar de São Paulo para o Rio de Janeiro em outubro')">
-                SP → Rio em outubro
+            <div class="suggestion-chip" onclick="useSuggestion('Quero viajar para Paris por 5 dias')">
+                Roteiro 5 dias em Paris
             </div>
-            <div class="suggestion-chip" onclick="useSuggestion('Roteiro de 5 dias em Salvador saindo de Brasília')">
-                5 dias em Salvador
+            <div class="suggestion-chip" onclick="useSuggestion('Viagem de 8 dias em Nova York')">
+                Viagem de 8 dias em Nova York
             </div>
-            <div class="suggestion-chip" onclick="useSuggestion('Dicas de restaurantes em Curitiba')">
-                Restaurantes em Curitiba
+            <div class="suggestion-chip" onclick="useSuggestion('Aventuras em Londres')">
+                Aventuras em Londres
             </div>
-            <div class="suggestion-chip" onclick="useSuggestion('Pontos turísticos em Fortaleza')">
-                Turismo em Fortaleza
+            <div class="suggestion-chip" onclick="useSuggestion('Roteiro de 7 dias na Espanha saindo de São Paulo')">
+                7 dias na Espanha
             </div>
         </div>
-        
-        <button class="new-chat-btn" onclick="startNewChat()" title="Iniciar nova conversa">
-            <i class="fas fa-plus"></i>
-        </button>
     </div>
 
     <script>
@@ -377,6 +460,31 @@
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
+        function animateChatTitle(titleText) {
+            const titleElement = document.querySelector('.chat-title');
+            if (!titleElement) return;
+
+            titleElement.textContent = '';
+            titleElement.style.width = '0';
+            titleElement.style.overflow = 'hidden';
+            titleElement.style.whiteSpace = 'nowrap';
+            
+            let i = 0;
+            const speed = 50;
+
+            function typeWriter() {
+                if (i < titleText.length) {
+                    titleElement.textContent += titleText.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, speed);
+                } else {
+                    titleElement.style.width = 'auto';
+                }
+            }
+            
+            typeWriter();
+        }
+
         function sendMessage() {
             const message = userInput.value.trim();
             if (message === '' || isWaitingForResponse) return;
@@ -403,6 +511,9 @@
                 hideLoading();
                 if (data.response) {
                     addMessage('bot', data.response);
+                    if (data.title) {
+                        animateChatTitle(data.title);
+                    }
                 } else if (data.error) {
                     addMessage('bot', "Desculpe, ocorreu um erro. Por favor, tente novamente.");
                 }
@@ -421,10 +532,13 @@
         function useSuggestion(text) {
             userInput.value = text;
             userInput.focus();
+            sendMessage();
         }
         
         function startNewChat() {
             chatContainer.innerHTML = '';
+            const titleElement = document.querySelector('.chat-title');
+            if(titleElement) titleElement.textContent = '';
             
             fetch('/new_chat', {
                 method: 'POST',
@@ -433,26 +547,16 @@
                 }
             }).then(() => {
                 setTimeout(() => {
-                    addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Hotéis e clima<br><br>Basta me dizer para onde quer ir! 😊");
+                    addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Informações sobre cidades, pontos históricos<br><br>Quanto mais detalhes sobre seu roteiro, mais personalizado ele ficará.<br><br> Basta me dizer para onde quer ir! 😊");
                 }, 500);
             });
-            
-            // Readiciona o botão de nova conversa
-            const newChatBtn = document.createElement('button');
-            newChatBtn.className = 'new-chat-btn';
-            newChatBtn.onclick = startNewChat;
-            newChatBtn.title = 'Iniciar nova conversa';
-            newChatBtn.innerHTML = '<i class="fas fa-plus"></i>';
-            chatContainer.appendChild(newChatBtn);
         }
 
-        // Auto-resize do textarea
         userInput.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
         });
 
-        // Permitir enviar com Enter (Shift+Enter para nova linha)
         userInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -460,7 +564,6 @@
             }
         });
 
-        // Mensagem inicial
         window.onload = function() {
             const pendingMessage = localStorage.getItem('pendingMessage');
             if (pendingMessage) {
@@ -471,6 +574,12 @@
                 setTimeout(() => {
                     addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Hotéis e clima<br><br>Basta me dizer para onde quer ir! 😊");
                 }, 500);
+            }
+            if (window.isExistingConversation && window.conversationTitle) {
+                const titleElement = document.querySelector('.chat-title');
+                if (titleElement) {
+                    titleElement.textContent = window.conversationTitle;
+                }
             }
         }
     </script>
