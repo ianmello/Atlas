@@ -72,8 +72,7 @@ Atlas é um assistente de viagens inteligente que ajuda os usuários a planejar 
 
 ## 🔜 Próximos Passos
 
-- Integração com sistema de pagamento para reserva de voos e hotéis
-- Suporte a mais idiomas
-- Aplicativo mobile
+- Integração para visualização de voos e hotéis
+- Arquitetura em nuvem para utilização das APIs
+- Análise preditiva
 - Personalização de preferências do usuário
-- Integração com mapas para visualização de rotas
