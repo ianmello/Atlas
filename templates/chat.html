@@ -39,7 +39,6 @@
             display: flex;
             flex-direction: column;
             min-height: calc(100vh - 80px);
-            margin-top: 80px;
         }
         
         header {
@@ -350,20 +349,27 @@
             margin-top: 5px;
             text-align: center;
             min-height: 1.5em;
-            overflow: hidden;
+            border-right: 1px solid transparent;
             white-space: nowrap;
-            animation: typeWriter 1s steps(40, end);
+            overflow: hidden;
+            margin: 0 auto;
         }
-        @keyframes typeWriter {
+        @keyframes typing {
             from { width: 0 }
             to { width: 100% }
+        }
+        @keyframes blinkCursor {
+            from { border-right-color: transparent }
+            to { border-right-color: #555 }
         }
     </style>
 </head>
 <body>
     <nav class="navbar">
       <div class="navbar-logo">
-        <img src="{{ url_for('static', filename='atlas_logo.png') }}" alt="Atlas Logo" />
+        <a href="/">
+          <img src="{{ url_for('static', filename='atlas_logo.png') }}" alt="Atlas Logo" />
+        </a>
       </div>
       <div class="navbar-links">
         <a href="#" class="navbar-link">Login</a>
@@ -373,9 +379,7 @@
     <div class="container">
         <header>
             <h1><i class="fas fa-globe-americas"></i> Atlas AI</h1>
-            {% if conversation %}
-            <h2 class="chat-title">{{ conversation.title }}</h2>
-            {% endif %}
+            <h2 class="chat-title">{% if conversation %}{{ conversation.title }}{% endif %}</h2>
             <div class="header-links">
                 <a href="/historico"><i class="fas fa-history"></i> Histórico</a>
             </div>
@@ -464,25 +468,36 @@
             const titleElement = document.querySelector('.chat-title');
             if (!titleElement) return;
 
+            // Limpa o título e configura para animação
             titleElement.textContent = '';
             titleElement.style.width = '0';
             titleElement.style.overflow = 'hidden';
             titleElement.style.whiteSpace = 'nowrap';
-            
-            let i = 0;
-            const speed = 50;
+            titleElement.style.display = 'inline-block';
+            titleElement.style.animation = 'typing 2s steps(40, end), blinkCursor 0.7s infinite';
 
-            function typeWriter() {
+            let i = 0;
+            const speed = 50; // Velocidade da digitação em milissegundos
+
+            function typeCharacter() {
                 if (i < titleText.length) {
                     titleElement.textContent += titleText.charAt(i);
                     i++;
-                    setTimeout(typeWriter, speed);
+                    setTimeout(typeCharacter, speed);
                 } else {
+                    // Animação completa: restaura o display normal
                     titleElement.style.width = 'auto';
+                    titleElement.style.overflow = 'visible';
+                    titleElement.style.whiteSpace = 'normal';
+                    titleElement.style.display = 'block';
+                    titleElement.style.animation = 'none';
+                    titleElement.style.borderRightColor = 'transparent';
                 }
             }
-            
-            typeWriter();
+
+            // Força um reflow para aplicar os estilos iniciais antes da animação
+            void titleElement.offsetWidth;
+            typeCharacter();
         }
 
         function sendMessage() {
@@ -538,7 +553,7 @@
         function startNewChat() {
             chatContainer.innerHTML = '';
             const titleElement = document.querySelector('.chat-title');
-            if(titleElement) titleElement.textContent = '';
+            if(titleElement) titleElement.textContent = ''; // Clear title for new chat
             
             fetch('/new_chat', {
                 method: 'POST',
@@ -572,13 +587,13 @@
                 sendMessage();
             } else if (!window.isExistingConversation) {
                 setTimeout(() => {
-                    addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Hotéis e clima<br><br>Basta me dizer para onde quer ir! 😊");
+                    addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Informações sobre cidades, pontos históricos<br><br>Quanto mais detalhes sobre seu roteiro, mais personalizado ele ficará.<br><br> Basta me dizer para onde quer ir! 😊");
                 }, 500);
-            }
-            if (window.isExistingConversation && window.conversationTitle) {
+            } else { // Para conversas existentes, animar o título já presente
                 const titleElement = document.querySelector('.chat-title');
-                if (titleElement) {
-                    titleElement.textContent = window.conversationTitle;
+                if (titleElement && titleElement.textContent.trim() !== '') {
+                    const existingTitle = titleElement.textContent.trim();
+                    animateChatTitle(existingTitle);
                 }
             }
         }

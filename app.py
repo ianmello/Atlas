@@ -105,7 +105,84 @@ CITY_IATA_CODES = {
     "santiago": "SCL",
     "lima": "LIM",
     "bogota": "BOG",
-    "bogotá": "BOG"
+    "bogotá": "BOG",
+    # Códigos IATA adicionais de países/cidades famosas
+    # Europa
+    "frança": "CDG", # Paris
+    "espanha": "MAD", # Madrid
+    "itália": "FCO", # Roma
+    "alemanha": "FRA", # Frankfurt
+    "reino unido": "LHR", # Londres
+    "turquia": "IST", # Istambul
+    "grécia": "ATH", # Atenas
+    "países baixos": "AMS", # Amsterdã
+    "áustria": "VIE", # Viena
+    "dublin": "DUB", # Irlanda
+    "zurique": "ZRH", # Suíça
+    "bruxelas": "BRU", # Bélgica
+    "copenhague": "CPH", # Dinamarca
+    "estocolmo": "ARN", # Suécia
+    "oslo": "OSL", # Noruega
+    "helsinque": "HEL", # Finlândia
+    "praga": "PRG", # República Tcheca
+    "budapeste": "BUD", # Hungria
+    "varsóvia": "WAW", # Polônia
+    "moscou": "SVO", # Rússia
+    # Ásia
+    "tailândia": "BKK", # Bangkok
+    "japão": "HND", # Tóquio
+    "china": "PEK", # Pequim
+    "malásia": "KUL", # Kuala Lumpur
+    "índia": "DEL", # Nova Deli
+    "indonésia": "CGK", # Jacarta
+    "vietnã": "SGN", # Ho Chi Minh
+    "coreia do sul": "ICN", # Seul
+    "singapura": "SIN", # Singapura
+    "emirados árabes unidos": "DXB", # Dubai
+    "hong kong": "HKG",
+    "xangai": "PVG",
+    "pequim": "PEK",
+    "seul": "ICN",
+    "deli": "DEL",
+    "bangkok": "BKK",
+    "kuala lumpur": "KUL",
+    "jacarta": "CGK",
+    "saigon": "SGN",
+    "ho chi minh": "SGN",
+    "manila": "MNL",
+    "taipei": "TPE",
+    "abu dhabi": "AUH",
+    "doha": "DOH",
+    # África
+    "áfrica do sul": "JNB", # Joanesburgo
+    "egito": "CAI", # Cairo
+    "marrocos": "CMN", # Casablanca
+    "quênia": "NBO", # Nairobi
+    "nigéria": "LOS", # Lagos
+    # América do Sul (mais algumas)
+    "colômbia": "BOG", # Bogotá
+    "peru": "LIM", # Lima
+    "argentina": "EZE", # Buenos Aires
+    "chile": "SCL", # Santiago
+    "uruguai": "MVD", # Montevidéu
+    "paraguai": "ASU", # Assunção
+    "equador": "UIO", # Quito
+    "venezuela": "CCS", # Caracas
+    # América do Norte (mais algumas)
+    "méxico": "MEX", # Cidade do México
+    "canadá": "YYZ", # Toronto
+    "estados unidos": "JFK", # Nova York
+    "vancouver": "YVR",
+    "montreal": "YUL",
+    "chicago": "ORD",
+    "são francisco": "SFO",
+    "seattle": "SEA",
+    # Oceania
+    "austrália": "SYD", # Sydney
+    "nova zelândia": "AKL", # Auckland
+    "sydney": "SYD",
+    "melbourne": "MEL",
+    "auckland": "AKL"
 }
 
 # Lista de palavras para descartar após a extração
@@ -1211,7 +1288,7 @@ def chat():
             db.session.rollback()
             raise
 
-        return jsonify({'response': formatted_response})
+        return jsonify({'response': formatted_response, 'title': conversation.title})
         
     except Exception as e:
         print(f"Erro geral na rota de chat: {e}")
