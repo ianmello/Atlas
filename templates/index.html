@@ -1,297 +1,437 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Qual é o seu próximo destino?</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body {
-      height: 100%;
-      font-family: Arial, sans-serif;
-      color: white;
-      overflow: hidden;
-    }
-    .navbar {
-      width: 100vw;
-      height: 80px;
-      background: rgba(0,0,0,0.45);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 10;
-      padding: 0 40px;
-      box-sizing: border-box;
-    }
-    .navbar-logo img {
-    height: 100px;
-    max-height: 130px;
-    width: auto;
-    display: block;
-  }
-    .navbar-links {
-      display: flex;
-      gap: 24px;
-    }
-    .navbar-link {
-      color: #fff;
-      font-family: 'Poppins', sans-serif;
-      font-weight: 600;
-      font-size: 1.1rem;
-      text-decoration: none;
-      padding: 8px 18px;
-      border-radius: 8px;
-      transition: background 0.2s;
-    }
-    .navbar-link:hover {
-      background: rgba(255,255,255,0.12);
-    }
-    @media (max-width: 700px) {
-      .navbar { padding: 0 10px; height: 60px; }
-      .navbar-logo img { height: 50px; }
-      .navbar-link { font-size: 0.95rem; padding: 6px 10px; }
-    }
-    .container {
-      position: relative;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 0 20px;
-      text-align: center;
-      z-index: 1;
-      opacity: 1;
-      transition: opacity 0.1s ease-out;
-      margin-top: 90px;
-    }
-    .container.fade-out { opacity: 0; }
-    h1 {
-      font-weight: 900;
-      font-family: 'Poppins', sans-serif;
-      font-size: 4.5rem;
-      line-height: 1.1;
-      text-transform: uppercase;
-      max-width: 700px;
-      margin-bottom: 10px;
-    }
-    #chat-container {
-      width: 100%;
-      max-width: 600px;
-      min-height: 220px;
-      margin: 30px auto 0;
-      background: rgba(0,0,0,0.25);
-      border-radius: 20px;
-      padding: 20px 10px 10px 10px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      overflow-y: auto;
-      max-height: 320px;
-      text-align: left;
-      display: none;
-    }
-    .search-box {
-      margin-top: 20px;
-      width: 480px;
-      max-width: 90vw;
-      background: rgba(255, 255, 255, 0.25);
-      border-radius: 20px;
-      padding: 12px 20px;
-      display: flex;
-      align-items: flex-start;
-      color: #e3e3e3;
-      font-size: 1rem;
-      transition: all 0.3s ease;
-      z-index: 2;
-    }
-    .search-box:focus-within {
-      background: rgba(255, 255, 255, 0.35);
-      transform: scale(1.02);
-    }
-    .search-box textarea {
-      background: transparent;
-      font-family: 'Poppins', sans-serif;
-      border: none;
-      outline: none;
-      flex: 1;
-      color: white;
-      font-size: 1.3rem;
-      font-weight: 400;
-      resize: none;
-      min-height: 40px;
-      max-height: 120px;
-      overflow: hidden;
-      line-height: 1.5;
-      width: 100%;
-      word-wrap: break-word;
-      padding: 0;
-    }
-    .search-box textarea::placeholder { color: #c7c7c7; }
-    .search-box button {
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      color: white;
-      font-size: 1.4rem;
-      font-weight: bold;
-      transform: rotate(-45deg);
-      transition: transform 0.3s ease;
-      padding-left: 10px;
-      margin-top: 5px;
-    }
-    .search-box button:hover {
-      transform: rotate(-45deg) scale(1.2);
-    }
-    @media (max-width: 700px) {
-      h1 { font-size: 2.2rem; }
-      #chat-container { max-width: 98vw; }
-      .search-box { width: 98vw; }
-    }
-    .background-layer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-size: cover;
-      background-position: center;
-      transition: opacity 1s ease-in-out;
-      z-index: -1;
-      opacity: 0;
-    }
-    .background-layer.active { opacity: 1; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Qual é o seu próximo destino?</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+   * {
+     margin: 0;
+     padding: 0;
+     box-sizing: border-box;
+     font-family: 'Poppins', sans-serif;
+   }
+   html,
+   body {
+     height: 100%;
+     font-family: Arial, sans-serif;
+     color: white;
+   }
+   .navbar {
+     width: 100vw;
+     height: 80px;
+     background: rgba(0, 0, 0, 0.45);
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+     position: fixed;
+     top: 0;
+     left: 0;
+     z-index: 10;
+     padding: 0 40px;
+     box-sizing: border-box;
+   }
+   .navbar-logo img {
+     height: 100px;
+     max-height: 130px;
+     width: auto;
+     display: block;
+   }
+   .navbar-links {
+     display: flex;
+     gap: 24px;
+   }
+   .navbar-link {
+     color: #fff;
+     font-family: 'Poppins', sans-serif;
+     font-weight: 600;
+     font-size: 1.1rem;
+     text-decoration: none;
+     padding: 8px 18px;
+     border-radius: 8px;
+     transition: background 0.2s;
+   }
+   .navbar-link:hover {
+     background: rgba(255, 255, 255, 0.12);
+   }
+   @media (max-width: 700px) {
+     .navbar {
+       padding: 0 10px;
+       height: 60px;
+     }
+     .navbar-logo img {
+       height: 50px;
+     }
+     .navbar-link {
+       font-size: 0.95rem;
+       padding: 6px 10px;
+     }
+   }
+   .container {
+     position: relative;
+     display: flex;
+     flex-direction: column;
+     justify-content: center;
+     align-items: center;
+     padding: 0 10px;
+     text-align: center;
+     z-index: 1;
+     opacity: 1;
+     transition: opacity 0.1s ease-out;
+     padding-top: 80px;
+     min-height: 100vh;
+     padding-bottom: 50px;
+   }
+   .container.fade-out {
+     opacity: 0;
+   }
+   h1 {
+     font-weight: 900;
+     font-family: 'Poppins', sans-serif;
+     font-size: 4.5rem;
+     line-height: 1.1;
+     text-transform: uppercase;
+     max-width: 700px;
+     margin-bottom: 10px;
+   }
+   #chat-container {
+     width: 100%;
+     max-width: 600px;
+     min-height: 220px;
+     margin: 30px auto 0;
+     background: rgba(0, 0, 0, 0.25);
+     border-radius: 20px;
+     padding: 20px 10px 10px 10px;
+     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+     overflow-y: auto;
+     max-height: 320px;
+     text-align: left;
+     display: none;
+   }
+   .search-box {
+     margin-top: 20px;
+     width: 480px;
+     max-width: 90vw;
+     background: rgba(255, 255, 255, 0.25);
+     border-radius: 20px;
+     padding: 12px 20px;
+     display: flex;
+     align-items: flex-start;
+     color: #e3e3e3;
+     font-size: 1rem;
+     transition: all 0.3s ease;
+     z-index: 2;
+   }
+   .search-box:focus-within {
+     background: rgba(255, 255, 255, 0.35);
+     transform: scale(1.02);
+   }
+   .search-box textarea {
+     background: transparent;
+     font-family: 'Poppins', sans-serif;
+     border: none;
+     outline: none;
+     flex: 1;
+     color: white;
+     font-size: 1.3rem;
+     font-weight: 400;
+     resize: none;
+     min-height: 40px;
+     max-height: 120px;
+     overflow: hidden;
+     line-height: 1.5;
+     width: 100%;
+     word-wrap: break-word;
+     padding: 0;
+   }
+  .search-box textarea::placeholder {
+     color: #c7c7c7;
+   }
+   .search-box button {
+     background: transparent;
+     border: none;
+     cursor: pointer;
+     color: white;
+     font-size: 1.4rem;
+     font-weight: bold;
+     transform: rotate(-45deg);
+     transition: transform 0.3s ease;
+     padding-left: 10px;
+     margin-top: 5px;
+   }
+   .search-box button:hover {
+     transform: rotate(-45deg) scale(1.2);
+   }
+   @media (max-width: 700px) {
+     h1 {
+       font-size: 2.2rem;
+     }
+     #chat-container {
+       max-width: 98vw;
+     }
+     .search-box {
+       width: 98vw;
+     }
+   }
+   .background-layer {
+     position: absolute;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background-size: cover;
+     background-position: center;
+     transition: opacity 1s ease-in-out;
+     z-index: -1;
+     opacity: 0;
+   }
+   .how-it-works-section {
+     padding: 60px 20px;
+     background-color: #f9f9f9;
+     text-align: center;
+     font-family: 'Arial', sans-serif;
+     color: #333;
+   }
+   .how-it-works-section .container {
+     max-width: 1200px;
+     margin: 0 auto;
+   }
+   .how-it-works-section h2 {
+     font-size: 2.5em;
+     margin-bottom: 50px;
+     color: #333;
+   }
+   .steps-container {
+     display: flex;
+     justify-content: center;
+     gap: 30px;
+     flex-wrap: wrap;
+   }
+   .step-item {
+     background-color: #fff;
+     border-radius: 10px;
+     padding: 30px;
+     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+     flex: 1;
+     min-width: 280px;
+     max-width: 400px;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     text-align: center;
+     transition: transform 0.3s ease, box-shadow 0.3s ease;
+   }
+   .step-item:hover {
+     transform: translateY(-5px);
+     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+   }
+   .step-number {
+     background-color: #3b3d46;
+     color: #fff;
+     border-radius: 50%;
+     width: 60px;
+     height: 60px;
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     font-size: 2em;
+     font-weight: bold;
+     margin-bottom: 20px;
+   }
+   .step-item h3 {
+     font-size: 1.5em;
+     margin-bottom: 15px;
+     color: #555;
+   }
+   .step-item p {
+     font-size: 1.05em;
+     line-height: 1.6;
+     color: #666;
+   }
+   .cta-button {
+     display: inline-block;
+     background-color: #3b3d46;
+     color: #fff;
+     padding: 15px 30px;
+     border-radius: 5px;
+     text-decoration: none;
+     font-size: 1.2em;
+     font-weight: bold;
+     margin-top: 50px;
+     transition: background-color 0.3s ease, transform 0.2s ease;
+   }
+   .cta-button:hover {
+     background-color: #646672;
+     transform: translateY(-2px);
+   }
+   @media (max-width: 768px) {
+     .steps-container {
+       flex-direction: column;
+       align-items: center;
+     }
+     .step-item {
+       max-width: 90%;
+     }
+     .how-it-works-section h2 {
+       font-size: 2em;
+     }
+     .cta-button {
+       width: 100%;
+       box-sizing: border-box;
+     }
+   }
+   .background-layer.active {
+     opacity: 1;
+   }
+</style>
 </head>
 <body>
 <nav class="navbar">
-  <div class="navbar-logo">
-    <img src="{{ url_for('static', filename='atlas_logo.png') }}" alt="Atlas Logo" />
-  </div>
-  <div class="navbar-links">
-    <a href="#" class="navbar-link">Login</a>
-    <a href="#" class="navbar-link">Cadastre-se</a>
-  </div>
+<div class="navbar-logo">
+<img src="{{ url_for('static', filename='atlas_logo.png') }}" alt="Atlas Logo" />
+</div>
+<div class="navbar-links">
+<a href="#" class="navbar-link">Login</a>
+<a href="#" class="navbar-link">Cadastre-se</a>
+</div>
 </nav>
-
 <div id="bg1" class="background-layer active"></div>
 <div id="bg2" class="background-layer"></div>
-
 <div class="container" id="bg-container">
-  <h1>QUAL SERÁ SEU<br>PRÓXIMO<br>DESTINO?</h1>
-  <div id="chat-container"></div>
-  <form class="search-box" id="chat-form" autocomplete="off">
-    <textarea 
-      id="user-input" 
-      name="query" 
-      placeholder="Explore um destino" 
-      autocomplete="off"
-      rows="1"></textarea>
-    <button type="submit" aria-label="Enviar" id="send-btn">&#8593;</button>
-  </form>
+<h1>QUAL SERÁ SEU<br>PRÓXIMO<br>DESTINO?</h1>
+<div id="chat-container"></div>
+<form class="search-box" id="chat-form" autocomplete="off">
+<textarea id="user-input" name="query" placeholder="Explore um destino" autocomplete="off" rows="1"></textarea>
+<button type="submit" aria-label="Enviar" id="send-btn">&#8593;</button>
+</form>
 </div>
-
+<section class="how-it-works-section">
+<div class="container">
+<h2>Porque usar o Atlas?</h2>
+<div class="steps-container">
+<div class="step-item">
+<div class="step-number">1</div>
+<h3>Economia do seu Tempo</h3>
+<p>Compartilhe seus interesses, destinos desejados, orçamento e o que você busca na sua aventura. Quanto mais
+           detalhes, mais personalizado será o resultado! O Atlas analisa suas preferências em segundos, gerando um
+           roteiro detalhado e otimizado com opções de hospedagem, voos e atividades, tudo pensado para você.</p>
+</div>
+<div class="step-item">
+<div class="step-number">2</div>
+<h3>Roteiro personalizado</h3>
+<p>Roteiros genéricos não atendem às necessidades individuais. Cada viajante tem gostos, orçamentos e estilos
+           diferentes. O Atlas se adapta às preferências do usuário, criando roteiros realmente únicos.</p>
+</div>
+<div class="step-item">
+<div class="step-number">3</div>
+<h3>Tudo em Um</h3>
+<p>Ter que usar vários aplicativos e sites para reservar voos, hotéis, atividades, e ainda gerenciar o
+           orçamento separadamente. O Atlas agrega todas essas informações em um só lugar</p>
+</div>
+<div class="step-item">
+<div class="step-number">4</div>
+<h3>Experiências Únicas</h3>
+<p>Perder oportunidades de experiências ou lugares escondidos porque não se tem tempo ou conhecimento para
+           pesquisá-las. Podemos sugerir coisas que o usuário nem sabia que existiam, otimizando a viagem.</p>
+</div>
+</div>
+<a href="#" class="cta-button">Planeje Sua Viagem Agora</a>
+</div>
+</section>
 <script>
-  // BACKGROUND ANIMADO
-  const backgrounds = [
-    'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1470&q=80',
-    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?fm=jpg&q=60&w=3000',
-    'https://images.unsplash.com/photo-1498307833015-e7b400441eb8?fm=jpg&q=60&w=3000',
-    'https://images.unsplash.com/photo-1528164344705-47542687000d?fm=jpg&q=60&w=3000'
-  ];
-  const placeholderTexts = [
-    "Explore lugares fantásticos...",
-    "Descubra cidades incríveis...",
-    "Encontre paisagens maravilhosas...",
-    "Faça sua viagem dos sonhos..."
-  ];
-  const themeColors = [
-    { text: "#FFF5EB", box: "rgba(0, 0, 0, 0.6)" },
-    { text: "#ffffff", box: "rgba(63, 121, 132, 0.6)" },
-    { text: "#ffffff", box: "rgba(0, 0, 0, 0.6)" },
-    { text: "#f5f5dc", box: "rgba(50, 50, 50, 0.4)" }
-  ];
-  let current = 0;
-  let activeIndex = 0;
-  const bgElements = [document.getElementById('bg1'), document.getElementById('bg2')];
-  const container = document.getElementById('bg-container');
-  const h1 = container.querySelector("h1");
-  const searchBox = document.querySelector(".search-box");
-  const textarea = searchBox.querySelector("textarea");
-  const button = searchBox.querySelector("button");
-  const chatContainer = document.getElementById('chat-container');
-  function typeWriter(text, element, speed = 75) {
-    let i = 0;
-    element.placeholder = "";
-    const interval = setInterval(() => {
-      if (i < text.length) {
-        element.placeholder += text.charAt(i);
-        i++;
-      } else {
-        clearInterval(interval);
-      }
-    }, speed);
-  }
-  function changeBackground() {
-    const next = (current + 1) % backgrounds.length;
-    const nextBg = bgElements[1 - activeIndex];
-    const currentBg = bgElements[activeIndex];
-    nextBg.style.backgroundImage = `url('${backgrounds[next]}')`;
-    nextBg.classList.add('active');
-    currentBg.classList.remove('active');
-    current = next;
-    activeIndex = 1 - activeIndex;
-    const theme = themeColors[current];
-    h1.style.color = theme.text;
-    searchBox.style.backgroundColor = theme.box;
-    searchBox.style.color = theme.text;
-    textarea.style.color = theme.text;
-    textarea.style.caretColor = theme.text;
-    button.style.color = theme.text;
-    typeWriter(placeholderTexts[current], textarea);
-  }
-  function redirectToChat(message) {
-    localStorage.setItem('pendingMessage', message);
-    window.location.href = '/chat';
-  }
-  // Inicializa o primeiro background
-  bgElements[activeIndex].style.backgroundImage = `url('${backgrounds[current]}')`;
-  typeWriter(placeholderTexts[current], textarea);
-  setInterval(changeBackground, 8000);
-  // Auto-resize do textarea
-  textarea.addEventListener('input', function() {
-    this.style.height = 'auto';
-    this.style.height = (this.scrollHeight) + 'px';
-  });
-  // Handler do formulário
-  const chatForm = document.getElementById('chat-form');
-  chatForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const message = textarea.value.trim();
-    if (message) {
-      container.classList.add('fade-out');
-      redirectToChat(message);
-    }
-  });
-  // Handler do textarea para Enter
-  textarea.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      const message = this.value.trim();
-      if (message) {
-        container.classList.add('fade-out');
-        redirectToChat(message);
-      }
-    }
-  });
-  // Limpa o textarea quando a página é carregada
-  window.addEventListener('pageshow', function(event) {
-    textarea.value = '';
-    textarea.style.height = 'auto';
-    container.classList.remove('fade-out');
-  });
+   const backgrounds = [
+     'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1470&q=80',
+     'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?fm=jpg&q=60&w=3000',
+     'https://images.unsplash.com/photo-1498307833015-e7b400441eb8?fm=jpg&q=60&w=3000',
+     'https://images.unsplash.com/photo-1528164344705-47542687000d?fm=jpg&q=60&w=3000'
+   ];
+   const placeholderTexts = [
+     "Explore lugares fantásticos...",
+     "Descubra cidades incríveis...",
+     "Encontre paisagens maravilhosas...",
+     "Faça sua viagem dos sonhos...",
+   ];
+   const themeColors = [
+     { text: "#FFF5EB", box: "rgba(0, 0, 0, 0.6)" },
+     { text: "#ffffff", box: "rgba(63, 121, 132, 0.6)" },
+     { text: "#ffffff", box: "rgba(0, 0, 0, 0.6)" },
+     { text: "#f5f5dc", box: "rgba(50, 50, 50, 0.4)" }
+   ];
+   let current = 0;
+   let activeIndex = 0;
+   const bgElements = [document.getElementById('bg1'), document.getElementById('bg2')];
+   const container = document.getElementById('bg-container');
+   const h1 = container.querySelector("h1");
+   const searchBox = document.querySelector(".search-box");
+   const textarea = searchBox.querySelector("textarea");
+   const button = searchBox.querySelector("button");
+   const chatContainer = document.getElementById('chat-container');
+   function typeWriter(text, element, speed = 75) {
+     let i = 0;
+     element.placeholder = "";
+     const interval = setInterval(() => {
+       if (i < text.length) {
+         element.placeholder += text.charAt(i);
+         i++;
+       } else {
+         clearInterval(interval);
+       }
+     }, speed);
+   }
+   function changeBackground() {
+     const next = (current + 1) % backgrounds.length;
+     const nextBg = bgElements[1 - activeIndex];
+     const currentBg = bgElements[activeIndex];
+     nextBg.style.backgroundImage = `url('${backgrounds[next]}')`;
+     nextBg.classList.add('active');
+     currentBg.classList.remove('active');
+     current = next;
+     activeIndex = 1 - activeIndex;
+     const theme = themeColors[current];
+     h1.style.color = theme.text;
+     searchBox.style.backgroundColor = theme.box;
+     searchBox.style.color = theme.text;
+     textarea.style.color = theme.text;
+     textarea.style.caretColor = theme.text;
+     button.style.color = theme.text;
+     typeWriter(placeholderTexts[current], textarea);
+   }
+   function redirectToChat(message) {
+     localStorage.setItem('pendingMessage', message);
+     window.location.href = '/chat';
+   }
+   bgElements[activeIndex].style.backgroundImage = `url('${backgrounds[current]}')`;
+   typeWriter(placeholderTexts[current], textarea);
+   setInterval(changeBackground, 8000);
+   textarea.addEventListener('input', function () {
+     this.style.height = 'auto';
+     this.style.height = (this.scrollHeight) + 'px';
+   });
+   const chatForm = document.getElementById('chat-form');
+   chatForm.addEventListener('submit', function (e) {
+     e.preventDefault();
+     const message = textarea.value.trim();
+     if (message) {
+       container.classList.add('fade-out');
+       redirectToChat(message);
+     }
+   });
+   textarea.addEventListener('keydown', function (e) {
+     if (e.key === 'Enter' && !e.shiftKey) {
+       e.preventDefault();
+       const message = this.value.trim();
+       if (message) {
+         container.classList.add('fade-out');
+         redirectToChat(message);
+       }
+     }
+   });
+   window.addEventListener('pageshow', function (event) {
+     textarea.value = '';
+     textarea.style.height = 'auto';
+     container.classList.remove('fade-out');
+   });
 </script>
 </body>
 </html>
