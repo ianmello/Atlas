@@ -4,7 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Qual é o seu próximo destino?</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
 <style>
    * {
      margin: 0;
@@ -93,87 +94,406 @@
      line-height: 1.1;
      text-transform: uppercase;
      max-width: 700px;
-     margin-bottom: 10px;
+     margin-bottom: 30px;
    }
-   #chat-container {
+
+   /* Painel de Busca Estruturado */
+   .search-panel {
+     background: rgba(255, 255, 255, 0.95);
+     border-radius: 20px;
+     padding: 25px;
+     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+     max-width: 1200px;
+     width: calc(100% - 40px);
+     margin: 30px auto;
+     backdrop-filter: blur(10px);
+     overflow: visible;
+     position: relative;
+     box-sizing: border-box;
+   }
+
+   .search-form {
+     display: grid;
+     grid-template-columns: 1fr 1.5fr 200px;
+     grid-template-rows: auto auto;
+     gap: 20px;
      width: 100%;
-     max-width: 600px;
-     min-height: 220px;
-     margin: 30px auto 0;
-     background: rgba(0, 0, 0, 0.25);
-     border-radius: 20px;
-     padding: 20px 10px 10px 10px;
-     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-     overflow-y: auto;
-     max-height: 320px;
-     text-align: left;
-     display: none;
+     margin-bottom: 15px;
    }
-   .search-box {
-     margin-top: 20px;
-     width: 480px;
-     max-width: 90vw;
-     background: rgba(255, 255, 255, 0.25);
-     border-radius: 20px;
-     padding: 12px 20px;
-     display: flex;
-     align-items: flex-start;
-     color: #e3e3e3;
+
+   .form-group {
+     position: relative;
+   }
+   
+   .form-group:first-child {
+     grid-column: 1;
+     grid-row: 1;
+   }
+
+   .form-group label {
+     display: block;
+     color: #555;
+     font-weight: 600;
+     margin-bottom: 8px;
+     font-size: 0.9rem;
+   }
+
+   .form-control {
+     width: 100%;
+     padding: 12px 15px;
+     border: 2px solid #e0e0e0;
+     border-radius: 12px;
      font-size: 1rem;
-     transition: all 0.3s ease;
-     z-index: 2;
-   }
-   .search-box:focus-within {
-     background: rgba(255, 255, 255, 0.35);
-     transform: scale(1.02);
-   }
-   .search-box textarea {
-     background: transparent;
      font-family: 'Poppins', sans-serif;
-     border: none;
+     transition: all 0.3s ease;
+     background: white;
+     color: #333;
+   }
+
+   .form-control:focus {
      outline: none;
-     flex: 1;
-     color: white;
-     font-size: 1.3rem;
-     font-weight: 400;
-     resize: none;
-     min-height: 40px;
-     max-height: 120px;
-     overflow: hidden;
-     line-height: 1.5;
-     width: 100%;
-     word-wrap: break-word;
-     padding: 0;
+     border-color: #4285f4;
+     box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
    }
-  .search-box textarea::placeholder {
-     color: #c7c7c7;
+
+   .form-control.with-icon {
+     padding-left: 45px;
    }
-   .search-box button {
-     background: transparent;
-     border: none;
+
+   .input-icon {
+     position: absolute;
+     left: 15px;
+     top: 50%;
+     transform: translateY(-50%);
+     color: #888;
+     font-size: 1.1rem;
+   }
+
+   .date-group {
+     display: flex;
+     gap: 15px;
+     grid-column: 2;
+     grid-row: 1;
+   }
+
+   .travelers-group {
+     width: 200px;
+     position: relative;
+     grid-column: 3;
+     grid-row: 1;
+   }
+
+   .travelers-selector {
+     background: white;
+     border: 2px solid #e0e0e0;
+     border-radius: 12px;
+     padding: 12px 15px;
      cursor: pointer;
-     color: white;
-     font-size: 1.4rem;
-     font-weight: bold;
-     transform: rotate(-45deg);
-     transition: transform 0.3s ease;
-     padding-left: 10px;
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+     transition: all 0.3s ease;
+     width: 100%;
+   }
+
+   .travelers-selector:hover {
+     border-color: #4285f4;
+   }
+
+   .travelers-info {
+     display: flex;
+     align-items: center;
+     gap: 8px;
+     color: #333;
+     font-weight: 500;
+   }
+
+   .travelers-dropdown {
+     position: absolute;
+     top: 100%;
+     left: 0;
+     right: 0;
+     background: white;
+     border-radius: 12px;
+     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+     padding: 20px;
+     z-index: 1000;
+     display: none;
      margin-top: 5px;
+     border: 1px solid #e0e0e0;
+     min-width: 280px;
+     width: 100%;
+     box-sizing: border-box;
    }
-   .search-box button:hover {
-     transform: rotate(-45deg) scale(1.2);
+
+   .travelers-dropdown.show {
+     display: block;
    }
-   @media (max-width: 700px) {
+
+   .traveler-row {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     padding: 12px 0;
+     border-bottom: 1px solid #f0f0f0;
+   }
+
+   .traveler-row:last-child {
+     border-bottom: none;
+   }
+
+   .traveler-label {
+     color: #333;
+     font-weight: 500;
+   }
+
+   .counter-controls {
+     display: flex;
+     align-items: center;
+     gap: 15px;
+   }
+
+   .counter-btn {
+     width: 32px;
+     height: 32px;
+     border-radius: 50%;
+     border: 2px solid #e0e0e0;
+     background: white;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     cursor: pointer;
+     transition: all 0.3s ease;
+     color: #666;
+   }
+
+   .counter-btn:hover:not(.disabled) {
+     border-color: #4285f4;
+     color: #4285f4;
+   }
+
+   .counter-btn.disabled {
+     opacity: 0.4;
+     cursor: not-allowed;
+   }
+
+   .counter-value {
+     font-weight: 600;
+     color: #333;
+     min-width: 20px;
+     text-align: center;
+   }
+
+   .search-options {
+     display: flex;
+     gap: 20px;
+     align-items: center;
+     flex-wrap: wrap;
+     flex: 1;
+   }
+
+   .checkbox-group {
+     display: flex;
+     align-items: center;
+     gap: 8px;
+     cursor: pointer;
+   }
+
+   .checkbox-group input[type="checkbox"] {
+     width: 18px;
+     height: 18px;
+     accent-color: #4285f4;
+   }
+
+   .checkbox-group label {
+     color: #555;
+     cursor: pointer;
+     margin: 0;
+     font-size: 0.95rem;
+   }
+
+   .search-button {
+     background: linear-gradient(135deg, #4285f4, #34a853);
+     color: white;
+     border: none;
+     border-radius: 12px;
+     padding: 15px 30px;
+     font-size: 1.1rem;
+     font-weight: 600;
+     cursor: pointer;
+     transition: all 0.3s ease;
+     display: flex;
+     align-items: center;
+     gap: 8px;
+     min-width: 150px;
+     justify-content: center;
+     flex-shrink: 0;
+     align-self: flex-end;
+   }
+
+       .search-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3);
+    }
+
+    .search-button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .form-group.error .form-control {
+      border-color: #dc3545;
+      box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+    }
+
+    .error-message {
+      color: #dc3545;
+      font-size: 0.8rem;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .form-group.error .error-message {
+      display: block;
+    }
+
+    /* Animações suaves */
+    .search-panel {
+      animation: slideUp 0.6s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .travelers-dropdown {
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Grid layout - mais estável que flexbox */
+    .search-form > * {
+      box-sizing: border-box;
+    }
+    
+    .search-button {
+      background: linear-gradient(135deg, #4285f4, #34a853);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 15px 40px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      justify-content: center;
+      grid-column: 1 / -1;
+      grid-row: 2;
+      justify-self: center;
+      max-width: 200px;
+    }
+    
+    .search-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3);
+    }
+    
+    .search-button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+   /* Media queries simplificadas */
+   @media (min-width: 1024px) {
+     .search-form {
+       gap: 25px;
+     }
+   }
+
+   @media (min-width: 769px) and (max-width: 1023px) {
+     .search-form {
+       grid-template-columns: 1fr 1.2fr 180px;
+       gap: 18px;
+     }
+     
+     .travelers-group {
+       width: 180px;
+     }
+     
+     .search-button {
+       padding: 12px 30px;
+       font-size: 1rem;
+     }
+   }
+
+   @media (max-width: 768px) {
      h1 {
-       font-size: 2.2rem;
+       font-size: 2.5rem;
      }
-     #chat-container {
-       max-width: 98vw;
+     
+     .search-panel {
+       margin: 20px 10px;
+       padding: 20px;
      }
-     .search-box {
-       width: 98vw;
+     
+     .search-form {
+       display: flex;
+       flex-direction: column;
+       gap: 15px;
+     }
+     
+     .form-group,
+     .date-group,
+     .travelers-group {
+       width: 100%;
+     }
+     
+     .date-group {
+       flex-direction: column;
+       gap: 15px;
+     }
+     
+     .search-button {
+       width: 100%;
+       max-width: 300px;
+       margin: 10px auto 0;
+     }
+     
+     .search-options {
+       justify-content: center;
+       width: 100%;
+     }
+
+     .travelers-dropdown {
+       left: -15px;
+       right: -15px;
+       min-width: auto;
      }
    }
+
    .background-layer {
      position: absolute;
      top: 0;
@@ -186,6 +506,11 @@
      z-index: -1;
      opacity: 0;
    }
+   
+   .background-layer.active {
+     opacity: 1;
+   }
+
    .how-it-works-section {
      padding: 60px 20px;
      background-color: #f9f9f9;
@@ -193,21 +518,25 @@
      font-family: 'Arial', sans-serif;
      color: #333;
    }
+   
    .how-it-works-section .container {
      max-width: 1200px;
      margin: 0 auto;
    }
+   
    .how-it-works-section h2 {
      font-size: 2.5em;
      margin-bottom: 50px;
      color: #333;
    }
+   
    .steps-container {
      display: flex;
      justify-content: center;
      gap: 30px;
      flex-wrap: wrap;
    }
+   
    .step-item {
      background-color: #fff;
      border-radius: 10px;
@@ -222,10 +551,12 @@
      text-align: center;
      transition: transform 0.3s ease, box-shadow 0.3s ease;
    }
+   
    .step-item:hover {
      transform: translateY(-5px);
      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
    }
+   
    .step-number {
      background-color: #3b3d46;
      color: #fff;
@@ -239,16 +570,19 @@
      font-weight: bold;
      margin-bottom: 20px;
    }
+   
    .step-item h3 {
      font-size: 1.5em;
      margin-bottom: 15px;
      color: #555;
    }
+   
    .step-item p {
      font-size: 1.05em;
      line-height: 1.6;
      color: #666;
    }
+   
    .cta-button {
      display: inline-block;
      background-color: #3b3d46;
@@ -261,28 +595,30 @@
      margin-top: 50px;
      transition: background-color 0.3s ease, transform 0.2s ease;
    }
+   
    .cta-button:hover {
      background-color: #646672;
      transform: translateY(-2px);
    }
+   
    @media (max-width: 768px) {
      .steps-container {
        flex-direction: column;
        align-items: center;
      }
+     
      .step-item {
        max-width: 90%;
      }
+     
      .how-it-works-section h2 {
        font-size: 2em;
      }
+     
      .cta-button {
        width: 100%;
        box-sizing: border-box;
      }
-   }
-   .background-layer.active {
-     opacity: 1;
    }
 </style>
 </head>
@@ -296,16 +632,121 @@
 <a href="#" class="navbar-link">Cadastre-se</a>
 </div>
 </nav>
+
 <div id="bg1" class="background-layer active"></div>
 <div id="bg2" class="background-layer"></div>
+
 <div class="container" id="bg-container">
 <h1>QUAL SERÁ SEU<br>PRÓXIMO<br>DESTINO?</h1>
-<div id="chat-container"></div>
-<form class="search-box" id="chat-form" autocomplete="off">
-<textarea id="user-input" name="query" placeholder="Explore um destino" autocomplete="off" rows="1"></textarea>
-<button type="submit" aria-label="Enviar" id="send-btn">&#8593;</button>
-</form>
+
+<div class="search-panel">
+    <form class="search-form" id="travel-form">
+                 <!-- Destino -->
+         <div class="form-group" id="destination-group">
+             <label for="destination">Para onde você vai?</label>
+             <div style="position: relative;">
+                 <i class="fas fa-map-marker-alt input-icon"></i>
+                 <input type="text" 
+                        id="destination" 
+                        name="destination" 
+                        class="form-control with-icon" 
+                        placeholder="Ex: Paris, São Paulo, Japão..."
+                        required>
+             </div>
+             <div class="error-message" id="destination-error">Por favor, informe o destino da viagem</div>
+         </div>
+
+                 <!-- Datas -->
+         <div class="form-group date-group">
+             <div style="flex: 1;" id="checkin-group">
+                 <label for="checkin">Data de ida</label>
+                 <div style="position: relative;">
+                     <i class="fas fa-calendar input-icon"></i>
+                     <input type="date" 
+                            id="checkin" 
+                            name="checkin" 
+                            class="form-control with-icon"
+                            required>
+                 </div>
+                 <div class="error-message" id="checkin-error">Por favor, informe a data de ida</div>
+             </div>
+             <div style="flex: 1;" id="checkout-group">
+                 <label for="checkout">Data de volta (opcional)</label>
+                 <div style="position: relative;">
+                     <i class="fas fa-calendar input-icon"></i>
+                     <input type="date" 
+                            id="checkout" 
+                            name="checkout" 
+                            class="form-control with-icon">
+                 </div>
+                 <div class="error-message" id="checkout-error">Data de volta deve ser posterior à data de ida</div>
+             </div>
+         </div>
+
+        <!-- Viajantes -->
+        <div class="form-group travelers-group">
+            <label>Viajantes</label>
+            <div class="travelers-selector" onclick="toggleTravelersDropdown()">
+                <div class="travelers-info">
+                    <i class="fas fa-user"></i>
+                    <span id="travelers-display">2 adultos • 0 crianças</span>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            
+            <div class="travelers-dropdown" id="travelers-dropdown">
+                <div class="traveler-row">
+                    <div class="traveler-label">Adultos</div>
+                    <div class="counter-controls">
+                        <button type="button" class="counter-btn" onclick="changeTravelers('adults', -1)">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <span class="counter-value" id="adults-count">2</span>
+                        <button type="button" class="counter-btn" onclick="changeTravelers('adults', 1)">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="traveler-row">
+                    <div class="traveler-label">Crianças</div>
+                    <div class="counter-controls">
+                        <button type="button" class="counter-btn" onclick="changeTravelers('children', -1)">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <span class="counter-value" id="children-count">0</span>
+                        <button type="button" class="counter-btn" onclick="changeTravelers('children', 1)">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botão de Pesquisa -->
+        <button type="submit" class="search-button">
+            <i class="fas fa-search"></i>
+            Pesquisar
+        </button>
+    </form>
+
+    <!-- Opções de Busca -->
+    <div class="search-options">
+        <div class="checkbox-group">
+            <input type="checkbox" id="include-flights" name="include-flights" checked>
+            <label for="include-flights">Incluir informações de voos</label>
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="include-hotels" name="include-hotels">
+            <label for="include-hotels">Incluir sugestões de hospedagem</label>
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="include-weather" name="include-weather" checked>
+            <label for="include-weather">Incluir previsão do tempo</label>
+        </div>
+    </div>
 </div>
+</div>
+
 <section class="how-it-works-section">
 <div class="container">
 <h2>Porque usar o Atlas?</h2>
@@ -339,6 +780,7 @@
 <a href="#" class="cta-button">Planeje Sua Viagem Agora</a>
 </div>
 </section>
+
 <script>
    const backgrounds = [
      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1470&q=80',
@@ -346,91 +788,322 @@
      'https://images.unsplash.com/photo-1498307833015-e7b400441eb8?fm=jpg&q=60&w=3000',
      'https://images.unsplash.com/photo-1528164344705-47542687000d?fm=jpg&q=60&w=3000'
    ];
-   const placeholderTexts = [
-     "Explore lugares fantásticos...",
-     "Descubra cidades incríveis...",
-     "Encontre paisagens maravilhosas...",
-     "Faça sua viagem dos sonhos...",
-   ];
-   const themeColors = [
-     { text: "#FFF5EB", box: "rgba(0, 0, 0, 0.6)" },
-     { text: "#ffffff", box: "rgba(63, 121, 132, 0.6)" },
-     { text: "#ffffff", box: "rgba(0, 0, 0, 0.6)" },
-     { text: "#f5f5dc", box: "rgba(50, 50, 50, 0.4)" }
-   ];
+
    let current = 0;
    let activeIndex = 0;
    const bgElements = [document.getElementById('bg1'), document.getElementById('bg2')];
    const container = document.getElementById('bg-container');
-   const h1 = container.querySelector("h1");
-   const searchBox = document.querySelector(".search-box");
-   const textarea = searchBox.querySelector("textarea");
-   const button = searchBox.querySelector("button");
-   const chatContainer = document.getElementById('chat-container');
-   function typeWriter(text, element, speed = 75) {
-     let i = 0;
-     element.placeholder = "";
-     const interval = setInterval(() => {
-       if (i < text.length) {
-         element.placeholder += text.charAt(i);
-         i++;
-       } else {
-         clearInterval(interval);
-       }
-     }, speed);
-   }
+
+   // Configurar data mínima como hoje
+   const today = new Date().toISOString().split('T')[0];
+   document.getElementById('checkin').min = today;
+   document.getElementById('checkout').min = today;
+
+       // Atualizar data mínima de volta quando ida é alterada
+    document.getElementById('checkin').addEventListener('change', function() {
+        document.getElementById('checkout').min = this.value;
+        // Limpar erro de data se válida
+        if (this.value) {
+            const checkinGroup = document.getElementById('checkin-group');
+            if (checkinGroup) checkinGroup.classList.remove('error');
+        }
+    });
+
+    // Validação em tempo real para destino
+    document.getElementById('destination').addEventListener('input', function() {
+        if (this.value.trim()) {
+            const destinationGroup = document.getElementById('destination-group');
+            if (destinationGroup) destinationGroup.classList.remove('error');
+        }
+    });
+
+    // Validação em tempo real para data de volta
+    document.getElementById('checkout').addEventListener('change', function() {
+        const checkin = document.getElementById('checkin').value;
+        const checkout = this.value;
+        
+        if (checkin && checkout) {
+            const checkinDate = new Date(checkin);
+            const checkoutDate = new Date(checkout);
+            
+            const checkoutGroup = document.getElementById('checkout-group');
+            if (checkoutDate > checkinDate) {
+                if (checkoutGroup) checkoutGroup.classList.remove('error');
+            }
+        }
+    });
+
    function changeBackground() {
      const next = (current + 1) % backgrounds.length;
      const nextBg = bgElements[1 - activeIndex];
      const currentBg = bgElements[activeIndex];
+     
      nextBg.style.backgroundImage = `url('${backgrounds[next]}')`;
      nextBg.classList.add('active');
      currentBg.classList.remove('active');
+     
      current = next;
      activeIndex = 1 - activeIndex;
-     const theme = themeColors[current];
-     h1.style.color = theme.text;
-     searchBox.style.backgroundColor = theme.box;
-     searchBox.style.color = theme.text;
-     textarea.style.color = theme.text;
-     textarea.style.caretColor = theme.text;
-     button.style.color = theme.text;
-     typeWriter(placeholderTexts[current], textarea);
    }
-   function redirectToChat(message) {
-     localStorage.setItem('pendingMessage', message);
-     window.location.href = '/chat';
-   }
-   bgElements[activeIndex].style.backgroundImage = `url('${backgrounds[current]}')`;
-   typeWriter(placeholderTexts[current], textarea);
-   setInterval(changeBackground, 8000);
-   textarea.addEventListener('input', function () {
-     this.style.height = 'auto';
-     this.style.height = (this.scrollHeight) + 'px';
-   });
-   const chatForm = document.getElementById('chat-form');
-   chatForm.addEventListener('submit', function (e) {
-     e.preventDefault();
-     const message = textarea.value.trim();
-     if (message) {
-       container.classList.add('fade-out');
-       redirectToChat(message);
-     }
-   });
-   textarea.addEventListener('keydown', function (e) {
-     if (e.key === 'Enter' && !e.shiftKey) {
-       e.preventDefault();
-       const message = this.value.trim();
-       if (message) {
-         container.classList.add('fade-out');
-         redirectToChat(message);
+
+   function toggleTravelersDropdown() {
+       console.log('Toggle dropdown clicked'); // Debug
+       const dropdown = document.getElementById('travelers-dropdown');
+       if (dropdown) {
+           dropdown.classList.toggle('show');
+           console.log('Dropdown classes:', dropdown.className); // Debug
+       } else {
+           console.log('Dropdown element not found'); // Debug
        }
-     }
+   }
+
+   // Fechar dropdown ao clicar fora
+   document.addEventListener('click', function(e) {
+       const dropdown = document.getElementById('travelers-dropdown');
+       const selector = document.querySelector('.travelers-selector');
+       
+       if (!selector.contains(e.target) && !dropdown.contains(e.target)) {
+           dropdown.classList.remove('show');
+       }
    });
-   window.addEventListener('pageshow', function (event) {
-     textarea.value = '';
-     textarea.style.height = 'auto';
-     container.classList.remove('fade-out');
+
+   let travelers = {
+       adults: 2,
+       children: 0
+   };
+
+   function changeTravelers(type, change) {
+       travelers[type] += change;
+       
+       if (travelers[type] < 0) travelers[type] = 0;
+       if (type === 'adults' && travelers[type] < 1) travelers[type] = 1;
+       if (travelers[type] > 10) travelers[type] = 10;
+       
+       document.getElementById(type + '-count').textContent = travelers[type];
+       updateTravelersDisplay();
+       updateCounterButtons();
+   }
+
+   function updateTravelersDisplay() {
+       const display = document.getElementById('travelers-display');
+       let text = `${travelers.adults} adulto${travelers.adults !== 1 ? 's' : ''}`;
+       if (travelers.children > 0) {
+           text += ` • ${travelers.children} criança${travelers.children !== 1 ? 's' : ''}`;
+       }
+       display.textContent = text;
+   }
+
+   function updateCounterButtons() {
+       const adultMinus = document.querySelector('.counter-controls .counter-btn');
+       const buttons = document.querySelectorAll('.counter-btn');
+       
+       buttons.forEach((btn, index) => {
+           const type = index < 2 ? 'adults' : 'children';
+           const isDecrease = index % 2 === 0;
+           
+           if (isDecrease) {
+               if ((type === 'adults' && travelers.adults <= 1) || 
+                   (type === 'children' && travelers.children <= 0)) {
+                   btn.classList.add('disabled');
+               } else {
+                   btn.classList.remove('disabled');
+               }
+           } else {
+               if (travelers[type] >= 10) {
+                   btn.classList.add('disabled');
+               } else {
+                   btn.classList.remove('disabled');
+               }
+           }
+       });
+   }
+
+   function generateSearchQuery() {
+       const destination = document.getElementById('destination').value.trim();
+       const checkin = document.getElementById('checkin').value;
+       const checkout = document.getElementById('checkout').value;
+       const includeFlights = document.getElementById('include-flights').checked;
+       const includeHotels = document.getElementById('include-hotels').checked;
+       const includeWeather = document.getElementById('include-weather').checked;
+
+       if (!destination) {
+           alert('Por favor, informe o destino da viagem');
+           return null;
+       }
+
+       if (!checkin) {
+           alert('Por favor, informe a data de ida');
+           return null;
+       }
+
+       // Calcular duração da viagem
+       let duration = '';
+       if (checkout) {
+           const startDate = new Date(checkin);
+           const endDate = new Date(checkout);
+           const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+           if (days > 0) {
+               duration = ` por ${days} dia${days !== 1 ? 's' : ''}`;
+           }
+       }
+
+       // Construir a query naturalemente
+       let query = `Quero um roteiro de viagem para ${destination}${duration}`;
+       
+       if (checkin) {
+           const startDate = new Date(checkin);
+           const formattedDate = startDate.toLocaleDateString('pt-BR');
+           query += ` saindo no dia ${formattedDate}`;
+       }
+
+       if (travelers.adults > 1 || travelers.children > 0) {
+           query += ` para ${travelers.adults} adulto${travelers.adults !== 1 ? 's' : ''}`;
+           if (travelers.children > 0) {
+               query += ` e ${travelers.children} criança${travelers.children !== 1 ? 's' : ''}`;
+           }
+       }
+
+       // Adicionar preferências
+       const preferences = [];
+       if (includeFlights) preferences.push('incluir informações de voos');
+       if (includeHotels) preferences.push('sugestões de hospedagem');
+       if (includeWeather) preferences.push('previsão do tempo');
+
+       if (preferences.length > 0) {
+           query += '. Por favor, ' + preferences.join(', ');
+       }
+
+       return query;
+   }
+
+       function clearValidationErrors() {
+        document.querySelectorAll('.form-group.error').forEach(group => {
+            group.classList.remove('error');
+        });
+    }
+
+    function showValidationError(fieldId, message) {
+        const group = document.getElementById(fieldId + '-group');
+        const errorElement = document.getElementById(fieldId + '-error');
+        
+        if (group) group.classList.add('error');
+        if (errorElement && message) errorElement.textContent = message;
+    }
+
+    function validateForm() {
+        clearValidationErrors();
+        let isValid = true;
+
+        const destination = document.getElementById('destination').value.trim();
+        const checkin = document.getElementById('checkin').value;
+        const checkout = document.getElementById('checkout').value;
+
+        // Validar destino
+        if (!destination) {
+            showValidationError('destination', 'Por favor, informe o destino da viagem');
+            isValid = false;
+        }
+
+        // Validar data de ida
+        if (!checkin) {
+            showValidationError('checkin', 'Por favor, informe a data de ida');
+            isValid = false;
+        } else {
+            // Verificar se a data não é no passado
+            const today = new Date();
+            const checkinDate = new Date(checkin);
+            today.setHours(0, 0, 0, 0);
+            
+            if (checkinDate < today) {
+                showValidationError('checkin', 'A data de ida não pode ser no passado');
+                isValid = false;
+            }
+        }
+
+        // Validar data de volta se informada
+        if (checkout && checkin) {
+            const checkinDate = new Date(checkin);
+            const checkoutDate = new Date(checkout);
+            
+            if (checkoutDate <= checkinDate) {
+                showValidationError('checkout', 'A data de volta deve ser posterior à data de ida');
+                isValid = false;
+            }
+        }
+
+        return isValid;
+    }
+
+    function performStructuredSearch() {
+        if (!validateForm()) {
+            return;
+        }
+
+        const searchData = {
+            destination: document.getElementById('destination').value.trim(),
+            checkin: document.getElementById('checkin').value,
+            checkout: document.getElementById('checkout').value,
+            adults: travelers.adults,
+            children: travelers.children,
+            includeFlights: document.getElementById('include-flights').checked,
+            includeHotels: document.getElementById('include-hotels').checked,
+            includeWeather: document.getElementById('include-weather').checked
+        };
+
+        // Mostrar loading
+        const submitBtn = document.querySelector('.search-button');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+        submitBtn.disabled = true;
+
+        // Enviar dados estruturados para o backend
+        fetch('/search', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(searchData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Redirecionar diretamente para a conversa criada
+                window.location.href = `/conversation/${data.conversation_id}`;
+            } else {
+                alert('Erro: ' + (data.error || 'Erro desconhecido'));
+                // Restaurar botão
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao processar sua solicitação. Tente novamente.');
+            // Restaurar botão
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        });
+    }
+
+    function redirectToChat(message) {
+        localStorage.setItem('pendingMessage', message);
+        window.location.href = '/chat';
+    }
+
+    // Inicialização
+    bgElements[activeIndex].style.backgroundImage = `url('${backgrounds[current]}')`;
+    setInterval(changeBackground, 8000);
+    updateCounterButtons();
+
+    // Event listeners
+    document.getElementById('travel-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        container.classList.add('fade-out');
+        setTimeout(() => performStructuredSearch(), 300);
+    });
+
+   window.addEventListener('pageshow', function(event) {
+       container.classList.remove('fade-out');
    });
 </script>
 </body>

@@ -580,20 +580,35 @@
         });
 
         window.onload = function() {
-            const pendingMessage = localStorage.getItem('pendingMessage');
-            if (pendingMessage) {
-                localStorage.removeItem('pendingMessage');
-                userInput.value = pendingMessage;
-                sendMessage();
-            } else if (!window.isExistingConversation) {
+            // Verificar se há dados de nova conversa estruturada
+            const newConversationData = localStorage.getItem('newConversationData');
+            if (newConversationData) {
+                const data = JSON.parse(newConversationData);
+                localStorage.removeItem('newConversationData');
+                
+                // Adicionar as mensagens da conversa estruturada
+                addMessage('user', data.userMessage);
                 setTimeout(() => {
-                    addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Informações sobre cidades, pontos históricos<br><br>Quanto mais detalhes sobre seu roteiro, mais personalizado ele ficará.<br><br> Basta me dizer para onde quer ir! 😊");
-                }, 500);
-            } else { // Para conversas existentes, animar o título já presente
-                const titleElement = document.querySelector('.chat-title');
-                if (titleElement && titleElement.textContent.trim() !== '') {
-                    const existingTitle = titleElement.textContent.trim();
-                    animateChatTitle(existingTitle);
+                    addMessage('bot', data.botResponse);
+                    animateChatTitle(data.title);
+                }, 1000);
+            } else {
+                // Verificar mensagem pendente (busca simples)
+                const pendingMessage = localStorage.getItem('pendingMessage');
+                if (pendingMessage) {
+                    localStorage.removeItem('pendingMessage');
+                    userInput.value = pendingMessage;
+                    sendMessage();
+                } else if (!window.isExistingConversation) {
+                    setTimeout(() => {
+                        addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Informações sobre cidades, pontos históricos<br><br>Quanto mais detalhes sobre seu roteiro, mais personalizado ele ficará.<br><br> Basta me dizer para onde quer ir! 😊");
+                    }, 500);
+                } else { // Para conversas existentes, animar o título já presente
+                    const titleElement = document.querySelector('.chat-title');
+                    if (titleElement && titleElement.textContent.trim() !== '') {
+                        const existingTitle = titleElement.textContent.trim();
+                        animateChatTitle(existingTitle);
+                    }
                 }
             }
         }

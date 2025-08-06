@@ -1171,6 +1171,124 @@ def view_conversation(conversation_id):
     
     return render_template('chat.html', conversation=conversation)
 
+@app.route('/search', methods=['POST'])
+def structured_search():
+    """Processa busca estruturada do painel principal"""
+    try:
+        data = request.get_json()
+        user_id = session.get("id")
+        
+        if not user_id:
+            user_id = str(uuid.uuid4())
+            session["id"] = user_id
+        
+        # Extrair dados estruturados
+        destination = data.get('destination', '').strip()
+        checkin = data.get('checkin')
+        checkout = data.get('checkout')
+        adults = data.get('adults', 2)
+        children = data.get('children', 0)
+        include_flights = data.get('includeFlights', True)
+        include_hotels = data.get('includeHotels', False)
+        include_weather = data.get('includeWeather', True)
+        
+        # Validar dados essenciais
+        if not destination:
+            return jsonify({"error": "Destino é obrigatório"}), 400
+        
+        if not checkin:
+            return jsonify({"error": "Data de ida é obrigatória"}), 400
+        
+        # Calcular duração da viagem
+        duration_text = ""
+        start_date = None
+        end_date = None
+        
+        if checkin:
+            start_date = datetime.strptime(checkin, "%Y-%m-%d").date()
+            
+        if checkout:
+            end_date = datetime.strptime(checkout, "%Y-%m-%d").date()
+            days = (end_date - start_date).days
+            if days > 0:
+                duration_text = f" por {days} dia{'s' if days != 1 else ''}"
+        
+        # Construir mensagem natural
+        message = f"Quero um roteiro de viagem para {destination}{duration_text}"
+        
+        if checkin:
+            formatted_date = start_date.strftime("%d/%m/%Y")
+            message += f" saindo no dia {formatted_date}"
+        
+        if adults > 1 or children > 0:
+            message += f" para {adults} adulto{'s' if adults != 1 else ''}"
+            if children > 0:
+                message += f" e {children} criança{'s' if children != 1 else ''}"
+        
+        # Adicionar preferências
+        preferences = []
+        if include_flights:
+            preferences.append("incluir informações de voos")
+        if include_hotels:
+            preferences.append("sugestões de hospedagem")
+        if include_weather:
+            preferences.append("previsão do tempo")
+        
+        if preferences:
+            message += ". Por favor, " + ", ".join(preferences)
+        
+        # Criar nova conversa
+        conversation = Conversation(
+            title=generate_conversation_title(message),
+            user_id=user_id,
+            destination=destination,
+            start_date=start_date,
+            end_date=end_date
+        )
+        
+        db.session.add(conversation)
+        db.session.commit()
+        session["conversation_id"] = conversation.id
+        
+        # Processar com IA
+        if user_id not in chat_context:
+            chat_context[user_id] = []
+        
+        chat_context[user_id].append({"role": "user", "content": message})
+        bot_response = get_ai_response(chat_context[user_id])
+        chat_context[user_id].append({"role": "model", "content": bot_response})
+        
+        # Salvar mensagens
+        user_msg = Message(
+            content=message,
+            is_bot=False,
+            conversation_id=conversation.id
+        )
+        
+        formatted_response = format_message_content(bot_response)
+        bot_msg = Message(
+            content=formatted_response,
+            is_bot=True,
+            conversation_id=conversation.id
+        )
+        
+        db.session.add(user_msg)
+        db.session.add(bot_msg)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'conversation_id': conversation.id,
+            'title': conversation.title,
+            'user_message': message,
+            'bot_response': formatted_response
+        })
+        
+    except Exception as e:
+        print(f"Erro na busca estruturada: {e}")
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/chat', methods=['POST'])
 def chat():
     try:
@@ -1417,4 +1535,4 @@ def excluir_conversa(conversation_id):
 if __name__ == '__main__':
     # Cria pasta para armazenar histórico de buscas
     os.makedirs("historico", exist_ok=True)
-    app.run(debug=True)
+    app.run(debug=True, port=8000)
