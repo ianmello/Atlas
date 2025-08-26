@@ -114,7 +114,7 @@
 
    .search-form {
      display: grid;
-     grid-template-columns: 1fr 1.5fr 200px;
+     grid-template-columns: 1fr 1fr 1.5fr 200px;
      grid-template-rows: auto auto;
      gap: 20px;
      width: 100%;
@@ -127,6 +127,11 @@
    
    .form-group:first-child {
      grid-column: 1;
+     grid-row: 1;
+   }
+
+   .form-group:nth-child(2) {
+     grid-column: 2;
      grid-row: 1;
    }
 
@@ -172,14 +177,14 @@
    .date-group {
      display: flex;
      gap: 15px;
-     grid-column: 2;
+     grid-column: 3;
      grid-row: 1;
    }
 
    .travelers-group {
      width: 200px;
      position: relative;
-     grid-column: 3;
+     grid-column: 4;
      grid-row: 1;
    }
 
@@ -435,7 +440,7 @@
 
    @media (min-width: 769px) and (max-width: 1023px) {
      .search-form {
-       grid-template-columns: 1fr 1.2fr 180px;
+       grid-template-columns: 1fr 1fr 1.2fr 180px;
        gap: 18px;
      }
      
@@ -641,6 +646,21 @@
 
 <div class="search-panel">
     <form class="search-form" id="travel-form">
+                 <!-- Origem -->
+         <div class="form-group" id="origin-group">
+             <label for="origin">De onde você vem?</label>
+             <div style="position: relative;">
+                 <i class="fas fa-home input-icon"></i>
+                 <input type="text" 
+                        id="origin" 
+                        name="origin" 
+                        class="form-control with-icon" 
+                        placeholder="Ex: São Paulo, Rio de Janeiro..."
+                        required>
+             </div>
+             <div class="error-message" id="origin-error">Por favor, informe a cidade de origem</div>
+         </div>
+
                  <!-- Destino -->
          <div class="form-group" id="destination-group">
              <label for="destination">Para onde você vai?</label>
@@ -809,6 +829,14 @@
         }
     });
 
+    // Validação em tempo real para origem
+    document.getElementById('origin').addEventListener('input', function() {
+        if (this.value.trim()) {
+            const originGroup = document.getElementById('origin-group');
+            if (originGroup) originGroup.classList.remove('error');
+        }
+    });
+
     // Validação em tempo real para destino
     document.getElementById('destination').addEventListener('input', function() {
         if (this.value.trim()) {
@@ -919,12 +947,18 @@
    }
 
    function generateSearchQuery() {
+       const origin = document.getElementById('origin').value.trim();
        const destination = document.getElementById('destination').value.trim();
        const checkin = document.getElementById('checkin').value;
        const checkout = document.getElementById('checkout').value;
        const includeFlights = document.getElementById('include-flights').checked;
        const includeHotels = document.getElementById('include-hotels').checked;
        const includeWeather = document.getElementById('include-weather').checked;
+
+       if (!origin) {
+           alert('Por favor, informe a cidade de origem');
+           return null;
+       }
 
        if (!destination) {
            alert('Por favor, informe o destino da viagem');
@@ -948,7 +982,7 @@
        }
 
        // Construir a query naturalemente
-       let query = `Quero um roteiro de viagem para ${destination}${duration}`;
+       let query = `Quero um roteiro de viagem de ${origin} para ${destination}${duration}`;
        
        if (checkin) {
            const startDate = new Date(checkin);
@@ -994,9 +1028,16 @@
         clearValidationErrors();
         let isValid = true;
 
+        const origin = document.getElementById('origin').value.trim();
         const destination = document.getElementById('destination').value.trim();
         const checkin = document.getElementById('checkin').value;
         const checkout = document.getElementById('checkout').value;
+
+        // Validar origem
+        if (!origin) {
+            showValidationError('origin', 'Por favor, informe a cidade de origem');
+            isValid = false;
+        }
 
         // Validar destino
         if (!destination) {
@@ -1040,6 +1081,7 @@
         }
 
         const searchData = {
+            origin: document.getElementById('origin').value.trim(),
             destination: document.getElementById('destination').value.trim(),
             checkin: document.getElementById('checkin').value,
             checkout: document.getElementById('checkout').value,
@@ -1056,33 +1098,11 @@
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
         submitBtn.disabled = true;
 
-        // Enviar dados estruturados para o backend
-        fetch('/search', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(searchData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Redirecionar diretamente para a conversa criada
-                window.location.href = `/conversation/${data.conversation_id}`;
-            } else {
-                alert('Erro: ' + (data.error || 'Erro desconhecido'));
-                // Restaurar botão
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            alert('Erro ao processar sua solicitação. Tente novamente.');
-            // Restaurar botão
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-        });
+        // Armazenar dados para processamento no chat
+        localStorage.setItem('pendingSearchData', JSON.stringify(searchData));
+        
+        // Redirecionar imediatamente para o chat
+        window.location.href = '/chat';
     }
 
     function redirectToChat(message) {
