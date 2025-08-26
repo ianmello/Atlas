@@ -362,6 +362,224 @@
             from { border-right-color: transparent }
             to { border-right-color: #555 }
         }
+        
+        /* Estilos para os cards de voos - Design Horizontal Compacto */
+        .flights-section {
+            margin: 15px 0;
+        }
+        
+        .flights-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        
+        .flight-card {
+            background: white;
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(66, 133, 244, 0.08);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .flight-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        .flight-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #4285f4, #34a853);
+        }
+        
+        .flight-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        
+        .price-badge {
+            background: linear-gradient(135deg, #4285f4, #5c9ce5);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+        }
+        
+        .flight-number {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #666;
+            background: rgba(66, 133, 244, 0.1);
+            padding: 6px 12px;
+            border-radius: 16px;
+        }
+        
+        .flight-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            gap: 20px;
+        }
+        
+        .flight-route-horizontal {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            flex: 1;
+        }
+        
+        .route-info {
+            text-align: center;
+            min-width: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .time-large {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            line-height: 1.2;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+        
+        .airport-code {
+            font-size: 1rem;
+            color: #666;
+            font-weight: 600;
+            background: rgba(66, 133, 244, 0.1);
+            padding: 4px 10px;
+            border-radius: 8px;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .route-arrow {
+            background: rgba(66, 133, 244, 0.1);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4285f4;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .flight-details {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .flight-airline, .flight-duration, .flight-type {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            color: #666;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        .flight-airline i, .flight-duration i, .flight-type i {
+            color: #4285f4;
+            font-size: 0.9rem;
+            width: 16px;
+            flex-shrink: 0;
+        }
+        
+        .flight-connections-horizontal {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(0, 0, 0, 0.04);
+        }
+        
+        .connection-item-horizontal {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 0;
+            font-size: 0.9rem;
+        }
+        
+        .connection-label {
+            font-weight: 600;
+            color: #4285f4;
+        }
+        
+        .connection-time {
+            color: #666;
+        }
+        
+        /* Responsividade para os cards de voos */
+        @media (max-width: 768px) {
+            .flight-header {
+                flex-direction: column;
+                gap: 8px;
+                align-items: stretch;
+            }
+            
+            .price-badge {
+                align-self: center;
+            }
+            
+            .flight-main {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+            
+            .flight-route-horizontal {
+                justify-content: center;
+                gap: 15px;
+            }
+            
+            .flight-details {
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            
+            .time-large {
+                font-size: 1.3rem;
+            }
+            
+            .airport-code {
+                font-size: 0.9rem;
+            }
+            
+            .route-arrow {
+                width: 28px;
+                height: 28px;
+                font-size: 0.9rem;
+            }
+            
+            .flight-airline, .flight-duration, .flight-type {
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -477,7 +695,7 @@
             titleElement.style.animation = 'typing 2s steps(40, end), blinkCursor 0.7s infinite';
 
             let i = 0;
-            const speed = 50; // Velocidade da digitação em milissegundos
+                         const speed = 30; // Velocidade da digitação em milissegundos
 
             function typeCharacter() {
                 if (i < titleText.length) {
@@ -561,9 +779,9 @@
                     'Content-Type': 'application/json',
                 }
             }).then(() => {
-                setTimeout(() => {
-                    addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Informações sobre cidades, pontos históricos<br><br>Quanto mais detalhes sobre seu roteiro, mais personalizado ele ficará.<br><br> Basta me dizer para onde quer ir! 😊");
-                }, 500);
+                                         setTimeout(() => {
+                             addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Informações sobre cidades, pontos históricos<br><br>Quanto mais detalhes sobre seu roteiro, mais personalizado ele ficará.<br><br> Basta me dizer para onde quer ir! 😊");
+                         }, 200);
             });
         }
 
@@ -580,34 +798,90 @@
         });
 
         window.onload = function() {
-            // Verificar se há dados de nova conversa estruturada
-            const newConversationData = localStorage.getItem('newConversationData');
-            if (newConversationData) {
-                const data = JSON.parse(newConversationData);
-                localStorage.removeItem('newConversationData');
+            // Verificar se há dados de busca estruturada pendente
+            const pendingSearchData = localStorage.getItem('pendingSearchData');
+            
+            if (pendingSearchData) {
+                const searchData = JSON.parse(pendingSearchData);
+                localStorage.removeItem('pendingSearchData');
                 
-                // Adicionar as mensagens da conversa estruturada
-                addMessage('user', data.userMessage);
-                setTimeout(() => {
-                    addMessage('bot', data.botResponse);
-                    animateChatTitle(data.title);
-                }, 1000);
+                // Mostrar loading imediatamente
+                showLoading();
+                
+                // Processar busca estruturada
+                fetch('/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(searchData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+                    if (data.success) {
+                        // Adicionar mensagem do usuário
+                        const userMessage = `Quero um roteiro de viagem de ${searchData.origin} para ${searchData.destination}`;
+                        if (searchData.checkin) {
+                            const checkinDate = new Date(searchData.checkin);
+                            userMessage += ` saindo no dia ${checkinDate.toLocaleDateString('pt-BR')}`;
+                        }
+                        if (searchData.checkout && searchData.checkin) {
+                            const checkinDate = new Date(searchData.checkin);
+                            const checkoutDate = new Date(searchData.checkout);
+                            const days = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
+                            if (days > 0) {
+                                userMessage += ` por ${days} dia${days > 1 ? 's' : ''}`;
+                            }
+                        }
+                        
+                        addMessage('user', userMessage);
+                        
+                        // Adicionar resposta do bot
+                        setTimeout(() => {
+                            addMessage('bot', data.bot_response);
+                            if (data.title) {
+                                animateChatTitle(data.title);
+                            }
+                        }, 200);
+                    } else {
+                        addMessage('bot', "Desculpe, ocorreu um erro ao processar sua busca. Por favor, tente novamente.");
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    addMessage('bot', "Desculpe, ocorreu um erro ao processar sua solicitação. Por favor, tente novamente.");
+                });
             } else {
-                // Verificar mensagem pendente (busca simples)
-                const pendingMessage = localStorage.getItem('pendingMessage');
-                if (pendingMessage) {
-                    localStorage.removeItem('pendingMessage');
-                    userInput.value = pendingMessage;
-                    sendMessage();
-                } else if (!window.isExistingConversation) {
+                // Verificar se há dados de nova conversa estruturada
+                const newConversationData = localStorage.getItem('newConversationData');
+                if (newConversationData) {
+                    const data = JSON.parse(newConversationData);
+                    localStorage.removeItem('newConversationData');
+                    
+                    // Adicionar as mensagens da conversa estruturada
+                    addMessage('user', data.userMessage);
                     setTimeout(() => {
-                        addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Informações sobre cidades, pontos históricos<br><br>Quanto mais detalhes sobre seu roteiro, mais personalizado ele ficará.<br><br> Basta me dizer para onde quer ir! 😊");
-                    }, 500);
-                } else { // Para conversas existentes, animar o título já presente
-                    const titleElement = document.querySelector('.chat-title');
-                    if (titleElement && titleElement.textContent.trim() !== '') {
-                        const existingTitle = titleElement.textContent.trim();
-                        animateChatTitle(existingTitle);
+                        addMessage('bot', data.botResponse);
+                        animateChatTitle(data.title);
+                    }, 300);
+                } else {
+                    // Verificar mensagem pendente (busca simples)
+                    const pendingMessage = localStorage.getItem('pendingMessage');
+                    if (pendingMessage) {
+                        localStorage.removeItem('pendingMessage');
+                        userInput.value = pendingMessage;
+                        sendMessage();
+                    } else if (!window.isExistingConversation) {
+                        setTimeout(() => {
+                            addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Informações sobre cidades, pontos históricos<br><br>Quanto mais detalhes sobre seu roteiro, mais personalizado ele ficará.<br><br> Basta me dizer para onde quer ir! 😊");
+                        }, 500);
+                    } else { // Para conversas existentes, animar o título já presente
+                        const titleElement = document.querySelector('.chat-title');
+                        if (titleElement && titleElement.textContent.trim() !== '') {
+                            const existingTitle = titleElement.textContent.trim();
+                            animateChatTitle(existingTitle);
+                        }
                     }
                 }
             }

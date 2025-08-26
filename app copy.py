@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for
-from flask_cors import CORS
 import datetime
 import requests
 import os
@@ -14,7 +13,6 @@ from datetime import timedelta, datetime, date
 from models import db, Conversation, Message, generate_conversation_title
 
 app = Flask(__name__)
-CORS(app)
 app.config["SESSION_PERMANENT"] = True
 app.config["SESSION_TYPE"] = "filesystem"
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=1)
@@ -266,93 +264,26 @@ def get_ai_response(messages, origem=None, destino=None, datas=None):
         return "Desculpe, ocorreu um erro ao processar sua mensagem."
 
 def format_flights_response(flights):
-    """Formata a resposta dos voos em cards HTML horizontais e compactos"""
+    """Formata a resposta dos voos de forma mais amigável, mostrando conexões"""
     if not flights:
         return "Desculpe, não encontrei voos disponíveis para esta rota."
     
-    response = '<div class="flights-section">'
-    response += '<h3 style="color: #4285f4; margin-bottom: 15px; font-size: 1.2rem; font-weight: 600;">✈️ Voos Disponíveis</h3>'
-    response += '<div class="flights-grid">'
+    response = "Encontrei os seguintes voos disponíveis:\n\n"
     
     for i, flight in enumerate(flights, 1):
-        price_formatted = format_price(flight['price'])
+        response += f"• Voo {i}: {format_price(flight['price'])}\n"
         segments = flight['itineraries'][0]['segments']
-        
-        # Calcula duração total da viagem
-        first_departure = datetime.fromisoformat(segments[0]['departure']['at'].replace('Z', '+00:00'))
-        last_arrival = datetime.fromisoformat(segments[-1]['arrival']['at'].replace('Z', '+00:00'))
-        duration = last_arrival - first_departure
-        
-        # Determina se é voo direto ou com conexão
-        is_direct = len(segments) == 1
-        connection_text = "Direto" if is_direct else f"{len(segments)-1} conexão{'ões' if len(segments)-1 > 1 else ''}"
-        
-        # Formata duração de forma mais legível
-        duration_str = str(duration).split(".")[0]
-        if "day" in duration_str:
-            duration_str = duration_str.replace("day", "dia").replace("days", "dias")
-        
-        # Obtém a companhia aérea do primeiro segmento
-        airline_code = segments[0].get('carrierCode', 'N/A')
-        airline_name = segments[0].get('carrierCode', 'Companhia Aérea')
-        
-        response += f'''
-        <div class="flight-card">
-            <div class="flight-header">
-                <div class="price-badge">{price_formatted}</div>
-                <div class="flight-number">Voo {i}</div>
-            </div>
-            <div class="flight-main">
-                <div class="flight-route-horizontal">
-                    <div class="route-info">
-                        <div class="time-large">{first_departure.strftime('%H:%M')}</div>
-                        <div class="airport-code">{segments[0]['departure']['iataCode']}</div>
-                    </div>
-                    <div class="route-arrow">
-                        <i class="fas fa-plane"></i>
-                    </div>
-                    <div class="route-info">
-                        <div class="time-large">{last_arrival.strftime('%H:%M')}</div>
-                        <div class="airport-code">{segments[-1]['arrival']['iataCode']}</div>
-                    </div>
-                </div>
-                <div class="flight-details">
-                    <div class="flight-airline">
-                        <i class="fas fa-plane-departure"></i>
-                        <span>{airline_code}</span>
-                    </div>
-                    <div class="flight-duration">
-                        <i class="fas fa-clock"></i>
-                        <span>{duration_str}</span>
-                    </div>
-                    <div class="flight-type">
-                        <i class="fas fa-exchange-alt"></i>
-                        <span>{connection_text}</span>
-                    </div>
-                </div>
-            </div>'''
-        
-        # Mostra detalhes das conexões apenas se houver
-        if len(segments) > 1:
-            response += '''
-            <div class="flight-connections-horizontal">'''
-            
-            for idx, segment in enumerate(segments[1:], 1):
-                departure = datetime.fromisoformat(segment['departure']['at'].replace('Z', '+00:00'))
-                connection_airline = segment.get('carrierCode', 'N/A')
-                response += f'''
-                <div class="connection-item-horizontal">
-                    <span class="connection-label">Conexão {idx}:</span>
-                    <span class="connection-time">{departure.strftime('%H:%M')} - {segment['departure']['iataCode']} ({connection_airline})</span>
-                </div>'''
-            
-            response += '''
-            </div>'''
-        
-        response += '''
-        </div>'''
-    
-    response += '</div></div>'
+        for idx, segment in enumerate(segments):
+            departure = datetime.fromisoformat(segment['departure']['at'].replace('Z', '+00:00'))
+            arrival = datetime.fromisoformat(segment['arrival']['at'].replace('Z', '+00:00'))
+            if idx == 0:
+                response += f"  Partida de {segment['departure']['iataCode']}: {departure.strftime('%d/%m/%Y às %H:%M')}\n"
+                response += f"  Chegada em {segment['arrival']['iataCode']}: {arrival.strftime('%d/%m/%Y às %H:%M')}\n"
+            else:
+                response += f"  --- CONEXÃO ---\n"
+                response += f"  Partida de {segment['departure']['iataCode']}: {departure.strftime('%d/%m/%Y às %H:%M')}\n"
+                response += f"  Chegada em {segment['arrival']['iataCode']}: {arrival.strftime('%d/%m/%Y às %H:%M')}\n"
+        response += "\n"
     return response
 
 def buscar_codigo_iata(nome_destino: str) -> str:
@@ -1183,11 +1114,6 @@ def carregar_conversa_por_id(sessao_id, conversa_id):
 
 def format_message_content(content):
     """Formata o conteúdo da mensagem para HTML"""
-    # Se o conteúdo já contém HTML (como os cards de voos), retorna como está
-    if '<div' in content or '<html' in content or '<body' in content or '<h3' in content:
-        return content
-    
-    # Formata apenas texto simples
     content = content.replace('\n', '<br>')
     content = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', content)
     content = re.sub(r'\*(.*?)\*', r'<em>\1</em>', content)
@@ -1366,14 +1292,13 @@ def structured_search():
         db.session.add(bot_msg)
         db.session.commit()
         
-        response_data = {
+        return jsonify({
             'success': True,
             'conversation_id': conversation.id,
             'title': conversation.title,
             'user_message': message,
             'bot_response': formatted_response
-        }
-        return jsonify(response_data)
+        })
         
     except Exception as e:
         print(f"Erro na busca estruturada: {e}")
