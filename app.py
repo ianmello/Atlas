@@ -211,15 +211,31 @@ def get_exchange_rate(currency: str = "USD") -> float:
             "@dataCotacao": f"'{today}'",
             "$format": "json"
         }
-        response = requests.get(EXCHANGE_API_URL, params=params)
+        response = requests.get(EXCHANGE_API_URL, params=params, timeout=10)
+        if response.status_code != 200:
+            print(f"Erro na API de câmbio: {response.status_code}")
+            return 5.0
         data = response.json()
-        return float(data['value'][0]['cotacaoVenda'])
-    except:
+        if 'value' in data and len(data['value']) > 0:
+            return float(data['value'][0]['cotacaoVenda'])
+        else:
+            print("Resposta da API de câmbio sem dados válidos")
+            return 5.0
+    except requests.exceptions.RequestException as e:
+        print(f"Erro de rede na API de câmbio: {e}")
+        return 5.0
+    except (KeyError, IndexError, ValueError) as e:
+        print(f"Erro ao processar resposta da API de câmbio: {e}")
+        return 5.0
+    except Exception as e:
+        print(f"Erro inesperado na API de câmbio: {e}")
         return 5.0
 
 def get_ai_response(messages, origem=None, destino=None, datas=None):
     try:
+        print(f"[DEBUG] get_ai_response chamada com {len(messages)} mensagens")
         last_message = messages[-1]["content"].lower()
+        print(f"[DEBUG] Última mensagem: {last_message[:100]}...")
         
         # Se origem e destino não foram fornecidos, tenta extrair da mensagem
         if not origem:
@@ -228,132 +244,278 @@ def get_ai_response(messages, origem=None, destino=None, datas=None):
             destino = extrair_destino(last_message)
         if not datas:
             datas = extrair_datas(last_message)
+        
+        print(f"[DEBUG] Origem extraída: {origem}")
+        print(f"[DEBUG] Destino extraído: {destino}")
+        print(f"[DEBUG] Datas extraídas: {datas}")
 
         roteiro = ""
         # Sempre gera um roteiro com Gemini primeiro
         headers = {"Content-Type": "application/json"}
         if GEMINI_API_KEY:
             url = f"{GEMINI_API_URL}?key={GEMINI_API_KEY}"
+            
+            # Adiciona instruções específicas para formatação
+            system_prompt = """Você é um assistente de viagens especializado. 
+            IMPORTANTE: Sempre formate suas respostas com quebras de linha adequadas:
+            - Use ## para títulos principais
+            - Use ** para subtítulos
+            - Use * para itens de lista
+            - Separe parágrafos com linhas em branco
+            - Use formatação markdown para melhor legibilidade
+            
+            Exemplo de formatação:
+            ## Roteiro de 3 Dias em Paris
+            
+            **Dia 1: Chegada e Centro Histórico**
+            * Manhã: Check-in no hotel
+            * Tarde: Visita à Torre Eiffel
+            * Noite: Jantar no Marais
+            
+            **Dia 2: Museus e Arte**
+            * Manhã: Louvre
+            * Tarde: Museu d'Orsay
+            * Noite: Passeio pelo Sena
+            
+            **Considerações Importantes**
+            * Transporte: Metrô eficiente
+            * Ingressos: Comprar com antecedência
+            * Hospedagem: Centro da cidade recomendado"""
+            
+            # Adiciona o prompt do sistema à conversa
+            enhanced_messages = [{"role": "user", "content": system_prompt}] + messages
+            
             data = {
                 "contents": [
-                    {"role": m["role"], "parts": [{"text": m["content"]}]} for m in messages
+                    {"role": m["role"], "parts": [{"text": m["content"]}]} for m in enhanced_messages
                 ]
             }
-            response = requests.post(url, headers=headers, data=json.dumps(data))
-            if response.status_code == 200:
-                resposta = response.json()
-                try:
-                    roteiro = resposta["candidates"][0]["content"]["parts"][0]["text"]
-                except Exception as e:
+            
+            print(f"[DEBUG] Enviando requisição para Gemini API...")
+            try:
+                response = requests.post(url, headers=headers, data=json.dumps(data), timeout=30)
+                print(f"[DEBUG] Resposta da API Gemini: {response.status_code}")
+                
+                if response.status_code == 200:
+                    resposta = response.json()
+                    try:
+                        roteiro = resposta["candidates"][0]["content"]["parts"][0]["text"]
+                        print(f"[DEBUG] Resposta do Gemini recebida com sucesso. Tamanho: {len(roteiro)} caracteres")
+                        print(f"[DEBUG] Primeiros 200 caracteres: {roteiro[:200]}...")
+                    except Exception as e:
+                        print(f"[ERROR] Erro ao processar resposta do Gemini: {e}")
+                        print(f"[DEBUG] Resposta completa: {resposta}")
+                        roteiro = "Desculpe, não consegui gerar um roteiro agora."
+                else:
+                    print(f"[ERROR] Erro na API Gemini: {response.status_code} - {response.text}")
                     roteiro = "Desculpe, não consegui gerar um roteiro agora."
-            else:
-                roteiro = "Desculpe, não consegui gerar um roteiro agora."
+            except requests.exceptions.Timeout:
+                print("[ERROR] Timeout na API Gemini")
+                roteiro = "Desculpe, a API demorou muito para responder. Por favor, tente novamente."
+            except Exception as e:
+                print(f"[ERROR] Erro inesperado na API Gemini: {e}")
+                roteiro = "Desculpe, ocorreu um erro inesperado. Por favor, tente novamente."
         else:
+            print("[ERROR] Chave da API Gemini não configurada")
             roteiro = "Desculpe, a chave da API Gemini não está configurada."
 
         # Se tem origem e destino válidos, busca voos e adiciona ao roteiro
         if origem != "Origem não informada" and destino != "Destino não informado":
-            origem_iata = buscar_codigo_iata(origem)
-            destino_iata = buscar_codigo_iata(destino)
-            voos = get_flights(origem_iata, destino_iata, datas.get('data_inicio'))
-            if voos and 'data' in voos and voos['data']:
-                roteiro += "\n\n---\n\n" + format_flights_response(voos['data'])
+            print(f"[DEBUG] Buscando voos para {origem} -> {destino}")
+            try:
+                origem_iata = buscar_codigo_iata(origem)
+                destino_iata = buscar_codigo_iata(destino)
+                
+                print(f"[DEBUG] Códigos IATA: {origem_iata} -> {destino_iata}")
+                
+                if origem_iata and destino_iata:
+                    voos = get_flights(origem_iata, destino_iata, datas.get('data_inicio'))
+                    
+                    if voos and 'data' in voos and voos['data']:
+                        try:
+                            voos_html = format_flights_response(voos['data'])
+                            roteiro += "\n\n---\n\n" + voos_html
+                            print(f"[DEBUG] Voos adicionados ao roteiro")
+                        except Exception as voo_error:
+                            print(f"[ERROR] Erro ao formatar voos: {voo_error}")
+                            roteiro += "\n\n---\n\n⚠️ Encontrei voos disponíveis, mas houve um erro ao exibir as informações detalhadas."
+                    elif voos and 'error' in voos:
+                        print(f"[WARN] Erro na busca de voos: {voos['error']}")
+                        roteiro += "\n\n---\n\n⚠️ Não foi possível buscar informações de voos no momento."
+                    else:
+                        print(f"[DEBUG] Nenhum voo encontrado")
+                        roteiro += "\n\n---\n\n✈️ Não encontrei voos disponíveis para esta rota na data especificada."
+                else:
+                    print(f"[WARN] Códigos IATA não encontrados")
+                    roteiro += "\n\n---\n\n⚠️ Não consegui identificar os códigos dos aeroportos para buscar voos."
+            except Exception as voo_error:
+                print(f"[ERROR] Erro ao buscar voos: {voo_error}")
+                roteiro += "\n\n---\n\n⚠️ Houve um erro ao buscar informações de voos."
 
+        print(f"[DEBUG] Roteiro final gerado. Tamanho: {len(roteiro)} caracteres")
         return roteiro
 
     except Exception as e:
-        print(f"[ERROR] Erro ao processar mensagem: {str(e)}")
-        return "Desculpe, ocorreu um erro ao processar sua mensagem."
+        print(f"[ERROR] Erro geral em get_ai_response: {str(e)}")
+        import traceback
+        print(f"[ERROR] Traceback: {traceback.format_exc()}")
+        return "Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente."
+    
+from dateutil import parser
 
 def format_flights_response(flights):
     """Formata a resposta dos voos em cards HTML horizontais e compactos"""
-    if not flights:
-        return "Desculpe, não encontrei voos disponíveis para esta rota."
-    
-    response = '<div class="flights-section">'
-    response += '<h3 style="color: #4285f4; margin-bottom: 15px; font-size: 1.2rem; font-weight: 600;">✈️ Voos Disponíveis</h3>'
-    response += '<div class="flights-grid">'
-    
-    for i, flight in enumerate(flights, 1):
-        price_formatted = format_price(flight['price'])
-        segments = flight['itineraries'][0]['segments']
+    try:
+        if not isinstance(flights, (list, tuple)):
+            return "Erro ao processar dados dos voos. Por favor, tente novamente."
         
-        # Calcula duração total da viagem
-        first_departure = datetime.fromisoformat(segments[0]['departure']['at'].replace('Z', '+00:00'))
-        last_arrival = datetime.fromisoformat(segments[-1]['arrival']['at'].replace('Z', '+00:00'))
-        duration = last_arrival - first_departure
+        if not flights:
+            return "Desculpe, não encontrei voos disponíveis para esta rota."
         
-        # Determina se é voo direto ou com conexão
-        is_direct = len(segments) == 1
-        connection_text = "Direto" if is_direct else f"{len(segments)-1} conexão{'ões' if len(segments)-1 > 1 else ''}"
+        response = '<div class="flights-section">'
+        response += '<h3 style="color: #4285f4; margin-bottom: 15px; font-size: 1.2rem; font-weight: 600;">✈️ Voos Disponíveis</h3>'
+        response += '<div class="flights-grid">'
         
-        # Formata duração de forma mais legível
-        duration_str = str(duration).split(".")[0]
-        if "day" in duration_str:
-            duration_str = duration_str.replace("day", "dia").replace("days", "dias")
-        
-        # Obtém a companhia aérea do primeiro segmento
-        airline_code = segments[0].get('carrierCode', 'N/A')
-        airline_name = segments[0].get('carrierCode', 'Companhia Aérea')
-        
-        response += f'''
-        <div class="flight-card">
-            <div class="flight-header">
-                <div class="price-badge">{price_formatted}</div>
-                <div class="flight-number">Voo {i}</div>
-            </div>
-            <div class="flight-main">
-                <div class="flight-route-horizontal">
-                    <div class="route-info">
-                        <div class="time-large">{first_departure.strftime('%H:%M')}</div>
-                        <div class="airport-code">{segments[0]['departure']['iataCode']}</div>
-                    </div>
-                    <div class="route-arrow">
-                        <i class="fas fa-plane"></i>
-                    </div>
-                    <div class="route-info">
-                        <div class="time-large">{last_arrival.strftime('%H:%M')}</div>
-                        <div class="airport-code">{segments[-1]['arrival']['iataCode']}</div>
-                    </div>
-                </div>
-                <div class="flight-details">
-                    <div class="flight-airline">
-                        <i class="fas fa-plane-departure"></i>
-                        <span>{airline_code}</span>
-                    </div>
-                    <div class="flight-duration">
-                        <i class="fas fa-clock"></i>
-                        <span>{duration_str}</span>
-                    </div>
-                    <div class="flight-type">
-                        <i class="fas fa-exchange-alt"></i>
-                        <span>{connection_text}</span>
-                    </div>
-                </div>
-            </div>'''
-        
-        # Mostra detalhes das conexões apenas se houver
-        if len(segments) > 1:
-            response += '''
-            <div class="flight-connections-horizontal">'''
-            
-            for idx, segment in enumerate(segments[1:], 1):
-                departure = datetime.fromisoformat(segment['departure']['at'].replace('Z', '+00:00'))
-                connection_airline = segment.get('carrierCode', 'N/A')
+        for i, flight in enumerate(flights, 1):
+            try:
+                if not isinstance(flight, dict):
+                    continue
+                if 'itineraries' not in flight or not flight['itineraries']:
+                    continue
+                
+                segments = flight['itineraries'][0].get('segments', [])
+                if not segments:
+                    continue
+                
+                price_data = flight.get('price', {})
+                if not price_data:
+                    continue
+                
+                price_formatted = format_price(price_data)
+                
+                first_segment = segments[0]
+                last_segment = segments[-1]
+                
+                if not first_segment.get('departure') or not last_segment.get('arrival'):
+                    continue
+                
+                # Parse robusto com dateutil
+                try:
+                    departure_str = first_segment['departure']['at']
+                    arrival_str = last_segment['arrival']['at']
+                    
+                    first_departure = parser.parse(departure_str)
+                    last_arrival = parser.parse(arrival_str)
+                    
+                    duration = last_arrival - first_departure
+                    duration_hours = duration.total_seconds() // 3600
+                    duration_minutes = (duration.total_seconds() % 3600) // 60
+                    duration_str = f"{int(duration_hours)}h {int(duration_minutes)}m"
+                except Exception as e:
+                    print(f"[ERROR] Falha ao parsear datas do voo: {e}")
+                    duration_str = "Duração não disponível"
+                    first_departure = None
+                    last_arrival = None
+                
+                is_direct = len(segments) == 1
+                connection_text = "Direto" if is_direct else f"{len(segments)-1} conexão{'ões' if len(segments)-1 > 1 else ''}"
+                
+                airline_code = first_segment.get('carrierCode', 'N/A')
+                departure_iata = first_segment['departure'].get('iataCode', 'N/A')
+                arrival_iata = last_segment['arrival'].get('iataCode', 'N/A')
+                
+                departure_time = first_departure.strftime('%H:%M') if first_departure else 'N/A'
+                arrival_time = last_arrival.strftime('%H:%M') if last_arrival else 'N/A'
+                
                 response += f'''
-                <div class="connection-item-horizontal">
-                    <span class="connection-label">Conexão {idx}:</span>
-                    <span class="connection-time">{departure.strftime('%H:%M')} - {segment['departure']['iataCode']} ({connection_airline})</span>
+                <div class="flight-card">
+                    <div class="flight-header">
+                        <div class="price-badge">{price_formatted}</div>
+                        <div class="flight-number">Voo {i}</div>
+                    </div>
+                    <div class="flight-main">
+                        <div class="flight-route-horizontal">
+                            <div class="route-info">
+                                <div class="time-large">{departure_time}</div>
+                                <div class="airport-code">{departure_iata}</div>
+                            </div>
+                            <div class="route-arrow">
+                                <i class="fas fa-plane"></i>
+                            </div>
+                            <div class="route-info">
+                                <div class="time-large">{arrival_time}</div>
+                                <div class="airport-code">{arrival_iata}</div>
+                            </div>
+                        </div>
+                        <div class="flight-details">
+                            <div class="flight-airline">
+                                <i class="fas fa-plane-departure"></i>
+                                <span>{airline_code}</span>
+                            </div>
+                            <div class="flight-duration">
+                                <i class="fas fa-clock"></i>
+                                <span>{duration_str}</span>
+                            </div>
+                            <div class="flight-type">
+                                <i class="fas fa-exchange-alt"></i>
+                                <span>{connection_text}</span>
+                            </div>
+                        </div>
+                    </div>'''
+                
+                if len(segments) > 1:
+                    response += '''
+                    <div class="flight-connections-horizontal">'''
+                    
+                    for idx, segment in enumerate(segments[1:], 1):
+                        try:
+                            if segment.get('departure') and segment['departure'].get('at'):
+                                connection_departure = parser.parse(segment['departure']['at'])
+                                connection_airline = segment.get('carrierCode', 'N/A')
+                                connection_iata = segment['departure'].get('iataCode', 'N/A')
+                                
+                                response += f'''
+                                <div class="connection-item-horizontal">
+                                    <span class="connection-label">Conexão {idx}:</span>
+                                    <span class="connection-time">{connection_departure.strftime('%H:%M')} - {connection_iata} ({connection_airline})</span>
+                                </div>'''
+                        except Exception as e:
+                            print(f"[WARN] Falha ao processar conexão {idx}: {e}")
+                            response += f'''
+                            <div class="connection-item-horizontal">
+                                <span class="connection-label">Conexão {idx}:</span>
+                                <span class="connection-time">Informações não disponíveis</span>
+                            </div>'''
+                    
+                    response += '''
+                    </div>'''
+                
+                response += '''
                 </div>'''
             
-            response += '''
-            </div>'''
+            except Exception as e:
+                print(f"[ERROR] Erro ao processar voo {i}: {e}")
+                response += f'''
+                <div class="flight-card" style="border-left: 3px solid #f44336;">
+                    <div class="flight-header">
+                        <div class="price-badge" style="background: #f44336;">Erro</div>
+                        <div class="flight-number">Voo {i}</div>
+                    </div>
+                    <div class="flight-main">
+                        <div style="text-align: center; color: #666; padding: 20px;">
+                            Erro ao processar informações deste voo
+                        </div>
+                    </div>
+                </div>'''
+                continue
         
-        response += '''
-        </div>'''
+        response += '</div></div>'
+        return response
     
-    response += '</div></div>'
-    return response
+    except Exception as e:
+        print(f"[ERROR] Erro geral ao formatar voos: {e}")
+        return "Erro ao processar informações dos voos. Por favor, tente novamente."
+
 
 def buscar_codigo_iata(nome_destino: str) -> str:
     """Retorna o código IATA para a cidade especificada"""
@@ -696,11 +858,13 @@ def format_price(price_data):
     try:
         # Verifica se há dados de preço válidos
         if not price_data or not isinstance(price_data, dict):
+            print("Dados de preço inválidos ou ausentes")
             return "Preço não disponível"
             
         # Extrai o valor total do preço
         total = price_data.get("total")
         if not total:
+            print("Valor total não encontrado nos dados de preço")
             return "Preço não disponível"
             
         # Converte para float se for string
@@ -708,16 +872,36 @@ def format_price(price_data):
             try:
                 total = float(total)
             except ValueError:
+                print(f"Não foi possível converter valor '{total}' para float")
                 return "Preço não disponível"
         
-        # Converte para real usando a taxa de câmbio atual
-        cotacao_dolar = get_exchange_rate("USD")
-        preco_brl = float(total) * cotacao_dolar
+        # Verifica se o valor é válido
+        if total <= 0:
+            print(f"Valor de preço inválido: {total}")
+            return "Preço não disponível"
         
-        # Formata o preço em reais
-        valor_formatado = f"R$ {preco_brl:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-        print(f"Preço formatado: {valor_formatado} (Original: {total} USD, Cotação: {cotacao_dolar})")
-        return valor_formatado
+        # Converte para real usando a taxa de câmbio atual
+        try:
+            cotacao_dolar = get_exchange_rate("USD")
+            if cotacao_dolar <= 0:
+                print(f"Taxa de câmbio inválida: {cotacao_dolar}")
+                return "Preço não disponível"
+                
+            preco_brl = float(total) * cotacao_dolar
+            
+            # Verifica se o resultado é válido
+            if preco_brl <= 0 or not isinstance(preco_brl, (int, float)) or not (preco_brl < 1000000):  # Limite razoável
+                print(f"Preço em reais inválido: {preco_brl}")
+                return "Preço não disponível"
+            
+            # Formata o preço em reais
+            valor_formatado = f"R$ {preco_brl:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            print(f"Preço formatado: {valor_formatado} (Original: {total} USD, Cotação: {cotacao_dolar})")
+            return valor_formatado
+        except Exception as e:
+            print(f"Erro ao converter preço: {e}")
+            return "Preço não disponível"
+            
     except Exception as e:
         print(f"Erro ao formatar preço: {e}")
         return "Preço não disponível"
@@ -1183,16 +1367,75 @@ def carregar_conversa_por_id(sessao_id, conversa_id):
 
 def format_message_content(content):
     """Formata o conteúdo da mensagem para HTML"""
-    # Se o conteúdo já contém HTML (como os cards de voos), retorna como está
-    if '<div' in content or '<html' in content or '<body' in content or '<h3' in content:
+    try:
+        # Verifica se o conteúdo é válido
+        if not content or not isinstance(content, str):
+            return content or ""
+        
+        # Se o conteúdo já contém HTML (como os cards de voos), retorna como está
+        if '<div' in content or '<html' in content or '<body' in content or '<h3' in content or '<ul' in content:
+            return content
+        
+        # Formata apenas texto simples
+        # Primeiro, normaliza quebras de linha
+        content = content.replace('\r\n', '\n').replace('\r', '\n')
+        
+        # Adiciona quebras de linha antes de títulos (##)
+        content = re.sub(r'##\s*(.+?)(?=\n|$)', r'<br><h3 style="color: #4285f4; margin: 20px 0 10px 0; font-size: 1.3rem; font-weight: 600;">\1</h3>', content)
+        
+        # Adiciona quebras de linha antes de subtítulos (**)
+        content = re.sub(r'\*\*(.+?)\*\*(?=\n|$)', r'<br><strong style="color: #333; font-size: 1.1rem; display: block; margin: 15px 0 8px 0;">\1</strong>', content)
+        
+        # Formata listas com asteriscos
+        content = re.sub(r'^\*\s+(.+?)$', r'<li style="margin: 8px 0; padding-left: 20px; position: relative;">\1</li>', content, flags=re.MULTILINE)
+        
+        # Encontra blocos de lista e os envolve em <ul>
+        lines = content.split('\n')
+        formatted_lines = []
+        in_list = False
+        list_items = []
+        
+        for line in lines:
+            if line.strip().startswith('<li'):
+                if not in_list:
+                    in_list = True
+                    list_items = []
+                list_items.append(line)
+            else:
+                if in_list and list_items:
+                    # Finaliza a lista
+                    formatted_lines.append('<ul style="margin: 15px 0; padding-left: 20px;">')
+                    formatted_lines.extend(list_items)
+                    formatted_lines.append('</ul>')
+                    in_list = False
+                    list_items = []
+                formatted_lines.append(line)
+        
+        # Finaliza lista se ainda estiver aberta
+        if in_list and list_items:
+            formatted_lines.append('<ul style="margin: 15px 0; padding-left: 20px;">')
+            formatted_lines.extend(list_items)
+            formatted_lines.append('</ul>')
+        
+        content = '\n'.join(formatted_lines)
+        
+        # Adiciona quebras de linha para separar parágrafos
+        content = re.sub(r'\n\s*\n', '<br><br>', content)
+        
+        # Formata texto em itálico
+        content = re.sub(r'\*(.+?)\*', r'<em>\1</em>', content)
+        
+        # Adiciona espaçamento para melhor legibilidade
+        content = content.replace('  ', '&nbsp;&nbsp;')
+        
+        # Remove quebras de linha extras no início
+        content = content.lstrip('\n')
+        
         return content
-    
-    # Formata apenas texto simples
-    content = content.replace('\n', '<br>')
-    content = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', content)
-    content = re.sub(r'\*(.*?)\*', r'<em>\1</em>', content)
-    content = content.replace('  ', '&nbsp;&nbsp;')
-    return content
+    except Exception as e:
+        print(f"[ERROR] Erro ao formatar mensagem: {e}")
+        # Retorna o conteúdo original em caso de erro
+        return content or ""
 
 @app.route('/')
 def index():
@@ -1248,18 +1491,35 @@ def view_conversation(conversation_id):
     session["data_inicio"] = conversation.start_date
     session["data_fim"] = conversation.end_date
     
+    # Formata as mensagens existentes para melhor apresentação
+    for message in conversation.messages:
+        if message.is_bot:
+            # Aplica formatação apenas se não for HTML já formatado
+            if not ('<div' in message.content or '<h3' in message.content or '<ul' in message.content):
+                message.content = format_message_content(message.content)
+    
     return render_template('chat.html', conversation=conversation)
 
 @app.route('/search', methods=['POST'])
 def structured_search():
     """Processa busca estruturada do painel principal"""
     try:
-        data = request.get_json()
-        user_id = session.get("id")
+        print("=== INICIANDO BUSCA ESTRUTURADA ===")
+        print(f"Headers recebidos: {dict(request.headers)}")
+        print(f"Content-Type: {request.content_type}")
         
+        data = request.get_json()
+        print(f"Dados recebidos: {data}")
+        
+        if not data:
+            print("ERRO: Dados JSON não recebidos ou inválidos")
+            return jsonify({"error": "Dados inválidos recebidos"}), 400
+        
+        user_id = session.get("id")
         if not user_id:
             user_id = str(uuid.uuid4())
             session["id"] = user_id
+        print(f"User ID: {user_id}")
         
         # Extrair dados estruturados
         origin = data.get('origin', '').strip()
@@ -1272,14 +1532,21 @@ def structured_search():
         include_hotels = data.get('includeHotels', False)
         include_weather = data.get('includeWeather', True)
         
+        print(f"Origem: {origin}, Destino: {destination}, Checkin: {checkin}, Checkout: {checkout}")
+        print(f"Adultos: {adults}, Crianças: {children}")
+        print(f"Incluir voos: {include_flights}, Incluir hotéis: {include_hotels}, Incluir clima: {include_weather}")
+        
         # Validar dados essenciais
         if not origin:
+            print("Erro: Origem não informada")
             return jsonify({"error": "Cidade de origem é obrigatória"}), 400
         
         if not destination:
+            print("Erro: Destino não informado")
             return jsonify({"error": "Destino é obrigatório"}), 400
         
         if not checkin:
+            print("Erro: Data de ida não informada")
             return jsonify({"error": "Data de ida é obrigatória"}), 400
         
         # Calcular duração da viagem
@@ -1287,20 +1554,28 @@ def structured_search():
         start_date = None
         end_date = None
         
-        if checkin:
-            start_date = datetime.strptime(checkin, "%Y-%m-%d").date()
-            
-        if checkout:
-            end_date = datetime.strptime(checkout, "%Y-%m-%d").date()
-            days = (end_date - start_date).days
-            if days > 0:
-                duration_text = f" por {days} dia{'s' if days != 1 else ''}"
+        try:
+            if checkin:
+                start_date = datetime.strptime(checkin, "%Y-%m-%d").date()
+                print(f"Data de início parseada: {start_date}")
+                
+            if checkout:
+                end_date = datetime.strptime(checkout, "%Y-%m-%d").date()
+                print(f"Data de fim parseada: {end_date}")
+                days = (end_date - start_date).days
+                if days > 0:
+                    duration_text = f" por {days} dia{'s' if days != 1 else ''}"
+                    print(f"Duração calculada: {days} dias")
+        except ValueError as date_error:
+            print(f"Erro ao parsear datas: {date_error}")
+            return jsonify({"error": "Formato de data inválido"}), 400
         
         # Preparar dados para a função get_ai_response
         datas = {
             "data_inicio": checkin,
             "data_fim": checkout
         }
+        print(f"Dados de datas preparados: {datas}")
         
         # Construir mensagem natural
         message = f"Quero um roteiro de viagem de {origin} para {destination}{duration_text}"
@@ -1326,45 +1601,95 @@ def structured_search():
         if preferences:
             message += ". Por favor, " + ", ".join(preferences)
         
-        # Criar nova conversa
-        conversation = Conversation(
-            title=generate_conversation_title(message),
-            user_id=user_id,
-            origin=origin,
-            destination=destination,
-            start_date=start_date,
-            end_date=end_date
-        )
+        print(f"Mensagem construída: {message}")
         
-        db.session.add(conversation)
-        db.session.commit()
-        session["conversation_id"] = conversation.id
+        # Criar nova conversa
+        print("Criando nova conversa no banco de dados...")
+        try:
+            conversation = Conversation(
+                title=generate_conversation_title(message),
+                user_id=user_id,
+                origin=origin,
+                destination=destination,
+                start_date=start_date,
+                end_date=end_date
+            )
+            print(f"Objeto conversation criado: {conversation}")
+            
+            db.session.add(conversation)
+            db.session.commit()
+            session["conversation_id"] = conversation.id
+            print(f"Conversa criada com ID: {conversation.id}")
+        except Exception as db_error:
+            print(f"Erro ao salvar conversa no banco: {db_error}")
+            print(f"Tipo de erro: {type(db_error).__name__}")
+            import traceback
+            print(f"Traceback completo: {traceback.format_exc()}")
+            db.session.rollback()
+            raise
         
         # Processar com IA
+        print("Inicializando contexto do chat...")
         if user_id not in chat_context:
             chat_context[user_id] = []
+            print(f"Novo contexto criado para usuário {user_id}")
+        else:
+            print(f"Contexto existente encontrado para usuário {user_id}")
         
         chat_context[user_id].append({"role": "user", "content": message})
-        bot_response = get_ai_response(chat_context[user_id], origem=origin, destino=destination, datas=datas)
-        chat_context[user_id].append({"role": "model", "content": bot_response})
+        print(f"Contexto atualizado. Total de mensagens: {len(chat_context[user_id])}")
+        print("Chamando get_ai_response...")
+        
+        try:
+            bot_response = get_ai_response(chat_context[user_id], origem=origin, destino=destination, datas=datas)
+            print(f"Resposta da IA recebida. Tamanho: {len(bot_response)} caracteres")
+            print(f"Primeiros 200 caracteres da resposta: {bot_response[:200]}...")
+            
+            if not bot_response or bot_response.strip() == "":
+                raise ValueError("Resposta da IA está vazia")
+            
+            chat_context[user_id].append({"role": "model", "content": bot_response})
+            print("Resposta da IA adicionada ao contexto")
+        except Exception as ai_error:
+            print(f"Erro na chamada da IA: {ai_error}")
+            print(f"Tipo de erro da IA: {type(ai_error).__name__}")
+            import traceback
+            print(f"Traceback da IA: {traceback.format_exc()}")
+            bot_response = "Desculpe, ocorreu um erro ao gerar o roteiro. Por favor, tente novamente."
+            chat_context[user_id].append({"role": "model", "content": bot_response})
         
         # Salvar mensagens
-        user_msg = Message(
-            content=message,
-            is_bot=False,
-            conversation_id=conversation.id
-        )
-        
-        formatted_response = format_message_content(bot_response)
-        bot_msg = Message(
-            content=formatted_response,
-            is_bot=True,
-            conversation_id=conversation.id
-        )
-        
-        db.session.add(user_msg)
-        db.session.add(bot_msg)
-        db.session.commit()
+        print("Salvando mensagens no banco de dados...")
+        try:
+            user_msg = Message(
+                content=message,
+                is_bot=False,
+                conversation_id=conversation.id
+            )
+            print(f"Mensagem do usuário criada: {user_msg}")
+            
+            formatted_response = format_message_content(bot_response)
+            print(f"Resposta formatada. Tamanho: {len(formatted_response)} caracteres")
+            print(f"Primeiros 200 caracteres formatados: {formatted_response[:200]}...")
+            
+            bot_msg = Message(
+                content=formatted_response,
+                is_bot=True,
+                conversation_id=conversation.id
+            )
+            print(f"Mensagem do bot criada: {bot_msg}")
+            
+            db.session.add(user_msg)
+            db.session.add(bot_msg)
+            db.session.commit()
+            print("Mensagens salvas com sucesso")
+        except Exception as msg_error:
+            print(f"Erro ao salvar mensagens: {msg_error}")
+            print(f"Tipo de erro das mensagens: {type(msg_error).__name__}")
+            import traceback
+            print(f"Traceback das mensagens: {traceback.format_exc()}")
+            db.session.rollback()
+            raise
         
         response_data = {
             'success': True,
@@ -1373,12 +1698,25 @@ def structured_search():
             'user_message': message,
             'bot_response': formatted_response
         }
+        
+        print("=== BUSCA ESTRUTURADA CONCLUÍDA COM SUCESSO ===")
+        print(f"Dados de resposta: {response_data}")
         return jsonify(response_data)
         
     except Exception as e:
-        print(f"Erro na busca estruturada: {e}")
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        print(f"=== ERRO NA BUSCA ESTRUTURADA ===")
+        print(f"Tipo de erro: {type(e).__name__}")
+        print(f"Mensagem de erro: {str(e)}")
+        import traceback
+        print(f"Traceback completo: {traceback.format_exc()}")
+        
+        try:
+            db.session.rollback()
+            print("Rollback do banco executado")
+        except Exception as rollback_error:
+            print(f"Erro no rollback: {rollback_error}")
+        
+        return jsonify({"error": f"Erro interno: {str(e)}"}), 500
 
 @app.route('/chat', methods=['POST'])
 def chat():

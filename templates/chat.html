@@ -124,6 +124,53 @@
             border-bottom-left-radius: 4px;
         }
         
+        /* Estilos para mensagens formatadas */
+        .bot-message h3 {
+            color: #4285f4;
+            margin: 20px 0 10px 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+            border-bottom: 2px solid #4285f4;
+            padding-bottom: 5px;
+        }
+        
+        .bot-message strong {
+            color: #333;
+            font-size: 1.1rem;
+            display: block;
+            margin: 15px 0 8px 0;
+            font-weight: 600;
+        }
+        
+        .bot-message ul {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+        
+        .bot-message li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+            line-height: 1.5;
+        }
+        
+        .bot-message li:before {
+            content: "•";
+            color: #4285f4;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        .bot-message em {
+            font-style: italic;
+            color: #666;
+        }
+        
+        .bot-message br {
+            margin: 5px 0;
+        }
+        
         .input-container {
             position: relative;
             margin-bottom: 5px;
@@ -646,11 +693,20 @@
     </div>
 
     <script>
+        // Elementos do DOM
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('user-input');
+        
+        // Variáveis de estado
         let isWaitingForResponse = false;
         
-        window.isExistingConversation = Boolean(document.querySelector('#chat-container .message'));
+        // Verifica se é uma conversa existente baseado na presença de mensagens
+        try {
+            window.isExistingConversation = Boolean(document.querySelector('#chat-container .message'));
+        } catch (error) {
+            console.warn('Erro ao verificar conversa existente:', error);
+            window.isExistingConversation = false;
+        }
         
         function showLoading() {
             const loading = document.createElement('div');
@@ -675,11 +731,37 @@
         }
 
         function addMessage(type, message) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}-message`;
-            messageDiv.innerHTML = message;
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+            try {
+                if (!message || typeof message !== 'string') {
+                    console.warn('Mensagem inválida recebida:', message);
+                    message = "Mensagem inválida";
+                }
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${type}-message`;
+                messageDiv.innerHTML = message;
+                
+                if (chatContainer) {
+                    chatContainer.appendChild(messageDiv);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                } else {
+                    console.error('Container de chat não encontrado');
+                }
+            } catch (error) {
+                console.error('Erro ao adicionar mensagem:', error);
+                // Fallback: tenta adicionar como texto simples
+                try {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${type}-message`;
+                    messageDiv.textContent = message;
+                    if (chatContainer) {
+                        chatContainer.appendChild(messageDiv);
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }
+                } catch (fallbackError) {
+                    console.error('Erro no fallback de mensagem:', fallbackError);
+                }
+            }
         }
 
         function animateChatTitle(titleText) {
@@ -798,93 +880,151 @@
         });
 
         window.onload = function() {
-            // Verificar se há dados de busca estruturada pendente
-            const pendingSearchData = localStorage.getItem('pendingSearchData');
-            
-            if (pendingSearchData) {
-                const searchData = JSON.parse(pendingSearchData);
-                localStorage.removeItem('pendingSearchData');
+            // Aguardar um pouco para garantir que a página esteja totalmente carregada
+            setTimeout(() => {
+                // Verificar se há dados de busca estruturada pendente
+                const pendingSearchData = localStorage.getItem('pendingSearchData');
                 
-                // Mostrar loading imediatamente
-                showLoading();
-                
-                // Processar busca estruturada
-                fetch('/search', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(searchData)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    hideLoading();
-                    if (data.success) {
-                        // Adicionar mensagem do usuário
-                        const userMessage = `Quero um roteiro de viagem de ${searchData.origin} para ${searchData.destination}`;
-                        if (searchData.checkin) {
-                            const checkinDate = new Date(searchData.checkin);
-                            userMessage += ` saindo no dia ${checkinDate.toLocaleDateString('pt-BR')}`;
-                        }
-                        if (searchData.checkout && searchData.checkin) {
-                            const checkinDate = new Date(searchData.checkin);
-                            const checkoutDate = new Date(searchData.checkout);
-                            const days = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
-                            if (days > 0) {
-                                userMessage += ` por ${days} dia${days > 1 ? 's' : ''}`;
-                            }
+                if (pendingSearchData) {
+                    try {
+                        const searchData = JSON.parse(pendingSearchData);
+                        localStorage.removeItem('pendingSearchData');
+                        
+                        // Validar dados antes de processar
+                        if (!searchData || typeof searchData !== 'object') {
+                            throw new Error('Dados de busca inválidos');
                         }
                         
-                        addMessage('user', userMessage);
+                        if (!searchData.origin || !searchData.destination || !searchData.checkin) {
+                            throw new Error('Dados obrigatórios não informados');
+                        }
                         
-                        // Adicionar resposta do bot
-                        setTimeout(() => {
-                            addMessage('bot', data.bot_response);
-                            if (data.title) {
-                                animateChatTitle(data.title);
+                        console.log('Processando busca estruturada:', searchData);
+                        
+                        // Mostrar loading imediatamente
+                        showLoading();
+                        
+                        // Processar busca estruturada
+                        fetch('/search', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(searchData)
+                        })
+                        .then(response => {
+                            console.log('Status da resposta:', response.status);
+                            console.log('Headers da resposta:', response.headers);
+                            
+                            if (!response.ok) {
+                                console.error('Resposta não OK:', response.status, response.statusText);
+                                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                             }
-                        }, 200);
-                    } else {
-                        addMessage('bot', "Desculpe, ocorreu um erro ao processar sua busca. Por favor, tente novamente.");
+                            
+                            return response.json();
+                        })
+                        .then(data => {
+                            hideLoading();
+                            console.log('Resposta da busca estruturada:', data);
+                            
+                            if (data.success) {
+                                // Adicionar mensagem do usuário
+                                let userMessage = `Quero um roteiro de viagem de ${searchData.origin} para ${searchData.destination}`;
+                                if (searchData.checkin) {
+                                    const checkinDate = new Date(searchData.checkin);
+                                    userMessage += ` saindo no dia ${checkinDate.toLocaleDateString('pt-BR')}`;
+                                }
+                                if (searchData.checkout && searchData.checkin) {
+                                    const checkinDate = new Date(searchData.checkin);
+                                    const checkoutDate = new Date(searchData.checkout);
+                                    const days = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
+                                    if (days > 0) {
+                                        userMessage += ` por ${days} dia${days > 1 ? 's' : ''}`;
+                                    }
+                                }
+                                
+                                addMessage('user', userMessage);
+                                
+                                // Adicionar resposta do bot
+                                setTimeout(() => {
+                                    addMessage('bot', data.bot_response);
+                                    if (data.title) {
+                                        animateChatTitle(data.title);
+                                    }
+                                }, 200);
+                            } else {
+                                console.error('Erro na busca estruturada:', data.error);
+                                addMessage('bot', `Desculpe, ocorreu um erro ao processar sua busca: ${data.error || 'Erro desconhecido'}. Por favor, tente novamente.`);
+                            }
+                        })
+                        .catch(error => {
+                            hideLoading();
+                            console.error('Erro na requisição de busca estruturada:', error);
+                            console.error('Tipo de erro:', typeof error);
+                            console.error('Propriedades do erro:', Object.keys(error));
+                            console.error('Stack trace:', error.stack);
+                            
+                            let errorMessage = "Desculpe, ocorreu um erro ao processar sua solicitação.";
+                            
+                            // Captura diferentes tipos de erro
+                            if (error.message) {
+                                console.error('Mensagem de erro:', error.message);
+                                if (error.message.includes('Assignment to constant variable')) {
+                                    errorMessage = "Desculpe, ocorreu um erro interno no sistema. Por favor, tente novamente.";
+                                } else if (error.message.includes('Failed to fetch')) {
+                                    errorMessage = "Desculpe, não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.";
+                                } else if (error.message.includes('NetworkError')) {
+                                    errorMessage = "Desculpe, ocorreu um erro de rede. Verifique sua conexão e tente novamente.";
+                                } else {
+                                    errorMessage += ` ${error.message}`;
+                                }
+                            }
+                            
+                            errorMessage += " Por favor, tente novamente.";
+                            addMessage('bot', errorMessage);
+                        });
+                    } catch (error) {
+                        console.error('Erro ao processar dados pendentes:', error);
+                        addMessage('bot', "Desculpe, ocorreu um erro ao processar os dados da busca. Por favor, tente novamente.");
                     }
-                })
-                .catch(error => {
-                    hideLoading();
-                    addMessage('bot', "Desculpe, ocorreu um erro ao processar sua solicitação. Por favor, tente novamente.");
-                });
-            } else {
-                // Verificar se há dados de nova conversa estruturada
-                const newConversationData = localStorage.getItem('newConversationData');
-                if (newConversationData) {
-                    const data = JSON.parse(newConversationData);
-                    localStorage.removeItem('newConversationData');
-                    
-                    // Adicionar as mensagens da conversa estruturada
-                    addMessage('user', data.userMessage);
-                    setTimeout(() => {
-                        addMessage('bot', data.botResponse);
-                        animateChatTitle(data.title);
-                    }, 300);
                 } else {
-                    // Verificar mensagem pendente (busca simples)
-                    const pendingMessage = localStorage.getItem('pendingMessage');
-                    if (pendingMessage) {
-                        localStorage.removeItem('pendingMessage');
-                        userInput.value = pendingMessage;
-                        sendMessage();
-                    } else if (!window.isExistingConversation) {
-                        setTimeout(() => {
-                            addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Informações sobre cidades, pontos históricos<br><br>Quanto mais detalhes sobre seu roteiro, mais personalizado ele ficará.<br><br> Basta me dizer para onde quer ir! 😊");
-                        }, 500);
-                    } else { // Para conversas existentes, animar o título já presente
-                        const titleElement = document.querySelector('.chat-title');
-                        if (titleElement && titleElement.textContent.trim() !== '') {
-                            const existingTitle = titleElement.textContent.trim();
-                            animateChatTitle(existingTitle);
+                    // Verificar se há dados de nova conversa estruturada
+                    const newConversationData = localStorage.getItem('newConversationData');
+                    if (newConversationData) {
+                        try {
+                            const data = JSON.parse(newConversationData);
+                            localStorage.removeItem('newConversationData');
+                            
+                            // Adicionar as mensagens da conversa estruturada
+                            addMessage('user', data.userMessage);
+                            setTimeout(() => {
+                                addMessage('bot', data.botResponse);
+                                animateChatTitle(data.title);
+                            }, 300);
+                        } catch (error) {
+                            console.error('Erro ao processar nova conversa:', error);
+                        }
+                    } else {
+                        // Verificar mensagem pendente (busca simples)
+                        const pendingMessage = localStorage.getItem('pendingMessage');
+                        if (pendingMessage) {
+                            localStorage.removeItem('pendingMessage');
+                            userInput.value = pendingMessage;
+                            sendMessage();
+                        } else if (!window.isExistingConversation) {
+                            setTimeout(() => {
+                                addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Informações sobre cidades, pontos históricos<br><br>Quanto mais detalhes sobre seu roteiro, mais personalizado ele ficará.<br><br> Basta me dizer para onde quer ir! 😊");
+                            }, 500);
+                        } else { // Para conversas existentes, animar o título já presente
+                            const titleElement = document.querySelector('.chat-title');
+                            if (titleElement && titleElement.textContent.trim() !== '') {
+                                const existingTitle = titleElement.textContent.trim();
+                                animateChatTitle(existingTitle);
+                            }
                         }
                     }
                 }
-            }
+            }, 100); // Aguarda 100ms para garantir carregamento completo
         }
     </script>
 </body>
