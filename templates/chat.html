@@ -494,14 +494,14 @@
         
         .route-info {
             text-align: center;
-            min-width: 90px;
+            min-width: 110px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
         
         .time-large {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 700;
             color: #333;
             line-height: 1.2;
@@ -700,13 +700,8 @@
         // Variáveis de estado
         let isWaitingForResponse = false;
         
-        // Verifica se é uma conversa existente baseado na presença de mensagens
-        try {
-            window.isExistingConversation = Boolean(document.querySelector('#chat-container .message'));
-        } catch (error) {
-            console.warn('Erro ao verificar conversa existente:', error);
-            window.isExistingConversation = false;
-        }
+        // Variável para controlar se é uma conversa existente
+        let isExistingConversation = false;
         
         function showLoading() {
             const loading = document.createElement('div');
@@ -851,9 +846,18 @@
         }
         
         function startNewChat() {
+            // Limpar completamente o chat
             chatContainer.innerHTML = '';
             const titleElement = document.querySelector('.chat-title');
-            if(titleElement) titleElement.textContent = ''; // Clear title for new chat
+            if(titleElement) titleElement.textContent = '';
+            
+            // Limpar todos os dados do localStorage para evitar interferência
+            localStorage.removeItem('pendingSearchData');
+            localStorage.removeItem('newConversationData');
+            localStorage.removeItem('pendingMessage');
+            
+            // Resetar estado da conversa
+            isExistingConversation = false;
             
             fetch('/new_chat', {
                 method: 'POST',
@@ -861,9 +865,9 @@
                     'Content-Type': 'application/json',
                 }
             }).then(() => {
-                                         setTimeout(() => {
-                             addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Informações sobre cidades, pontos históricos<br><br>Quanto mais detalhes sobre seu roteiro, mais personalizado ele ficará.<br><br> Basta me dizer para onde quer ir! 😊");
-                         }, 200);
+                setTimeout(() => {
+                    addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Informações sobre cidades, pontos históricos<br><br>Quanto mais detalhes sobre seu roteiro, mais personalizado ele ficará.<br><br> Basta me dizer para onde quer ir! 😊");
+                }, 200);
             });
         }
 
@@ -882,6 +886,36 @@
         window.onload = function() {
             // Aguardar um pouco para garantir que a página esteja totalmente carregada
             setTimeout(() => {
+                // Verificar se já existe uma conversa carregada (mensagens no DOM)
+                const existingMessages = document.querySelectorAll('#chat-container .message');
+                isExistingConversation = existingMessages.length > 0;
+                
+                console.log('Conversa existente detectada:', isExistingConversation, 'Mensagens encontradas:', existingMessages.length);
+                
+                // Se já existe uma conversa carregada, não processar dados pendentes
+                if (isExistingConversation) {
+                    console.log('Conversa existente detectada, pulando processamento de dados pendentes');
+                    // Limpar qualquer dado pendente do localStorage
+                    localStorage.removeItem('pendingSearchData');
+                    localStorage.removeItem('newConversationData');
+                    localStorage.removeItem('pendingMessage');
+                    
+                    // Apenas animar o título se existir
+                    const titleElement = document.querySelector('.chat-title');
+                    if (titleElement && titleElement.textContent.trim() !== '') {
+                        const existingTitle = titleElement.textContent.trim();
+                        animateChatTitle(existingTitle);
+                    }
+                    return;
+                }
+                
+                // Limpar dados antigos que possam estar causando interferência
+                const oldPendingMessage = localStorage.getItem('pendingMessage');
+                if (oldPendingMessage) {
+                    console.log('Removendo mensagem pendente antiga:', oldPendingMessage);
+                    localStorage.removeItem('pendingMessage');
+                }
+                
                 // Verificar se há dados de busca estruturada pendente
                 const pendingSearchData = localStorage.getItem('pendingSearchData');
                 
@@ -1011,16 +1045,10 @@
                             localStorage.removeItem('pendingMessage');
                             userInput.value = pendingMessage;
                             sendMessage();
-                        } else if (!window.isExistingConversation) {
+                        } else {
                             setTimeout(() => {
                                 addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Informações sobre cidades, pontos históricos<br><br>Quanto mais detalhes sobre seu roteiro, mais personalizado ele ficará.<br><br> Basta me dizer para onde quer ir! 😊");
                             }, 500);
-                        } else { // Para conversas existentes, animar o título já presente
-                            const titleElement = document.querySelector('.chat-title');
-                            if (titleElement && titleElement.textContent.trim() !== '') {
-                                const existingTitle = titleElement.textContent.trim();
-                                animateChatTitle(existingTitle);
-                            }
                         }
                     }
                 }

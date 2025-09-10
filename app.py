@@ -334,7 +334,11 @@ def get_ai_response(messages, origem=None, destino=None, datas=None):
                     if voos and 'data' in voos and voos['data']:
                         try:
                             voos_html = format_flights_response(voos['data'])
-                            roteiro += "\n\n---\n\n" + voos_html
+                            # Adiciona separação adequada entre roteiro e voos
+                            if roteiro.strip():
+                                roteiro += "\n\n---\n\n" + voos_html
+                            else:
+                                roteiro = voos_html
                             print(f"[DEBUG] Voos adicionados ao roteiro")
                         except Exception as voo_error:
                             print(f"[ERROR] Erro ao formatar voos: {voo_error}")
@@ -424,8 +428,9 @@ def format_flights_response(flights):
                 departure_iata = first_segment['departure'].get('iataCode', 'N/A')
                 arrival_iata = last_segment['arrival'].get('iataCode', 'N/A')
                 
-                departure_time = first_departure.strftime('%H:%M') if first_departure else 'N/A'
-                arrival_time = last_arrival.strftime('%H:%M') if last_arrival else 'N/A'
+                # Formatar horários com datas para evitar confusão em voos noturnos
+                departure_time = first_departure.strftime('%d/%m %H:%M') if first_departure else 'N/A'
+                arrival_time = last_arrival.strftime('%d/%m %H:%M') if last_arrival else 'N/A'
                 
                 response += f'''
                 <div class="flight-card">
@@ -1372,11 +1377,74 @@ def format_message_content(content):
         if not content or not isinstance(content, str):
             return content or ""
         
-        # Se o conteúdo já contém HTML (como os cards de voos), retorna como está
-        if '<div' in content or '<html' in content or '<body' in content or '<h3' in content or '<ul' in content:
-            return content
+        # Se o conteúdo já contém HTML (como os cards de voos), processa de forma inteligente
+        if '<div' in content or '<html' in content or '<body' in content or '<h3' in content or '<ul' in content or '<span' in content or '<style' in content:
+            # Separa o conteúdo em partes: texto simples e HTML
+            parts = []
+            current_part = ""
+            in_html = False
+            html_depth = 0
+            
+            lines = content.split('\n')
+            for line in lines:
+                # Detecta início de HTML (tags de abertura)
+                if re.search(r'<[^/][^>]*>', line):
+                    if current_part.strip() and not in_html:
+                        parts.append(('text', current_part.strip()))
+                        current_part = ""
+                    in_html = True
+                    # Conta tags de abertura e fechamento para controlar profundidade
+                    open_tags = len(re.findall(r'<[^/][^>]*>', line))
+                    close_tags = len(re.findall(r'</[^>]*>', line))
+                    html_depth += open_tags - close_tags
+                    current_part += line + '\n'
+                # Detecta fim de HTML (tags de fechamento)
+                elif in_html and re.search(r'</[^>]*>', line):
+                    close_tags = len(re.findall(r'</[^>]*>', line))
+                    html_depth -= close_tags
+                    current_part += line + '\n'
+                    # Se chegou ao nível 0, finaliza o bloco HTML
+                    if html_depth <= 0:
+                        if current_part.strip():
+                            parts.append(('html', current_part.strip()))
+                            current_part = ""
+                        in_html = False
+                        html_depth = 0
+                # Continua acumulando
+                else:
+                    current_part += line + '\n'
+            
+            # Adiciona a última parte se houver
+            if current_part.strip():
+                if in_html:
+                    parts.append(('html', current_part.strip()))
+                else:
+                    parts.append(('text', current_part.strip()))
+            
+            # Processa cada parte
+            formatted_parts = []
+            for part_type, part_content in parts:
+                if part_type == 'html':
+                    # HTML já formatado, mantém como está
+                    formatted_parts.append(part_content)
+                else:
+                    # Texto simples, formata
+                    formatted_text = format_text_content(part_content)
+                    formatted_parts.append(formatted_text)
+            
+            return '\n'.join(formatted_parts)
         
-        # Formata apenas texto simples
+        # Se não há HTML, formata como texto simples
+        return format_text_content(content)
+        
+    except Exception as e:
+        print(f"[ERROR] Erro ao formatar mensagem: {e}")
+        # Retorna o conteúdo original em caso de erro
+        return content or ""
+
+def format_text_content(content):
+    """Formata apenas conteúdo de texto simples"""
+    try:
         # Primeiro, normaliza quebras de linha
         content = content.replace('\r\n', '\n').replace('\r', '\n')
         
@@ -1433,17 +1501,16 @@ def format_message_content(content):
         
         return content
     except Exception as e:
-        print(f"[ERROR] Erro ao formatar mensagem: {e}")
-        # Retorna o conteúdo original em caso de erro
+        print(f"[ERROR] Erro ao formatar texto: {e}")
         return content or ""
 
 @app.route('/')
 def index():
-    # Cria ou recupera ID de sessão
-    if not session.get("id"):
-        session["id"] = str(uuid.uuid4())
-    # Limpa dados de conversa anterior
+    # Limpa completamente a sessão para garantir que não há dados de conversas anteriores
+    session.clear()
+    session["id"] = str(uuid.uuid4())
     session["nova_conversa"] = True
+    print("Página inicial acessada, sessão limpa")
     return render_template('index.html')
 
 @app.route('/chat')
@@ -1451,7 +1518,34 @@ def chat_page():
     # Cria ou recupera ID de sessão
     if not session.get("id"):
         session["id"] = str(uuid.uuid4())
-    return render_template('chat.html')
+    
+    # Verificar se há uma conversa ativa na sessão
+    conversation = None
+    conversation_id = session.get("conversation_id")
+    
+    # Se há um conversation_id, verificar se a conversa ainda existe e é válida
+    if conversation_id:
+        conversation = Conversation.query.get(conversation_id)
+        if conversation and conversation.user_id == session.get("id"):
+            # Formata as mensagens existentes para melhor apresentação
+            for message in conversation.messages:
+                if message.is_bot:
+                    # Aplica formatação apenas se não for HTML já formatado
+                    if not ('<div' in message.content or '<h3' in message.content or '<ul' in message.content):
+                        message.content = format_message_content(message.content)
+        else:
+            # Se a conversa não existe ou não pertence ao usuário, limpa completamente a sessão
+            session.pop("conversation_id", None)
+            session.pop("nova_conversa", None)
+            conversation = None
+            print(f"Conversa {conversation_id} não encontrada ou inválida, sessão limpa")
+    
+    # Se não há conversa ativa, garantir que a sessão está limpa
+    if not conversation:
+        session.pop("conversation_id", None)
+        session.pop("nova_conversa", None)
+    
+    return render_template('chat.html', conversation=conversation)
 
 @app.route('/historico')
 def historico():
@@ -1814,7 +1908,20 @@ def chat():
             chat_context[user_id] = []
 
         chat_context[user_id].append({"role": "user", "content": user_message})
-        bot_response = get_ai_response(chat_context[user_id])
+        
+        # Se é uma conversa existente, passa o contexto da conversa para manter informações de origem, destino e datas
+        if not is_new_conversation and conversation:
+            origem = conversation.origin if conversation.origin else None
+            destino = conversation.destination if conversation.destination else None
+            datas = {}
+            if conversation.start_date:
+                datas['data_inicio'] = conversation.start_date.strftime('%Y-%m-%d')
+            if conversation.end_date:
+                datas['data_fim'] = conversation.end_date.strftime('%Y-%m-%d')
+            bot_response = get_ai_response(chat_context[user_id], origem=origem, destino=destino, datas=datas)
+        else:
+            bot_response = get_ai_response(chat_context[user_id])
+            
         chat_context[user_id].append({"role": "model", "content": bot_response})
 
         # Formata e adiciona a resposta do bot
@@ -1866,6 +1973,11 @@ def new_chat():
         session.pop("data_inicio", None)
         session.pop("data_fim", None)
         session.pop("nova_conversa", None)
+        
+        # Força uma nova sessão para evitar persistência de dados antigos
+        session.clear()
+        session["id"] = user_id
+        session["nova_conversa"] = True
         
         # Força uma nova conversa na próxima mensagem
         session["nova_conversa"] = True
