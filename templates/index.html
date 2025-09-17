@@ -633,8 +633,17 @@
 <img src="{{ url_for('static', filename='atlas_logo.png') }}" alt="Atlas Logo" />
 </div>
 <div class="navbar-links">
-<a href="#" class="navbar-link">Login</a>
-<a href="#" class="navbar-link">Cadastre-se</a>
+{% if is_logged_in %}
+    <span class="navbar-link" style="color: #4CAF50;">
+        <i class="fas fa-user"></i> 
+        Olá, {{ user.email.split('@')[0] }}!
+    </span>
+    <a href="/historico" class="navbar-link">Histórico</a>
+    <a href="/auth/logout" class="navbar-link">Sair</a>
+{% else %}
+    <a href="/login" class="navbar-link">Login</a>
+    <a href="/register" class="navbar-link">Cadastre-se</a>
+{% endif %}
 </div>
 </nav>
 
