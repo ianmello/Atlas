@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Atlas AI 🌏</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4285f4;
+            --primary-dark: #3367d6;
+            --secondary-color: #fbbc05;
+            --text-color: #333;
+            --light-bg: #f8f9fa;
+            --border-radius: 16px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding-bottom: 120px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 80px);
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 5px;
+            border-bottom: 2px solid rgba(66, 133, 244, 0.1);
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .header-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            background: rgba(66, 133, 244, 0.1);
+        }
+        
+        .header-links a:hover {
+            background: rgba(66, 133, 244, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        #chat-container {
+            flex: 1;
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 5px;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+            position: relative;
+            scroll-behavior: smooth;
+        }
+        
+        .message {
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            margin: 10px 0;
+            max-width: 80%;
+            position: relative;
+            animation: messageAppear 0.3s ease-out;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        @keyframes messageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .user-message {
+            background: linear-gradient(135deg, var(--primary-color), #5c9ce5);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .bot-message {
+            background: var(--light-bg);
+            color: var(--text-color);
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+        
+        /* Estilos para mensagens formatadas */
+        .bot-message h3 {
+            color: #4285f4;
+            margin: 20px 0 10px 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+            border-bottom: 2px solid #4285f4;
+            padding-bottom: 5px;
+        }
+        
+        .bot-message strong {
+            color: #333;
+            font-size: 1.1rem;
+            display: block;
+            margin: 15px 0 8px 0;
+            font-weight: 600;
+        }
+        
+        .bot-message ul {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+        
+        .bot-message li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+            line-height: 1.5;
+        }
+        
+        .bot-message li:before {
+            content: "•";
+            color: #4285f4;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+        
+        .bot-message em {
+            font-style: italic;
+            color: #666;
+        }
+        
+        .bot-message br {
+            margin: 5px 0;
+        }
+        
+        .input-container {
+            position: relative;
+            margin-bottom: 5px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        
+        #user-input {
+            flex: 1;
+            width: 100%;
+            padding: 16px 20px;
+            padding-right: 50px;
+            border-radius: var(--border-radius);
+            border: 2px solid rgba(66, 133, 244, 0.1);
+            font-size: 1rem;
+            transition: var(--transition);
+            font-family: 'Inter', sans-serif;
+            resize: none;
+            min-height: 56px;
+            max-height: 150px;
+            line-height: 1.5;
+            background: white;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        #user-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+        }
+        
+        .send-btn {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            background: transparent;
+            color: var(--primary-color);
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            border-radius: 50%;
+            z-index: 1;
+        }
+        
+        .send-btn:hover {
+            background: rgba(66, 133, 244, 0.1);
+            transform: scale(1.1);
+        }
+        
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 0;
+        }
+        
+        .suggestion-chip {
+            background: white;
+            color: var(--primary-color);
+            border: 2px solid rgba(66, 133, 244, 0.2);
+            border-radius: 25px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+        
+        .suggestion-chip:hover {
+            background: rgba(66, 133, 244, 0.1);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 15px 20px;
+            margin: 10px 0;
+            max-width: fit-content;
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            animation: bounce 1.5s infinite;
+        }
+        
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-8px); }
+        }
+        
+        .new-chat-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            width: 56px;
+            height: 56px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+            flex-shrink: 0;
+        }
+        
+        .new-chat-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        .new-chat-btn i {
+            font-size: 24px;
+            line-height: 0;
+            margin: 0;
+            padding: 0;
+        }    
+        
+        @media (max-width: 768px) {
+            body {
+                padding-bottom: 100px;
+            }
+            .container {
+                padding: 10px;
+                margin-top: 60px;
+                min-height: calc(100vh - 60px);
+            }
+            
+            header {
+                padding: 15px 0;
+                margin-bottom: 5px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .chat-title {
+                font-size: 1rem;
+            }
+            
+            .message {
+                max-width: 90%;
+                padding: 12px 16px;
+            }
+            
+            .new-chat-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+            }
+            
+            .suggestions {
+                gap: 8px;
+                margin-bottom: 0;
+            }
+            
+            .suggestion-chip {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+        }
+        .navbar {
+          width: 100vw;
+          height: 80px;
+          background: rgba(0,0,0,0.45);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          z-index: 10;
+          padding: 0 40px;
+          box-sizing: border-box;
+        }
+        .navbar-logo img {
+          height: 100px;
+          max-height: 130px;
+          width: auto;
+          display: block;
+        }
+        .navbar-links {
+          display: flex;
+          gap: 24px;
+        }
+        .navbar-link {
+          color: #fff;
+          font-family: 'Poppins', sans-serif;
+          font-weight: 600;
+          font-size: 1.1rem;
+          text-decoration: none;
+          padding: 8px 18px;
+          border-radius: 8px;
+          transition: background 0.2s;
+        }
+        .navbar-link:hover {
+          background: rgba(255,255,255,0.12);
+        }
+        @media (max-width: 700px) {
+          .navbar { padding: 0 10px; height: 60px; }
+          .navbar-logo img { height: 50px; }
+          .navbar-link { font-size: 0.95rem; padding: 6px 10px; }
+        }
+        .chat-title {
+            color: #555;
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-top: 5px;
+            text-align: center;
+            min-height: 1.5em;
+            border-right: 1px solid transparent;
+            white-space: nowrap;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        @keyframes blinkCursor {
+            from { border-right-color: transparent }
+            to { border-right-color: #555 }
+        }
+        
+        /* Estilos para os cards de voos - Design Horizontal Compacto */
+        .flights-section {
+            margin: 15px 0;
+        }
+        
+        .flights-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        
+        .flight-card {
+            background: white;
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(66, 133, 244, 0.08);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .flight-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        .flight-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #4285f4, #34a853);
+        }
+        
+        .flight-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        
+        .price-badge {
+            background: linear-gradient(135deg, #4285f4, #5c9ce5);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+        }
+        
+        .flight-number {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #666;
+            background: rgba(66, 133, 244, 0.1);
+            padding: 6px 12px;
+            border-radius: 16px;
+        }
+        
+        .flight-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            gap: 20px;
+        }
+        
+        .flight-route-horizontal {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            flex: 1;
+        }
+        
+        .route-info {
+            text-align: center;
+            min-width: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .time-large {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            line-height: 1.2;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+        
+        .airport-code {
+            font-size: 1rem;
+            color: #666;
+            font-weight: 600;
+            background: rgba(66, 133, 244, 0.1);
+            padding: 4px 10px;
+            border-radius: 8px;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .route-arrow {
+            background: rgba(66, 133, 244, 0.1);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4285f4;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .flight-details {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .flight-airline, .flight-duration, .flight-type {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            color: #666;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        .flight-airline i, .flight-duration i, .flight-type i {
+            color: #4285f4;
+            font-size: 0.9rem;
+            width: 16px;
+            flex-shrink: 0;
+        }
+        
+        .flight-connections-horizontal {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(0, 0, 0, 0.04);
+        }
+        
+        .connection-item-horizontal {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 0;
+            font-size: 0.9rem;
+        }
+        
+        .connection-label {
+            font-weight: 600;
+            color: #4285f4;
+        }
+        
+        .connection-time {
+            color: #666;
+        }
+        
+        /* Responsividade para os cards de voos */
+        @media (max-width: 768px) {
+            .flight-header {
+                flex-direction: column;
+                gap: 8px;
+                align-items: stretch;
+            }
+            
+            .price-badge {
+                align-self: center;
+            }
+            
+            .flight-main {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+            
+            .flight-route-horizontal {
+                justify-content: center;
+                gap: 15px;
+            }
+            
+            .flight-details {
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            
+            .time-large {
+                font-size: 1.3rem;
+            }
+            
+            .airport-code {
+                font-size: 0.9rem;
+            }
+            
+            .route-arrow {
+                width: 28px;
+                height: 28px;
+                font-size: 0.9rem;
+            }
+            
+            .flight-airline, .flight-duration, .flight-type {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+      <div class="navbar-logo">
+        <a href="/">
+          <img src="{{ url_for('static', filename='atlas_logo.png') }}" alt="Atlas Logo" />
+        </a>
+      </div>
+      <div class="navbar-links">
+        {% if is_logged_in %}
+            <a href="/historico" class="navbar-link">Histórico</a>
+            <a href="/auth/logout" class="navbar-link">Sair</a>
+        {% else %}
+            <a href="/login" class="navbar-link">Login</a>
+            <a href="/register" class="navbar-link">Cadastre-se</a>
+        {% endif %}
+      </div>
+    </nav>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-globe-americas"></i> Atlas AI</h1>
+            <h2 class="chat-title">{% if conversation %}{{ conversation.title }}{% endif %}</h2>
+            <div class="header-links">
+                <a href="/historico"><i class="fas fa-history"></i> Histórico</a>
+            </div>
+        </header>
+        
+        {% if not is_logged_in %}
+        <div class="alert" style="background: #e3f2fd; border-left: 4px solid #2196f3; color: #1565c0; padding: 12px 16px; margin-bottom: 15px; border-radius: 4px; font-size: 0.9rem;">
+            <i class="fas fa-info-circle"></i>
+            <strong>Modo Visitante:</strong> Faça <a href="/login" style="color: #1565c0; font-weight: bold;">login</a> para salvar no histórico e usar o chat contínuo.
+        </div>
+        {% endif %}
+        
+        <div id="chat-container">
+            {% if conversation %}
+                {% for message in conversation.messages %}
+                    <div class="message {{ 'bot-message' if message.is_bot else 'user-message' }}">
+                        {{ message.content|safe }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        
+        {% if is_logged_in %}
+        <div class="input-container">
+            <div style="position: relative; flex: 1;">
+                <textarea id="user-input" 
+                         placeholder="Digite sua mensagem... (Ex: Roteiro de 3 dias em São Paulo com parques)"
+                         rows="1"
+                         oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';"
+                         maxlength="1000"></textarea>
+                <button class="send-btn" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <button class="new-chat-btn" onclick="startNewChat()">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+        {% else %}
+        <div class="input-container">
+            <div style="position: relative; flex: 1; opacity: 0.6;">
+                <textarea id="user-input" 
+                         placeholder="Faça login para usar o chat contínuo..."
+                         rows="1"
+                         disabled
+                         style="background: #f5f5f5; cursor: not-allowed;"></textarea>
+                <div style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #999;">
+                    <i class="fas fa-lock"></i>
+                </div>
+            </div>
+            <a href="/login" class="new-chat-btn" style="background: var(--primary-color); color: white; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-sign-in-alt"></i>
+            </a>
+        </div>
+        {% endif %}
+        
+        <div class="suggestions">
+            <div class="suggestion-chip" onclick="useSuggestion('Quero viajar para Paris por 5 dias')">
+                Roteiro 5 dias em Paris
+            </div>
+            <div class="suggestion-chip" onclick="useSuggestion('Viagem de 8 dias em Nova York')">
+                Viagem de 8 dias em Nova York
+            </div>
+            <div class="suggestion-chip" onclick="useSuggestion('Aventuras em Londres')">
+                Aventuras em Londres
+            </div>
+            <div class="suggestion-chip" onclick="useSuggestion('Roteiro de 7 dias na Espanha saindo de São Paulo')">
+                7 dias na Espanha
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Elementos do DOM
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        
+        // Variáveis de estado
+        let isWaitingForResponse = false;
+        
+        // Verifica se é uma conversa existente baseado na presença de mensagens
+        try {
+            window.isExistingConversation = Boolean(document.querySelector('#chat-container .message'));
+        } catch (error) {
+            console.warn('Erro ao verificar conversa existente:', error);
+            window.isExistingConversation = false;
+        }
+        
+        function showLoading() {
+            const loading = document.createElement('div');
+            loading.className = 'loading';
+            loading.id = 'loading-indicator';
+            
+            for (let i = 0; i < 3; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                loading.appendChild(dot);
+            }
+            
+            chatContainer.appendChild(loading);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function hideLoading() {
+            const loading = document.getElementById('loading-indicator');
+            if (loading) {
+                loading.remove();
+            }
+        }
+
+        function addMessage(type, message) {
+            try {
+                if (!message || typeof message !== 'string') {
+                    console.warn('Mensagem inválida recebida:', message);
+                    message = "Mensagem inválida";
+                }
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${type}-message`;
+                messageDiv.innerHTML = message;
+                
+                if (chatContainer) {
+                    chatContainer.appendChild(messageDiv);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                } else {
+                    console.error('Container de chat não encontrado');
+                }
+            } catch (error) {
+                console.error('Erro ao adicionar mensagem:', error);
+                // Fallback: tenta adicionar como texto simples
+                try {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${type}-message`;
+                    messageDiv.textContent = message;
+                    if (chatContainer) {
+                        chatContainer.appendChild(messageDiv);
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }
+                } catch (fallbackError) {
+                    console.error('Erro no fallback de mensagem:', fallbackError);
+                }
+            }
+        }
+
+        function animateChatTitle(titleText) {
+            const titleElement = document.querySelector('.chat-title');
+            if (!titleElement) return;
+
+            // Limpa o título e configura para animação
+            titleElement.textContent = '';
+            titleElement.style.width = '0';
+            titleElement.style.overflow = 'hidden';
+            titleElement.style.whiteSpace = 'nowrap';
+            titleElement.style.display = 'inline-block';
+            titleElement.style.animation = 'typing 2s steps(40, end), blinkCursor 0.7s infinite';
+
+            let i = 0;
+                         const speed = 30; // Velocidade da digitação em milissegundos
+
+            function typeCharacter() {
+                if (i < titleText.length) {
+                    titleElement.textContent += titleText.charAt(i);
+                    i++;
+                    setTimeout(typeCharacter, speed);
+                } else {
+                    // Animação completa: restaura o display normal
+                    titleElement.style.width = 'auto';
+                    titleElement.style.overflow = 'visible';
+                    titleElement.style.whiteSpace = 'normal';
+                    titleElement.style.display = 'block';
+                    titleElement.style.animation = 'none';
+                    titleElement.style.borderRightColor = 'transparent';
+                }
+            }
+
+            // Força um reflow para aplicar os estilos iniciais antes da animação
+            void titleElement.offsetWidth;
+            typeCharacter();
+        }
+
+        function sendMessage() {
+            // Verificar se usuário está logado antes de permitir envio
+            if (!isLoggedIn) {
+                alert('Você precisa fazer login para usar o chat contínuo. Faça login para ter acesso completo!');
+                return;
+            }
+            
+            const message = userInput.value.trim();
+            if (message === '' || isWaitingForResponse) return;
+            
+            addMessage('user', message);
+            userInput.value = '';
+            userInput.style.height = 'auto';
+            
+            isWaitingForResponse = true;
+            showLoading();
+            
+            fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: message,
+                    initial_message: Boolean(localStorage.getItem('pendingMessage'))
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.response) {
+                    addMessage('bot', data.response);
+                    if (data.title) {
+                        animateChatTitle(data.title);
+                    }
+                } else if (data.error) {
+                    addMessage('bot', "Desculpe, ocorreu um erro. Por favor, tente novamente.");
+                }
+                isWaitingForResponse = false;
+                localStorage.removeItem('pendingMessage');
+            })
+            .catch(error => {
+                hideLoading();
+                addMessage('bot', "Desculpe, ocorreu um erro ao processar sua solicitação. Por favor, tente novamente.");
+                isWaitingForResponse = false;
+                localStorage.removeItem('pendingMessage');
+                console.error('Erro:', error);
+            });
+        }
+        
+        function useSuggestion(text) {
+            userInput.value = text;
+            userInput.focus();
+            sendMessage();
+        }
+        
+        function startNewChat() {
+            chatContainer.innerHTML = '';
+            const titleElement = document.querySelector('.chat-title');
+            if(titleElement) titleElement.textContent = ''; // Clear title for new chat
+            
+            fetch('/new_chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            }).then(() => {
+                                         setTimeout(() => {
+                             addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Informações sobre cidades, pontos históricos<br><br>Quanto mais detalhes sobre seu roteiro, mais personalizado ele ficará.<br><br> Basta me dizer para onde quer ir! 😊");
+                         }, 200);
+            });
+        }
+
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        userInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Verificar se usuário está logado (vem do template)
+        const isLoggedIn = {{ 'true' if is_logged_in else 'false' }};
+        
+        console.log('🚀 Atlas Chat iniciado. Usuário logado:', isLoggedIn);
+        
+        window.onload = function() {
+            // Aguardar um pouco para garantir que a página esteja totalmente carregada
+            setTimeout(() => {
+                // Verificar se há dados de busca estruturada pendente
+                const pendingSearchData = localStorage.getItem('pendingSearchData');
+                
+                if (pendingSearchData) {
+                    try {
+                        const searchData = JSON.parse(pendingSearchData);
+                        localStorage.removeItem('pendingSearchData');
+                        
+                        console.log('🔍 Dados de busca encontrados:', searchData);
+                        
+                        // Validar dados antes de processar
+                        if (!searchData || typeof searchData !== 'object') {
+                            throw new Error('Dados de busca inválidos');
+                        }
+                        
+                        if (!searchData.origin || !searchData.destination || !searchData.checkin) {
+                            throw new Error('Dados obrigatórios não informados');
+                        }
+                        
+                        console.log('Processando busca estruturada:', searchData);
+                        
+                        // Mostrar loading imediatamente
+                        showLoading();
+                        
+                        // Processar busca estruturada
+                        fetch('/search', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(searchData)
+                        })
+                        .then(response => {
+                            console.log('Status da resposta:', response.status);
+                            console.log('Headers da resposta:', response.headers);
+                            
+                            if (!response.ok) {
+                                console.error('Resposta não OK:', response.status, response.statusText);
+                                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                            }
+                            
+                            return response.json();
+                        })
+                        .then(data => {
+                            hideLoading();
+                            console.log('Resposta da busca estruturada:', data);
+                            
+                            if (data.success) {
+                                // Adicionar mensagem do usuário
+                                let userMessage = `Quero um roteiro de viagem de ${searchData.origin} para ${searchData.destination}`;
+                                if (searchData.checkin) {
+                                    const checkinDate = new Date(searchData.checkin);
+                                    userMessage += ` saindo no dia ${checkinDate.toLocaleDateString('pt-BR')}`;
+                                }
+                                if (searchData.checkout && searchData.checkin) {
+                                    const checkinDate = new Date(searchData.checkin);
+                                    const checkoutDate = new Date(searchData.checkout);
+                                    const days = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
+                                    if (days > 0) {
+                                        userMessage += ` por ${days} dia${days > 1 ? 's' : ''}`;
+                                    }
+                                }
+                                
+                                addMessage('user', userMessage);
+                                
+                                // Adicionar resposta do bot SEMPRE
+                                setTimeout(() => {
+                                    addMessage('bot', data.bot_response);
+                                    if (data.title) {
+                                        animateChatTitle(data.title);
+                                    }
+                                    
+                                }, 200);
+                            } else {
+                                console.error('Erro na busca estruturada:', data.error);
+                                addMessage('bot', `Desculpe, ocorreu um erro ao processar sua busca: ${data.error || 'Erro desconhecido'}. Por favor, tente novamente.`);
+                            }
+                        })
+                        .catch(error => {
+                            hideLoading();
+                            console.error('Erro na requisição de busca estruturada:', error);
+                            console.error('Tipo de erro:', typeof error);
+                            console.error('Propriedades do erro:', Object.keys(error));
+                            console.error('Stack trace:', error.stack);
+                            
+                            let errorMessage = "Desculpe, ocorreu um erro ao processar sua solicitação.";
+                            
+                            // Captura diferentes tipos de erro
+                            if (error.message) {
+                                console.error('Mensagem de erro:', error.message);
+                                if (error.message.includes('Assignment to constant variable')) {
+                                    errorMessage = "Desculpe, ocorreu um erro interno no sistema. Por favor, tente novamente.";
+                                } else if (error.message.includes('Failed to fetch')) {
+                                    errorMessage = "Desculpe, não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.";
+                                } else if (error.message.includes('NetworkError')) {
+                                    errorMessage = "Desculpe, ocorreu um erro de rede. Verifique sua conexão e tente novamente.";
+                                } else {
+                                    errorMessage += ` ${error.message}`;
+                                }
+                            }
+                            
+                            errorMessage += " Por favor, tente novamente.";
+                            addMessage('bot', errorMessage);
+                        });
+                    } catch (error) {
+                        console.error('Erro ao processar dados pendentes:', error);
+                        addMessage('bot', "Desculpe, ocorreu um erro ao processar os dados da busca. Por favor, tente novamente.");
+                    }
+                    } else {
+                        // Verificar se há dados de nova conversa estruturada
+                        const newConversationData = localStorage.getItem('newConversationData');
+                        if (newConversationData) {
+                            console.log('📄 Dados de nova conversa encontrados');
+                            try {
+                                const data = JSON.parse(newConversationData);
+                                localStorage.removeItem('newConversationData');
+                                
+                                // Adicionar as mensagens da conversa estruturada
+                                addMessage('user', data.userMessage);
+                                setTimeout(() => {
+                                    addMessage('bot', data.botResponse);
+                                    animateChatTitle(data.title);
+                                }, 300);
+                            } catch (error) {
+                                console.error('Erro ao processar nova conversa:', error);
+                            }
+                        } else {
+                            // Verificar mensagem pendente (busca simples)
+                            const pendingMessage = localStorage.getItem('pendingMessage');
+                            if (pendingMessage) {
+                                console.log('💬 Mensagem pendente encontrada');
+                                localStorage.removeItem('pendingMessage');
+                                if (isLoggedIn && userInput) {
+                                    userInput.value = pendingMessage;
+                                    sendMessage();
+                                }
+                            } else if (!window.isExistingConversation && isLoggedIn) {
+                                setTimeout(() => {
+                                    addMessage('bot', "Olá! Sou seu assistente de viagens personalizado. Como posso ajudar?<br><br>Você pode me perguntar sobre:<br>• Roteiros de viagem (Ex: \"Roteiro de 4 dias em Fortaleza\")<br>• Pontos turísticos (Ex: \"O que visitar em Recife?\")<br>• Transportes e preços (Ex: \"Voos de São Paulo para Salvador\")<br>• Informações sobre cidades, pontos históricos<br><br>Quanto mais detalhes sobre seu roteiro, mais personalizado ele ficará.<br><br> Basta me dizer para onde quer ir! 😊");
+                                }, 500);
+                            } else if (!window.isExistingConversation && !isLoggedIn) {
+                                // Para visitantes sem conversa, mostrar mensagem de boas-vindas apenas se não há dados pendentes
+                                setTimeout(() => {
+                                    addMessage('bot', "🌎 <strong>Bem-vindo ao Atlas!</strong><br><br>Preencha o formulário na página inicial para criar seu primeiro roteiro personalizado!<br><br>💡 <strong>Dica:</strong> Faça login para salvar seus roteiros e usar o chat inteligente.");
+                                }, 500);
+                            } else { // Para conversas existentes, animar o título já presente
+                                const titleElement = document.querySelector('.chat-title');
+                                if (titleElement && titleElement.textContent.trim() !== '') {
+                                    const existingTitle = titleElement.textContent.trim();
+                                    animateChatTitle(existingTitle);
+                                }
+                            }
+                        }
+                }
+            }, 100); // Aguarda 100ms para garantir carregamento completo
+        }
+    </script>
+</body>
+</html>

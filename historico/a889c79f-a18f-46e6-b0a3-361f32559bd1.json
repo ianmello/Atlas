@@ -1,0 +1,68 @@
+[
+  {
+    "mensagem": "quero um roteiro para a Franca de 5 dias saindo de São Paulo",
+    "destino": "Destino não informado",
+    "origem": "São Paulo",
+    "datas": {
+      "data_inicio": "2025-05-27",
+      "data_fim": "2025-06-01"
+    },
+    "timestamp": "2025-05-20 11:34:26",
+    "id": "4baaf049-ab09-459e-ba22-f7b84c20d532"
+  },
+  {
+    "mensagem": "quero um roteiro saindo de São Paulo para Portugal no dia 27/05 voltando no dia 01/06, meus interesses sao cidades, pontos historicos, meu orçãmento é de 25000 reais",
+    "destino": "Destino não informado",
+    "origem": "São Paulo para",
+    "datas": {
+      "data_inicio": null,
+      "data_fim": null
+    },
+    "timestamp": "2025-05-20 11:39:20",
+    "id": "4aba2f65-6eb1-4108-ba6b-c6dc92d8be7d"
+  },
+  {
+    "mensagem": "quero um roteiro para a França durante 5 dias saindo no dia 27/05, com orçamento de 30000 reais, meus interesses sao pontos historicos, museus",
+    "destino": "a França",
+    "origem": "voos",
+    "datas": {
+      "data_inicio": "2025-05-27",
+      "data_fim": "2025-06-01"
+    },
+    "timestamp": "2025-05-20 14:41:13",
+    "id": "0f9ffa6c-ebc7-4b4c-bb33-694dffe4755e"
+  },
+  {
+    "mensagem": "quero um roteiro para França no dia 27/05, meu orçamento é de 30000 reais, meus interesses sao museus, pontos historicos",
+    "destino": "Destino não informado",
+    "origem": "Origem não informada",
+    "datas": {
+      "data_inicio": null,
+      "data_fim": null
+    },
+    "timestamp": "2025-05-20 14:53:49",
+    "id": "b9cb667f-d8d5-407f-a19e-c9510d7f23d4"
+  },
+  {
+    "mensagem": "quero um roteiro para Campinas saindo de São Paulo no dia 27/05, meu orçamento é de 5000 reais, meus interesses são conhecer os pontos historicos, parques",
+    "destino": "os pontos historicos",
+    "origem": "Origem não informada",
+    "datas": {
+      "data_inicio": null,
+      "data_fim": null
+    },
+    "timestamp": "2025-05-20 14:55:55",
+    "id": "e35e7377-2651-457d-b14e-a1e1c69c7824"
+  },
+  {
+    "mensagem": "quero um roteiro para Campinas saindo de São Paulo no dia 27/05, meu orçamento é de 5000 reais, meus interesses são conhecer os pontos historicos, parques",
+    "destino": "os pontos historicos",
+    "origem": "Origem não informada",
+    "datas": {
+      "data_inicio": null,
+      "data_fim": null
+    },
+    "timestamp": "2025-05-20 15:02:19",
+    "id": "cfaf76e7-06b6-4a18-b26b-b6b92632b427"
+  }
+]

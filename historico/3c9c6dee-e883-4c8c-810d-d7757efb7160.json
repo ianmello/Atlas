@@ -1,0 +1,90 @@
+[
+  {
+    "mensagem": "quero um roteiro para França",
+    "destino": "França",
+    "origem": "Origem não informada",
+    "datas": {
+      "data_inicio": null,
+      "data_fim": null
+    },
+    "timestamp": "2025-05-26 18:58:37",
+    "id": "0e33f7f7-0030-44b0-a7a7-dc68c87d26ef"
+  },
+  {
+    "mensagem": "quero um roteiro para Campinas durante 5 dias",
+    "destino": "Campinas",
+    "origem": "Origem não informada",
+    "datas": {
+      "data_inicio": "2025-06-02",
+      "data_fim": "2025-06-07"
+    },
+    "timestamp": "2025-05-26 18:59:46",
+    "id": "0c796385-ae46-4ba1-b735-4367428ee6b1"
+  },
+  {
+    "mensagem": "voce esta funcionando?",
+    "destino": "Campinas",
+    "origem": "São Paulo",
+    "datas": {
+      "data_inicio": "2025-06-02",
+      "data_fim": "2025-06-07"
+    },
+    "timestamp": "2025-05-26 19:01:26",
+    "id": "0a2821e3-9e05-4a4d-899a-e4cef4252c86"
+  },
+  {
+    "mensagem": "faça um roteiro para França",
+    "destino": "França",
+    "origem": "São Paulo",
+    "datas": {
+      "data_inicio": "2025-06-02",
+      "data_fim": "2025-06-07"
+    },
+    "timestamp": "2025-05-26 19:16:56",
+    "id": "d2e27cbf-bb0c-43c2-bbe8-9f269ca25ef3"
+  },
+  {
+    "mensagem": "quero um roteiro para França",
+    "destino": "França",
+    "origem": "São Paulo",
+    "datas": {
+      "data_inicio": "2025-06-02",
+      "data_fim": "2025-06-07"
+    },
+    "timestamp": "2025-05-26 19:27:21",
+    "id": "d00a99c3-6989-44d7-ac1c-949479b9465a"
+  },
+  {
+    "mensagem": "quero um roteiro para França",
+    "destino": "França",
+    "origem": "São Paulo",
+    "datas": {
+      "data_inicio": "2025-06-02",
+      "data_fim": "2025-06-07"
+    },
+    "timestamp": "2025-05-26 19:34:32",
+    "id": "0fb961b2-0cd2-4061-a083-7d5c6964be9d"
+  },
+  {
+    "mensagem": "quero um roteiro para França",
+    "destino": "França",
+    "origem": "São Paulo",
+    "datas": {
+      "data_inicio": "2025-06-02",
+      "data_fim": "2025-06-07"
+    },
+    "timestamp": "2025-05-26 19:42:05",
+    "id": "9625ffd6-ce7e-4f30-9eee-0d4b57691e11"
+  },
+  {
+    "mensagem": "quero um roteiro para França",
+    "destino": "França",
+    "origem": "São Paulo",
+    "datas": {
+      "data_inicio": "2025-06-02",
+      "data_fim": "2025-06-07"
+    },
+    "timestamp": "2025-05-26 21:05:42",
+    "id": "68df6030-55b1-4843-9515-840f24585733"
+  }
+]
