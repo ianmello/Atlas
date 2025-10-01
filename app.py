@@ -32,7 +32,7 @@ load_dotenv()
 # APIs URLs (mantém as mesmas)
 EXCHANGE_API_URL = "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/CotacaoMoedaDia(moeda=@moeda,dataCotacao=@dataCotacao)"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 FLIGHT_API_URL = "https://test.api.amadeus.com/v2/shopping/flight-offers"
 HOTEL_API_URL = "https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city"
 WEATHER_API_URL = "https://api.openweathermap.org/data/2.5/forecast"
@@ -163,40 +163,88 @@ def get_ai_response(messages, origem=None, destino=None, datas=None):
         if not datas:
             datas = extrair_datas(last_message)
         
+        print(f"[DEBUG] Origem: {origem}, Destino: {destino}, Datas: {datas}")
+        
         roteiro = ""
         headers = {"Content-Type": "application/json"}
         if GEMINI_API_KEY:
+            print(f"[DEBUG] Chave Gemini configurada")
             url = f"{GEMINI_API_URL}?key={GEMINI_API_KEY}"
             
-            system_prompt = """Você é um assistente de viagens especializado. 
-            IMPORTANTE: Sempre formate suas respostas com quebras de linha adequadas:
-            - Use ## para títulos principais
-            - Use ** para subtítulos
-            - Use * para itens de lista
-            - Separe parágrafos com linhas em branco
-            - Use formatação markdown para melhor legibilidade"""
-            
-            enhanced_messages = [{"role": "user", "content": system_prompt}] + messages
+            # Preparar mensagens com system prompt otimizado
+            system_instruction = """Você é o Atlas, um assistente de viagens especializado e experiente. Sua missão é criar roteiros de viagem personalizados, detalhados e práticos.
+
+INSTRUÇÕES DE FORMATAÇÃO:
+- Use ## para títulos principais de seções
+- Use **texto** para subtítulos e destaques importantes
+- Use * para criar listas de itens
+- Separe parágrafos com linhas em branco para melhor legibilidade
+- Seja específico e detalhado sobre horários, locais e dicas práticas
+
+ESTRUTURA DO ROTEIRO:
+1. Visão geral da viagem
+2. Roteiro dia a dia com horários sugeridos
+3. Dicas importantes (clima, moeda, transporte, cultura)
+4. Recomendações de restaurantes e hospedagem quando relevante"""
+
+            # Converter mensagens para formato Gemini
+            contents = []
+            for i, m in enumerate(messages):
+                role = "user" if m["role"] == "user" else "model"
+                
+                # Adicionar system instruction apenas na primeira mensagem do usuário
+                if i == 0 and role == "user":
+                    text_with_context = f"{system_instruction}\n\n{m['content']}"
+                    contents.append({
+                        "role": role,
+                        "parts": [{"text": text_with_context}]
+                    })
+                else:
+                    contents.append({
+                        "role": role,
+                        "parts": [{"text": m["content"]}]
+                    })
             
             data = {
-                "contents": [
-                    {"role": m["role"], "parts": [{"text": m["content"]}]} for m in enhanced_messages
-                ]
+                "contents": contents,
+                "generationConfig": {
+                    "temperature": 0.7,
+                    "topK": 40,
+                    "topP": 0.95,
+                    "maxOutputTokens": 3072,  # Aumentei para roteiros mais completos
+                }
             }
             
+            print(f"[DEBUG] Payload preparado com {len(contents)} mensagens")
+            print(f"[DEBUG] Enviando requisição para Gemini API...")
+            print(f"[DEBUG] URL: {url[:80]}...")
+            
             try:
-                response = requests.post(url, headers=headers, data=json.dumps(data), timeout=30)
+                response = requests.post(url, headers=headers, data=json.dumps(data), timeout=60)
+                print(f"[DEBUG] Status code: {response.status_code}")
+                
                 if response.status_code == 200:
                     resposta = response.json()
+                    print(f"[DEBUG] Resposta recebida: {str(resposta)[:200]}...")
                     try:
                         roteiro = resposta["candidates"][0]["content"]["parts"][0]["text"]
+                        print(f"[DEBUG] Roteiro gerado com sucesso. Tamanho: {len(roteiro)} caracteres")
                     except Exception as e:
+                        print(f"[ERROR] Erro ao processar resposta: {e}")
+                        print(f"[ERROR] Resposta completa: {resposta}")
                         roteiro = "Desculpe, não consegui gerar um roteiro agora."
                 else:
+                    print(f"[ERROR] Erro na API Gemini: {response.status_code}")
+                    print(f"[ERROR] Resposta: {response.text}")
                     roteiro = "Desculpe, não consegui gerar um roteiro agora."
-            except:
+            except requests.exceptions.Timeout:
+                print("[ERROR] Timeout na requisição")
+                roteiro = "Desculpe, a API demorou muito para responder. Por favor, tente novamente."
+            except Exception as e:
+                print(f"[ERROR] Erro na requisição: {e}")
                 roteiro = "Desculpe, a API demorou muito para responder. Por favor, tente novamente."
         else:
+            print("[ERROR] Chave Gemini NÃO configurada")
             roteiro = "Desculpe, a chave da API Gemini não está configurada."
 
         # Adiciona informações de voos se disponível
@@ -637,9 +685,13 @@ def view_conversation(conversation_id):
 @app.route('/search', methods=['POST'])
 def structured_search():
     try:
+        print("[DEBUG] ===== INICIANDO BUSCA ESTRUTURADA =====")
         data = request.get_json()
+        print(f"[DEBUG] Dados recebidos: {data}")
+        
         user_id = get_current_user_id()
         is_logged_in = user_id is not None
+        print(f"[DEBUG] Usuário logado: {is_logged_in}, User ID: {user_id}")
         
         if not data:
             return jsonify({"error": "Dados inválidos recebidos"}), 400
@@ -651,6 +703,8 @@ def structured_search():
         checkout = data.get('checkout')
         adults = data.get('adults', 2)
         children = data.get('children', 0)
+        
+        print(f"[DEBUG] Origem: {origin}, Destino: {destination}, Check-in: {checkin}, Check-out: {checkout}")
         
         # Validar dados essenciais
         if not origin or not destination or not checkin:
@@ -691,6 +745,8 @@ def structured_search():
             if children > 0:
                 message += f" e {children} criança{'s' if children != 1 else ''}"
         
+        print(f"[DEBUG] Mensagem construída: {message}")
+        
         # Criar nova conversa APENAS se usuário estiver logado
         conversation = None
         if is_logged_in:
@@ -716,8 +772,13 @@ def structured_search():
         if context_key not in chat_context:
             chat_context[context_key] = []
         
+        print(f"[DEBUG] Context key: {context_key}")
         chat_context[context_key].append({"role": "user", "content": message})
+        
+        print("[DEBUG] Chamando get_ai_response...")
         bot_response = get_ai_response(chat_context[context_key], origem=origin, destino=destination, datas=datas)
+        print(f"[DEBUG] Bot response recebido. Tamanho: {len(bot_response)} caracteres")
+        
         chat_context[context_key].append({"role": "model", "content": bot_response})
         
         # Salvar mensagens APENAS se usuário estiver logado
