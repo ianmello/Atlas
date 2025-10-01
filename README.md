@@ -34,7 +34,7 @@ Atlas é um assistente de viagens inteligente que ajuda os usuários a planejar 
 
 1. Clone o repositório:
    ```
-   git clone https://github.com/seu-usuario/atlas.git
+   git clone --branch atlas_v0 --single-branch https://github.com/ianmello/Atlas.git
    cd atlas
    ```
 
