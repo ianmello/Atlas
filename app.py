@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, session, redirect, url_for
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for, send_from_directory
 from flask_cors import CORS
 import datetime
 import requests
@@ -883,6 +883,11 @@ def excluir_conversa(conversation_id):
         
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/images/<path:filename>')
+def serve_image(filename):
+    """Serve arquivos da pasta images"""
+    return send_from_directory('images', filename)
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000)

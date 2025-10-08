@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro - Atlas</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <style>
         * {
@@ -15,106 +15,212 @@
         }
         
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Background de viagem com overlay */
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .background-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            transition: opacity 1.5s ease-in-out;
+            opacity: 0;
+        }
+        
+        .background-layer.active {
+            opacity: 1;
+        }
+        
+        .background-layer::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, 
+                rgba(66, 133, 244, 0.75) 0%, 
+                rgba(52, 168, 83, 0.65) 50%,
+                rgba(251, 188, 5, 0.55) 100%);
+            backdrop-filter: blur(2px);
         }
         
         .auth-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 
+                        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
             overflow: hidden;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             position: relative;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .auth-header {
-            background: linear-gradient(135deg, #4285f4, #34a853);
-            color: white;
             text-align: center;
-            padding: 40px 30px;
+            padding: 35px 30px 25px;
+            position: relative;
+        }
+        
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        
+        .logo-circle {
+            width: 85px;
+            height: 85px;
+            background: transparent;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3));
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .logo-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: brightness(1.1);
         }
         
         .auth-header h1 {
-            font-size: 2rem;
-            margin-bottom: 10px;
+            font-size: 1.9rem;
+            margin-bottom: 8px;
             font-weight: 700;
+            color: white;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
         }
         
         .auth-header p {
-            opacity: 0.9;
-            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
         }
         
         .auth-form {
-            padding: 40px 30px;
+            padding: 0 32px 35px;
         }
         
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 16px;
             position: relative;
         }
         
         .form-group label {
             display: block;
-            color: #555;
+            color: rgba(255, 255, 255, 0.95);
             font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
+            margin-bottom: 7px;
+            font-size: 0.88rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        
+        .input-wrapper {
+            position: relative;
         }
         
         .form-control {
             width: 100%;
-            padding: 15px 20px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background: #f8f9fa;
+            padding: 13px 16px 13px 48px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 14px;
+            font-size: 0.93rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .form-control::placeholder {
+            color: rgba(0, 0, 0, 0.4);
         }
         
         .form-control:focus {
             outline: none;
-            border-color: #4285f4;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
-        }
-        
-        .form-control.with-icon {
-            padding-left: 50px;
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
         }
         
         .input-icon {
             position: absolute;
-            left: 18px;
+            left: 16px;
             top: 50%;
             transform: translateY(-50%);
-            color: #888;
-            font-size: 1.1rem;
+            color: #4285f4;
+            font-size: 1.05rem;
+            z-index: 1;
         }
         
         .btn-primary {
             width: 100%;
-            background: linear-gradient(135deg, #4285f4, #34a853);
+            background: linear-gradient(135deg, #34a853, #4285f4);
             color: white;
             border: none;
-            border-radius: 12px;
-            padding: 15px;
-            font-size: 1.1rem;
-            font-weight: 600;
+            border-radius: 14px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 8px;
+            box-shadow: 0 8px 20px rgba(52, 168, 83, 0.35);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
         
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(52, 168, 83, 0.5);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(-1px);
         }
         
         .btn-primary:disabled {
@@ -125,54 +231,74 @@
         
         .auth-links {
             text-align: center;
-            margin-top: 25px;
-            padding-top: 25px;
-            border-top: 1px solid #eee;
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .auth-links p {
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 500;
+            margin: 6px 0;
+            font-size: 0.9rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
         }
         
         .auth-links a {
-            color: #4285f4;
+            color: white;
             text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s ease;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            padding: 3px 7px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            display: inline-block;
         }
         
         .auth-links a:hover {
-            color: #3367d6;
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         
         .alert {
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .alert-error {
-            background: #fee;
-            color: #c33;
-            border: 1px solid #fcc;
+            background: rgba(255, 59, 48, 0.9);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
         
         .alert-success {
-            background: #efe;
-            color: #363;
-            border: 1px solid #cfc;
+            background: rgba(52, 168, 83, 0.9);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
         
         .loading {
             display: none;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: 10px;
         }
         
         .spinner {
             width: 20px;
             height: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 3px solid rgba(255,255,255,0.3);
             border-radius: 50%;
             border-top-color: white;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
         }
         
         @keyframes spin {
@@ -180,40 +306,84 @@
         }
         
         .password-requirements {
-            font-size: 0.8rem;
-            color: #666;
-            margin-top: 5px;
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.85);
+            margin-top: 4px;
             line-height: 1.4;
+            font-weight: 500;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
         }
         
-        .password-requirements ul {
-            margin: 5px 0;
-            padding-left: 20px;
-        }
-        
-        .password-requirements li {
-            margin: 2px 0;
-        }
-        
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
             .auth-container {
-                margin: 10px;
+                max-width: 100%;
             }
             
             .auth-header {
-                padding: 30px 20px;
+                padding: 35px 25px 25px;
+            }
+            
+            .logo-circle {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .logo-circle img {
+                width: 100%;
+                height: 100%;
+            }
+            
+            .auth-header h1 {
+                font-size: 1.8rem;
             }
             
             .auth-form {
-                padding: 30px 20px;
+                padding: 0 25px 35px;
+            }
+            
+            .form-control {
+                padding: 13px 16px 13px 48px;
+            }
+            
+            .form-group {
+                margin-bottom: 18px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .auth-header h1 {
+                font-size: 1.6rem;
+            }
+            
+            .auth-header p {
+                font-size: 0.9rem;
+            }
+            
+            .form-control {
+                font-size: 0.9rem;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Background animado com imagens de viagem -->
+    <div class="background-overlay">
+        <div class="background-layer" id="bg1"></div>
+        <div class="background-layer" id="bg2"></div>
+    </div>
+    
     <div class="auth-container">
         <div class="auth-header">
-            <h1><i class="fas fa-globe-americas"></i> Atlas</h1>
+            <div class="logo-container">
+                <div class="logo-circle">
+                    <img src="/images/logo-mundo.png" alt="Atlas Logo">
+                </div>
+            </div>
+            <h1>Atlas</h1>
             <p>Crie sua conta e comece a planejar</p>
         </div>
         
@@ -222,39 +392,39 @@
             
             <div class="form-group">
                 <label for="full_name">Nome Completo</label>
-                <div style="position: relative;">
+                <div class="input-wrapper">
                     <i class="fas fa-user input-icon"></i>
-                    <input type="text" id="full_name" name="full_name" class="form-control with-icon" 
+                    <input type="text" id="full_name" name="full_name" class="form-control" 
                            placeholder="Seu nome completo" required>
                 </div>
             </div>
             
             <div class="form-group">
                 <label for="email">Email</label>
-                <div style="position: relative;">
+                <div class="input-wrapper">
                     <i class="fas fa-envelope input-icon"></i>
-                    <input type="email" id="email" name="email" class="form-control with-icon" 
+                    <input type="email" id="email" name="email" class="form-control" 
                            placeholder="seu@email.com" required>
                 </div>
             </div>
             
             <div class="form-group">
                 <label for="password">Senha</label>
-                <div style="position: relative;">
+                <div class="input-wrapper">
                     <i class="fas fa-lock input-icon"></i>
-                    <input type="password" id="password" name="password" class="form-control with-icon" 
+                    <input type="password" id="password" name="password" class="form-control" 
                            placeholder="••••••••" required minlength="6">
                 </div>
                 <div class="password-requirements">
-                    A senha deve ter pelo menos 6 caracteres
+                    Mínimo de 6 caracteres
                 </div>
             </div>
             
             <div class="form-group">
                 <label for="confirm_password">Confirmar Senha</label>
-                <div style="position: relative;">
+                <div class="input-wrapper">
                     <i class="fas fa-lock input-icon"></i>
-                    <input type="password" id="confirm_password" name="confirm_password" class="form-control with-icon" 
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" 
                            placeholder="••••••••" required>
                 </div>
             </div>
@@ -268,8 +438,8 @@
             </button>
             
             <div class="auth-links">
-                <p>Já tem uma conta? <a href="/login">Faça login aqui</a></p>
-                <p><a href="/">Voltar ao início</a></p>
+                <p>Já tem conta? <a href="/login">Faça login</a></p>
+                <p><a href="/">← Voltar ao início</a></p>
             </div>
         </form>
     </div>
@@ -367,11 +537,47 @@
             const confirmPassword = this.value;
             
             if (confirmPassword && password !== confirmPassword) {
-                this.style.borderColor = '#dc3545';
+                this.style.borderColor = 'rgba(255, 59, 48, 0.6)';
             } else {
-                this.style.borderColor = '#e0e0e0';
+                this.style.borderColor = 'rgba(255, 255, 255, 0.3)';
             }
         });
+        
+        // Background animado com imagens de viagem
+        const backgrounds = [
+            'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1600&auto=format&fit=crop',  // Trailer/RV na estrada
+            'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1600&auto=format&fit=crop',  // Montanha e lago
+            'https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=1600&auto=format&fit=crop',  // Van em viagem
+            'https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?w=1600&auto=format&fit=crop',  // Avião voando
+            'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1600&auto=format&fit=crop',  // Lago e montanhas
+            'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&auto=format&fit=crop'   // Montanha ao nascer do sol
+        ];
+        
+        let currentBg = 0;
+        let activeIndex = 0;
+        const bg1 = document.getElementById('bg1');
+        const bg2 = document.getElementById('bg2');
+        const bgElements = [bg1, bg2];
+        
+        // Inicializar primeiro background
+        bg1.style.backgroundImage = `url('${backgrounds[0]}')`;
+        bg1.classList.add('active');
+        
+        function changeBackground() {
+            const next = (currentBg + 1) % backgrounds.length;
+            const nextBg = bgElements[1 - activeIndex];
+            const currentBgEl = bgElements[activeIndex];
+            
+            nextBg.style.backgroundImage = `url('${backgrounds[next]}')`;
+            nextBg.classList.add('active');
+            currentBgEl.classList.remove('active');
+            
+            currentBg = next;
+            activeIndex = 1 - activeIndex;
+        }
+        
+        // Mudar background a cada 6 segundos
+        setInterval(changeBackground, 6000);
     </script>
 </body>
 </html>
