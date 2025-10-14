@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-color: #4285f4;
@@ -15,6 +16,11 @@
             --border-radius: 16px;
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --transition: all 0.3s ease;
+            --accent-color: #34a853; /* verde Google */
+            --warning-color: #fbbc05;
+            --danger-color: #ea4335;
+            --gradient-primary: linear-gradient(135deg, #4285f4 0%, #5c9ce5 100%);
+            --gradient-accent: linear-gradient(135deg, #34a853 0%, #66bb6a 100%);
         }
         
         * {
@@ -24,7 +30,7 @@
         }
         
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Poppins', 'Inter', sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
             color: var(--text-color);
             line-height: 1.6;
@@ -153,14 +159,8 @@
             position: relative;
             line-height: 1.5;
         }
-        
-        .bot-message li:before {
-            content: "•";
-            color: #4285f4;
-            font-weight: bold;
-            position: absolute;
-            left: 0;
-        }
+        /* Removemos a bolinha pseudo-elemento para evitar duplicidade com o bullet natural */
+        .bot-message li::before { content: none; }
         
         .bot-message em {
             font-style: italic;
@@ -453,25 +453,28 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            padding: 12px;
+            border-radius: 12px;
+            background: linear-gradient(90deg, rgba(66,133,244,0.06), rgba(52,168,83,0.06));
+            border: 1px solid rgba(66, 133, 244, 0.08);
         }
         
         .price-badge {
-            background: linear-gradient(135deg, #4285f4, #5c9ce5);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
+            background: var(--gradient-primary);
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 22px;
             font-weight: 700;
-            font-size: 1.1rem;
-            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+            font-size: 1.15rem;
+            box-shadow: 0 4px 14px rgba(66, 133, 244, 0.35);
+            letter-spacing: 0.2px;
         }
         
         .flight-number {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #666;
-            background: rgba(66, 133, 244, 0.1);
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #3367d6;
+            background: rgba(66, 133, 244, 0.12);
             padding: 6px 12px;
             border-radius: 16px;
         }
@@ -490,38 +493,41 @@
             justify-content: center;
             gap: 24px;
             flex: 1;
+            position: relative;
         }
         
         .route-info {
             text-align: center;
-            min-width: 90px;
+            min-width: 110px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
         
         .time-large {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #333;
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #222;
             line-height: 1.2;
             margin-bottom: 6px;
             text-align: center;
+            text-shadow: 0 1px 0 rgba(0,0,0,0.04);
         }
         
         .airport-code {
             font-size: 1rem;
-            color: #666;
-            font-weight: 600;
-            background: rgba(66, 133, 244, 0.1);
-            padding: 4px 10px;
-            border-radius: 8px;
+            color: #3367d6;
+            font-weight: 700;
+            background: rgba(66, 133, 244, 0.12);
+            padding: 5px 12px;
+            border-radius: 10px;
             display: inline-block;
             text-align: center;
+            box-shadow: inset 0 0 0 1px rgba(66, 133, 244, 0.25);
         }
         
         .route-arrow {
-            background: rgba(66, 133, 244, 0.1);
+            background: rgba(66, 133, 244, 0.12);
             border-radius: 50%;
             width: 32px;
             height: 32px;
@@ -531,13 +537,27 @@
             color: #4285f4;
             font-size: 1rem;
             flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(66, 133, 244, 0.25);
+            position: relative;
         }
+        .route-arrow::before, .route-arrow::after {
+            content: '';
+            position: absolute;
+            height: 2px;
+            width: 80px;
+            background: rgba(0,0,0,0.12);
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .route-arrow::before { left: -85px; }
+        .route-arrow::after { right: -85px; }
         
         .flight-details {
             display: flex;
-            gap: 20px;
+            gap: 12px;
             align-items: center;
             flex-shrink: 0;
+            flex-wrap: wrap;
         }
         
         .flight-airline, .flight-duration, .flight-type {
@@ -545,22 +565,31 @@
             align-items: center;
             gap: 8px;
             font-size: 0.95rem;
-            color: #666;
-            font-weight: 500;
+            font-weight: 600;
             white-space: nowrap;
+            padding: 6px 10px;
+            border-radius: 16px;
+            border: 1px solid rgba(0,0,0,0.06);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            background: rgba(245,247,250,0.8);
         }
+        .flight-duration { background: rgba(66,133,244,0.12); color: #1e88e5; border-color: rgba(66,133,244,0.25); }
+        .flight-airline { background: rgba(52,168,83,0.12); color: #2e7d32; border-color: rgba(52,168,83,0.25); }
+        .flight-type { background: rgba(251,188,5,0.14); color: #b36b00; border-color: rgba(251,188,5,0.35); }
         
         .flight-airline i, .flight-duration i, .flight-type i {
-            color: #4285f4;
-            font-size: 0.9rem;
+            color: var(--primary-color);
+            font-size: 0.95rem;
             width: 16px;
             flex-shrink: 0;
         }
         
         .flight-connections-horizontal {
             margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid rgba(0, 0, 0, 0.04);
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(245,247,250,0.65);
+            border: 1px solid rgba(0,0,0,0.05);
         }
         
         .connection-item-horizontal {
@@ -572,12 +601,13 @@
         }
         
         .connection-label {
-            font-weight: 600;
-            color: #4285f4;
+            font-weight: 700;
+            color: var(--accent-color);
         }
         
         .connection-time {
-            color: #666;
+            color: #4a4a4a;
+            font-weight: 600;
         }
         
         /* Responsividade para os cards de voos */
@@ -760,6 +790,124 @@
             }
         }
 
+        // Formata conteúdo de resposta do bot (fallback no front-end)
+        function formatBotMessage(message) {
+            try {
+                if (!message || typeof message !== 'string') return message || '';
+                let content = message.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+                // Formatar apenas o texto antes do primeiro bloco HTML (conteúdo misto)
+                const firstHtmlIdx = (() => {
+                    const tags = ['<div', '<section', '<table', '<article', '<header', '<main', '<ul', '<ol'];
+                    const idxs = tags.map(t => content.indexOf(t)).filter(i => i !== -1);
+                    return idxs.length ? Math.min(...idxs) : -1;
+                })();
+                const head = firstHtmlIdx !== -1 ? content.slice(0, firstHtmlIdx) : content;
+                const tail = firstHtmlIdx !== -1 ? content.slice(firstHtmlIdx) : '';
+
+                let headFmt = head;
+
+                // Se head já contém HTML básico, não reformatar
+                if (!(headFmt.includes('<h3') || headFmt.includes('<ul') || headFmt.includes('<li') || headFmt.includes('<br') || headFmt.includes('<p'))) {
+                    // Separar título inicial se vier colado a texto
+                    try {
+                        const lines = headFmt.split('\n');
+                        if (lines.length && lines[0].trim().startsWith('##')) {
+                            let raw = lines[0].trim().replace(/^##\s*/, '');
+                            const markers = [' **', ' - ', ' — ', ' – ', '. '];
+                            let idx = -1;
+                            for (const m of markers) { const i = raw.indexOf(m); if (i !== -1) { idx = i; break; } }
+                            const title = idx !== -1 ? raw.slice(0, idx).trim() : raw.trim();
+                            const rest = idx !== -1 ? raw.slice(idx).trim() : '';
+                            const newLines = [`## ${title}`];
+                            if (rest) newLines.push(rest);
+                            if (lines.length > 1) newLines.push(...lines.slice(1));
+                            headFmt = newLines.join('\n');
+                        }
+                    } catch {}
+
+                    // Títulos e subtítulos
+                    headFmt = headFmt.replace(/^##\s*(.+)$/gm, '<h3>$1</h3>');
+                    headFmt = headFmt.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+                    // Itens de lista: '* ', '- ' e '1. ' (permitindo espaços iniciais) e evitando bullets vazios
+                    headFmt = headFmt.replace(/^\s*\*\s+(\S.+)$/gm, '<li>$1</li>');
+                    headFmt = headFmt.replace(/^\s*-\s+(\S.+)$/gm, '<li>$1</li>');
+                    headFmt = headFmt.replace(/^\d+\.\s+(\S.+)$/gm, '<li>$1</li>');
+
+                    // Agrupar <li> consecutivos em <ul>
+                    {
+                        const lines2 = headFmt.split('\n');
+                        const formatted = [];
+                        let inList = false, items = [];
+                        for (const line of lines2) {
+                            if (line.trim().startsWith('<li')) {
+                                if (!inList) { inList = true; items = []; }
+                                items.push(line);
+                            } else {
+                                if (inList && items.length) {
+                                    formatted.push('<ul>');
+                                    formatted.push(...items);
+                                    formatted.push('</ul>');
+                                    inList = false; items = [];
+                                }
+                                formatted.push(line);
+                            }
+                        }
+                        if (inList && items.length) {
+                            formatted.push('<ul>');
+                            formatted.push(...items);
+                            formatted.push('</ul>');
+                        }
+                        headFmt = formatted.join('\n');
+                    }
+
+                    // Parágrafos e espaçamentos: une linhas soltas em parágrafos
+                    {
+                        const linesP = headFmt.split('\n');
+                        const joined = [];
+                        let para = [];
+                        const isStructural = (s) => {
+                            const t = s.trim();
+                            return t === '' || t.startsWith('<') || /^##\s/.test(t) || /^\*\s/.test(t) || /^-\s/.test(t) || /^\d+\.\s/.test(t) || /:\s*$/.test(t);
+                        };
+                        for (const ln of linesP) {
+                            const t = ln.trim();
+                            if (isStructural(t)) {
+                                if (para.length) { joined.push(para.join(' ').trim()); para = []; }
+                                joined.push(ln);
+                            } else {
+                                para.push(t);
+                            }
+                        }
+                        if (para.length) joined.push(para.join(' ').trim());
+                        headFmt = joined.join('\n');
+                    }
+                    // Espaçamento visual
+                    headFmt = headFmt.replace(/\n{2,}/g, '<br><br>');
+                    headFmt = headFmt.replace(/\n/g, '<br>');
+                    // Corrigir espaços antes de pontuação
+                    headFmt = headFmt.replace(/\s+([,.;:!?])/g, '$1');
+
+                    // Itálico simples
+                    headFmt = headFmt.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+                    // Negritar períodos do dia sempre que seguidos de dois-pontos
+                    headFmt = headFmt.replace(/\b(Manh[ãa]|Tarde|Noite)\s*:/g, '<strong>$1:</strong>');
+                }
+
+                // Se não há texto antes do HTML, retorna tail diretamente
+                if (!head.trim() && tail) {
+                    return tail;
+                }
+
+                return headFmt + (tail ? (headFmt.trim() ? '<br>' : '') + tail : '');
+            } catch (e) {
+                console.warn('Erro ao formatar mensagem do bot:', e);
+                return message;
+            }
+        }
+
         function addMessage(type, message) {
             try {
                 if (!message || typeof message !== 'string') {
@@ -769,7 +917,7 @@
                 
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${type}-message`;
-                messageDiv.innerHTML = message;
+                messageDiv.innerHTML = type === 'bot' ? formatBotMessage(message) : message;
                 
                 if (chatContainer) {
                     chatContainer.appendChild(messageDiv);
@@ -861,7 +1009,7 @@
             .then(data => {
                 hideLoading();
                 if (data.response) {
-                    addMessage('bot', data.response);
+                    addMessage('bot', formatBotMessage(data.response));
                     if (data.title) {
                         animateChatTitle(data.title);
                     }
@@ -916,9 +1064,9 @@
         });
 
         // Verificar se usuário está logado (vem do template)
-        const isLoggedIn = {{ 'true' if is_logged_in else 'false' }};
-        
-        console.log('🚀 Atlas Chat iniciado. Usuário logado:', isLoggedIn);
+        window.isLoggedIn = JSON.parse('{{ is_logged_in|tojson }}');
+
+        console.log('🚀 Atlas Chat iniciado. Usuário logado:', window.isLoggedIn);
         
         window.onload = function() {
             // Aguardar um pouco para garantir que a página esteja totalmente carregada
@@ -930,6 +1078,11 @@
                     try {
                         const searchData = JSON.parse(pendingSearchData);
                         localStorage.removeItem('pendingSearchData');
+                        // Saudação inicial personalizada sobre a viagem
+                        if (searchData.origin && searchData.destination) {
+                            const greet = `✈️ <strong>Vamos planejar sua viagem de ${searchData.origin} para ${searchData.destination}!</strong><br><br>Vou preparar um roteiro completo com dicas e sugestões.`;
+                            addMessage('bot', greet);
+                        }
                         
                         console.log('🔍 Dados de busca encontrados:', searchData);
                         
@@ -990,7 +1143,7 @@
                                 
                                 // Adicionar resposta do bot SEMPRE
                                 setTimeout(() => {
-                                    addMessage('bot', data.bot_response);
+                                    addMessage('bot', formatBotMessage(data.bot_response));
                                     if (data.title) {
                                         animateChatTitle(data.title);
                                     }
@@ -1043,7 +1196,7 @@
                                 // Adicionar as mensagens da conversa estruturada
                                 addMessage('user', data.userMessage);
                                 setTimeout(() => {
-                                    addMessage('bot', data.botResponse);
+                                    addMessage('bot', formatBotMessage(data.botResponse));
                                     animateChatTitle(data.title);
                                 }, 300);
                             } catch (error) {

@@ -1361,6 +1361,7 @@
     }
 
     function redirectToChat(message) {
+        // Armazena mensagem bruta; o chat aplicará o formatador ao renderizar
         localStorage.setItem('pendingMessage', message);
         window.location.href = '/chat';
     }
