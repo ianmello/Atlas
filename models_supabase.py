@@ -56,10 +56,21 @@ class User:
     def get_current_user():
         """Obtém usuário atual autenticado"""
         try:
+            print("[DEBUG] Tentando obter usuário atual do Supabase...")
             user = supabase.auth.get_user()
+            print(f"[DEBUG] Resposta do Supabase auth: {user is not None}")
+            if user:
+                print(f"[DEBUG] User object has 'user' attribute: {hasattr(user, 'user')}")
+                if hasattr(user, 'user'):
+                    print(f"[DEBUG] User.user is not None: {user.user is not None}")
+                    if user.user:
+                        print(f"[DEBUG] User ID: {getattr(user.user, 'id', 'N/A')}")
+
             return user.user if user else None
         except Exception as e:
-            print(f"Erro ao obter usuário atual: {e}")
+            print(f"[ERROR] Erro ao obter usuário atual: {e}")
+            import traceback
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
             return None
     
     @staticmethod
@@ -119,15 +130,24 @@ class Conversation(SupabaseModel):
     def get_user_conversations(cls, user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
         """Buscar conversas do usuário"""
         try:
+            print(f"[DEBUG] Iniciando busca de conversas para user_id: {user_id}")
+            print(f"[DEBUG] Table name: {cls.table_name}")
+
             result = supabase.table(cls.table_name)\
                 .select("*")\
                 .eq("user_id", user_id)\
                 .order("created_at", desc=True)\
                 .limit(limit)\
                 .execute()
+
+            print(f"[DEBUG] Query executada com sucesso")
+            print(f"[DEBUG] Número de conversas retornadas: {len(result.data) if result.data else 0}")
+
             return result.data
         except Exception as e:
-            print(f"Erro ao buscar conversas do usuário: {e}")
+            print(f"[ERROR] Erro ao buscar conversas do usuário: {e}")
+            import traceback
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
             return []
     
     @classmethod

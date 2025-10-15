@@ -6,10 +6,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root {
-            --primary-color: #4285f4;
-            --primary-dark: #3367d6;
+            --primary-color: #14355d;
+            --primary-dark: #0a1e35;
+            --primary-light: #1e4a75;
             --secondary-color: #fbbc05;
             --text-color: #333;
             --light-bg: #f8f9fa;
@@ -19,7 +24,7 @@
             --accent-color: #34a853; /* verde Google */
             --warning-color: #fbbc05;
             --danger-color: #ea4335;
-            --gradient-primary: linear-gradient(135deg, #4285f4 0%, #5c9ce5 100%);
+            --gradient-primary: linear-gradient(135deg, #14355d 0%, #1e4a75 100%);
             --gradient-accent: linear-gradient(135deg, #34a853 0%, #66bb6a 100%);
         }
         
@@ -53,7 +58,7 @@
             align-items: center;
             padding: 20px 0;
             margin-bottom: 5px;
-            border-bottom: 2px solid rgba(66, 133, 244, 0.1);
+            border-bottom: 2px solid rgba(20, 53, 93, 0.1);
         }
         
         h1 {
@@ -75,11 +80,11 @@
             padding: 10px 20px;
             border-radius: var(--border-radius);
             transition: var(--transition);
-            background: rgba(66, 133, 244, 0.1);
+            background: rgba(20, 53, 93, 0.1);
         }
         
         .header-links a:hover {
-            background: rgba(66, 133, 244, 0.2);
+            background: rgba(20, 53, 93, 0.2);
             transform: translateY(-2px);
         }
         
@@ -117,7 +122,7 @@
         }
         
         .user-message {
-            background: linear-gradient(135deg, var(--primary-color), #5c9ce5);
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
             color: white;
             margin-left: auto;
             border-bottom-right-radius: 4px;
@@ -132,43 +137,48 @@
         
         /* Estilos para mensagens formatadas */
         .bot-message h3 {
-            color: #4285f4;
-            margin: 20px 0 10px 0;
-            font-size: 1.3rem;
+            color: #1e4a75;
+            margin: 18px 0 10px 0;
+            font-size: 1.25rem;
             font-weight: 600;
-            border-bottom: 2px solid #4285f4;
+            border-bottom: 2px solid #1e4a75;
             padding-bottom: 5px;
         }
-        
+
         .bot-message strong {
             color: #333;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             display: block;
-            margin: 15px 0 8px 0;
+            margin: 12px 0 6px 0;
             font-weight: 600;
         }
-        
+
         .bot-message ul {
-            margin: 15px 0;
+            margin: 12px 0;
             padding-left: 20px;
         }
-        
+
         .bot-message li {
-            margin: 8px 0;
-            padding-left: 20px;
+            margin: 6px 0;
+            padding-left: 10px;
             position: relative;
-            line-height: 1.5;
+            line-height: 1.6;
         }
         /* Removemos a bolinha pseudo-elemento para evitar duplicidade com o bullet natural */
         .bot-message li::before { content: none; }
-        
+
         .bot-message em {
             font-style: italic;
             color: #666;
         }
-        
+
         .bot-message br {
-            margin: 5px 0;
+            margin: 4px 0;
+        }
+
+        .bot-message p {
+            margin: 10px 0;
+            line-height: 1.6;
         }
         
         .input-container {
@@ -185,7 +195,7 @@
             padding: 16px 20px;
             padding-right: 50px;
             border-radius: var(--border-radius);
-            border: 2px solid rgba(66, 133, 244, 0.1);
+            border: 2px solid rgba(20, 53, 93, 0.1);
             font-size: 1rem;
             transition: var(--transition);
             font-family: 'Inter', sans-serif;
@@ -201,7 +211,7 @@
         #user-input:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+            box-shadow: 0 0 0 3px rgba(20, 53, 93, 0.1);
         }
         
         .send-btn {
@@ -223,7 +233,7 @@
         }
         
         .send-btn:hover {
-            background: rgba(66, 133, 244, 0.1);
+            background: rgba(20, 53, 93, 0.1);
             transform: scale(1.1);
         }
         
@@ -237,7 +247,7 @@
         .suggestion-chip {
             background: white;
             color: var(--primary-color);
-            border: 2px solid rgba(66, 133, 244, 0.2);
+            border: 2px solid rgba(20, 53, 93, 0.2);
             border-radius: 25px;
             padding: 8px 16px;
             font-size: 0.9rem;
@@ -247,7 +257,7 @@
         }
         
         .suggestion-chip:hover {
-            background: rgba(66, 133, 244, 0.1);
+            background: rgba(20, 53, 93, 0.1);
             border-color: var(--primary-color);
             transform: translateY(-2px);
         }
@@ -427,7 +437,7 @@
             border-radius: 12px;
             padding: 18px;
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(66, 133, 244, 0.08);
+            border: 1px solid rgba(20, 53, 93, 0.08);
             transition: all 0.2s ease;
             position: relative;
             overflow: hidden;
@@ -445,7 +455,7 @@
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, #4285f4, #34a853);
+            background: linear-gradient(90deg, #1e4a75, #34a853);
         }
         
         .flight-header {
@@ -455,8 +465,8 @@
             margin-bottom: 16px;
             padding: 12px;
             border-radius: 12px;
-            background: linear-gradient(90deg, rgba(66,133,244,0.06), rgba(52,168,83,0.06));
-            border: 1px solid rgba(66, 133, 244, 0.08);
+            background: linear-gradient(90deg, rgba(20,53,93,0.06), rgba(52,168,83,0.06));
+            border: 1px solid rgba(20, 53, 93, 0.08);
         }
         
         .price-badge {
@@ -466,15 +476,15 @@
             border-radius: 22px;
             font-weight: 700;
             font-size: 1.15rem;
-            box-shadow: 0 4px 14px rgba(66, 133, 244, 0.35);
+            box-shadow: 0 4px 14px rgba(20, 53, 93, 0.35);
             letter-spacing: 0.2px;
         }
         
         .flight-number {
             font-size: 0.92rem;
             font-weight: 700;
-            color: #3367d6;
-            background: rgba(66, 133, 244, 0.12);
+            color: #0a1e35;
+            background: rgba(20, 53, 93, 0.12);
             padding: 6px 12px;
             border-radius: 16px;
         }
@@ -516,28 +526,28 @@
         
         .airport-code {
             font-size: 1rem;
-            color: #3367d6;
+            color: #0a1e35;
             font-weight: 700;
-            background: rgba(66, 133, 244, 0.12);
+            background: rgba(20, 53, 93, 0.12);
             padding: 5px 12px;
             border-radius: 10px;
             display: inline-block;
             text-align: center;
-            box-shadow: inset 0 0 0 1px rgba(66, 133, 244, 0.25);
+            box-shadow: inset 0 0 0 1px rgba(20, 53, 93, 0.25);
         }
         
         .route-arrow {
-            background: rgba(66, 133, 244, 0.12);
+            background: rgba(20, 53, 93, 0.12);
             border-radius: 50%;
             width: 32px;
             height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #4285f4;
+            color: #1e4a75;
             font-size: 1rem;
             flex-shrink: 0;
-            box-shadow: 0 2px 6px rgba(66, 133, 244, 0.25);
+            box-shadow: 0 2px 6px rgba(20, 53, 93, 0.25);
             position: relative;
         }
         .route-arrow::before, .route-arrow::after {
@@ -573,7 +583,7 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.06);
             background: rgba(245,247,250,0.8);
         }
-        .flight-duration { background: rgba(66,133,244,0.12); color: #1e88e5; border-color: rgba(66,133,244,0.25); }
+        .flight-duration { background: rgba(20,53,93,0.12); color: #1e4a75; border-color: rgba(20,53,93,0.25); }
         .flight-airline { background: rgba(52,168,83,0.12); color: #2e7d32; border-color: rgba(52,168,83,0.25); }
         .flight-type { background: rgba(251,188,5,0.14); color: #b36b00; border-color: rgba(251,188,5,0.35); }
         
@@ -617,44 +627,216 @@
                 gap: 8px;
                 align-items: stretch;
             }
-            
+
             .price-badge {
                 align-self: center;
             }
-            
+
             .flight-main {
                 flex-direction: column;
                 align-items: stretch;
                 gap: 12px;
             }
-            
+
             .flight-route-horizontal {
                 justify-content: center;
                 gap: 15px;
             }
-            
+
             .flight-details {
                 justify-content: center;
                 flex-wrap: wrap;
                 gap: 12px;
             }
-            
+
             .time-large {
                 font-size: 1.3rem;
             }
-            
+
             .airport-code {
                 font-size: 0.9rem;
             }
-            
+
             .route-arrow {
                 width: 28px;
                 height: 28px;
                 font-size: 0.9rem;
             }
-            
+
             .flight-airline, .flight-duration, .flight-type {
                 font-size: 0.9rem;
+            }
+        }
+
+        /* Estilos para o Mapa Interativo */
+        .map-container {
+            margin: 20px 0;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border: 2px solid rgba(20, 53, 93, 0.15);
+            background: white;
+            animation: mapAppear 0.5s ease-out;
+        }
+
+        @keyframes mapAppear {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .map-wrapper {
+            position: relative;
+            background: #f8f9fa;
+        }
+
+        #travel-map {
+            width: 100%;
+            height: 450px;
+            z-index: 1;
+        }
+
+        .map-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .map-loading i {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .map-footer {
+            background: linear-gradient(to bottom, rgba(255,255,255,0.95), white);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .map-legend {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+            align-items: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .legend-dot.destination {
+            background: linear-gradient(135deg, #ea4335, #ff6b6b);
+        }
+
+        .legend-dot.poi {
+            background: linear-gradient(135deg, #34a853, #66bb6a);
+        }
+
+        .map-info {
+            font-size: 0.85rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* Custom Leaflet popup styles */
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            padding: 4px;
+        }
+
+        .leaflet-popup-content {
+            margin: 12px 16px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .popup-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #333;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .popup-title i {
+            color: var(--primary-color);
+        }
+
+        .popup-description {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .popup-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #14355d, #1e4a75);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 768px) {
+            #travel-map {
+                height: 350px;
+            }
+
+            .map-header {
+                font-size: 1rem;
+                padding: 12px 16px;
+            }
+
+            .map-legend {
+                flex-direction: column;
+                gap: 8px;
+                align-items: flex-start;
+            }
+
+            .map-footer {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
             }
         }
     </style>
@@ -680,9 +862,6 @@
         <header>
             <h1><img src="/images/logo-mundo.png" alt="Atlas Logo" style="height: 1.3em; width: 1.3em; vertical-align: middle; margin-right: 8px; filter: brightness(1.1) drop-shadow(0 2px 8px rgba(0,0,0,0.2));"> Atlas AI</h1>
             <h2 class="chat-title">{% if conversation %}{{ conversation.title }}{% endif %}</h2>
-            <div class="header-links">
-                <a href="/historico"><i class="fas fa-history"></i> Histórico</a>
-            </div>
         </header>
         
         {% if not is_logged_in %}
@@ -1067,6 +1246,180 @@
         window.isLoggedIn = JSON.parse('{{ is_logged_in|tojson }}');
 
         console.log('🚀 Atlas Chat iniciado. Usuário logado:', window.isLoggedIn);
+
+        // Função para criar mapa interativo
+        let currentMap = null;
+
+        function createTravelMap(mapData) {
+            try {
+                console.log('🗺️ Criando mapa com dados:', mapData);
+
+                if (!mapData || !mapData.center) {
+                    console.warn('Dados do mapa inválidos');
+                    return null;
+                }
+
+                // Criar container do mapa
+                const mapContainer = document.createElement('div');
+                mapContainer.className = 'map-container';
+                mapContainer.innerHTML = `
+                    <div class="map-wrapper">
+                        <div id="travel-map"></div>
+                        <div class="map-loading">
+                            <i class="fas fa-spinner"></i>
+                            <span>Carregando mapa...</span>
+                        </div>
+                    </div>
+                    <div class="map-footer">
+                        <div class="map-legend">
+                            <div class="legend-item">
+                                <span class="legend-dot destination"></span>
+                                <span>Destino Principal</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot poi"></span>
+                                <span>Pontos de Interesse</span>
+                            </div>
+                        </div>
+                        <div class="map-info">
+                            <i class="fas fa-info-circle"></i>
+                            Clique nos marcadores para mais informações
+                        </div>
+                    </div>
+                `;
+
+                // Inserir o container no chat
+                chatContainer.appendChild(mapContainer);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                // Aguardar um momento para o DOM atualizar
+                setTimeout(() => {
+                    try {
+                        // Inicializar o mapa Leaflet
+                        const map = L.map('travel-map', {
+                            zoomControl: true,
+                            scrollWheelZoom: true,
+                            dragging: true,
+                            touchZoom: true
+                        }).setView([mapData.center.lat, mapData.center.lng], 13);
+
+                        // Adicionar camada de tiles OpenStreetMap
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors',
+                            maxZoom: 18,
+                            tileSize: 256,
+                            zoomOffset: 0
+                        }).addTo(map);
+
+                        // Ícones personalizados para marcadores
+                        const destinationIcon = L.divIcon({
+                            className: 'custom-marker destination-marker',
+                            html: '<div style="background: linear-gradient(135deg, #ea4335, #ff6b6b); width: 32px; height: 32px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); box-shadow: 0 4px 12px rgba(234, 67, 53, 0.5); border: 3px solid white; display: flex; align-items: center; justify-content: center;"><i class="fas fa-map-pin" style="color: white; transform: rotate(45deg); font-size: 14px;"></i></div>',
+                            iconSize: [32, 32],
+                            iconAnchor: [16, 32],
+                            popupAnchor: [0, -32]
+                        });
+
+                        const poiIcon = L.divIcon({
+                            className: 'custom-marker poi-marker',
+                            html: '<div style="background: linear-gradient(135deg, #34a853, #66bb6a); width: 28px; height: 28px; border-radius: 50%; box-shadow: 0 3px 10px rgba(52, 168, 83, 0.5); border: 3px solid white; display: flex; align-items: center; justify-content: center;"><i class="fas fa-map-marker-alt" style="color: white; font-size: 12px;"></i></div>',
+                            iconSize: [28, 28],
+                            iconAnchor: [14, 28],
+                            popupAnchor: [0, -28]
+                        });
+
+                        // Adicionar marcadores
+                        const bounds = [];
+                        mapData.markers.forEach((marker, index) => {
+                            const markerIcon = marker.type === 'destination' ? destinationIcon : poiIcon;
+                            const badge = marker.type === 'destination' ?
+                                '<div class="popup-badge">🎯 Destino</div>' :
+                                `<div class="popup-badge">#${index} POI</div>`;
+
+                            const mapMarker = L.marker([marker.lat, marker.lng], { icon: markerIcon })
+                                .addTo(map)
+                                .bindPopup(`
+                                    <div class="popup-title">
+                                        <i class="fas fa-${marker.type === 'destination' ? 'star' : 'map-marker-alt'}"></i>
+                                        ${marker.name}
+                                    </div>
+                                    <div class="popup-description">
+                                        ${marker.description || 'Ponto de interesse turístico'}
+                                    </div>
+                                    ${badge}
+                                `);
+
+                            bounds.push([marker.lat, marker.lng]);
+
+                            // Animação de aparição dos marcadores
+                            setTimeout(() => {
+                                mapMarker.openPopup();
+                                setTimeout(() => mapMarker.closePopup(), 1500);
+                            }, index * 200);
+                        });
+
+                        // Ajustar visualização para mostrar todos os marcadores
+                        if (bounds.length > 1) {
+                            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+                        }
+
+                        // Remover loading
+                        const loadingEl = mapContainer.querySelector('.map-loading');
+                        if (loadingEl) {
+                            setTimeout(() => {
+                                loadingEl.style.opacity = '0';
+                                loadingEl.style.transition = 'opacity 0.3s';
+                                setTimeout(() => loadingEl.remove(), 300);
+                            }, 800);
+                        }
+
+                        // Forçar redimensionamento do mapa
+                        setTimeout(() => map.invalidateSize(), 100);
+
+                        currentMap = map;
+                        console.log('✅ Mapa criado com sucesso!');
+                    } catch (error) {
+                        console.error('Erro ao criar mapa Leaflet:', error);
+                        const loadingEl = mapContainer.querySelector('.map-loading');
+                        if (loadingEl) {
+                            loadingEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>Erro ao carregar mapa</span>';
+                        }
+                    }
+                }, 200);
+
+                return mapContainer;
+            } catch (error) {
+                console.error('Erro ao criar container do mapa:', error);
+                return null;
+            }
+        }
+
+        // Função para solicitar dados do mapa do backend
+        async function fetchMapData(destination) {
+            try {
+                console.log('📍 Solicitando dados do mapa para:', destination);
+
+                const response = await fetch('/api/map_data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ destination: destination })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('📍 Dados do mapa recebidos:', data);
+
+                return data;
+            } catch (error) {
+                console.error('Erro ao buscar dados do mapa:', error);
+                return null;
+            }
+        }
         
         window.onload = function() {
             // Aguardar um pouco para garantir que a página esteja totalmente carregada
@@ -1122,7 +1475,7 @@
                         .then(data => {
                             hideLoading();
                             console.log('Resposta da busca estruturada:', data);
-                            
+
                             if (data.success) {
                                 // Adicionar mensagem do usuário
                                 let userMessage = `Quero um roteiro de viagem de ${searchData.origin} para ${searchData.destination}`;
@@ -1138,16 +1491,24 @@
                                         userMessage += ` por ${days} dia${days > 1 ? 's' : ''}`;
                                     }
                                 }
-                                
+
                                 addMessage('user', userMessage);
-                                
+
                                 // Adicionar resposta do bot SEMPRE
                                 setTimeout(() => {
                                     addMessage('bot', formatBotMessage(data.bot_response));
                                     if (data.title) {
                                         animateChatTitle(data.title);
                                     }
-                                    
+
+                                    // Adicionar mapa se disponível
+                                    if (data.map_data) {
+                                        console.log('🗺️ Dados do mapa recebidos, criando mapa...');
+                                        setTimeout(() => {
+                                            createTravelMap(data.map_data);
+                                        }, 500);
+                                    }
+
                                 }, 200);
                             } else {
                                 console.error('Erro na busca estruturada:', data.error);

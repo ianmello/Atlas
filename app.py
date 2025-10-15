@@ -8,10 +8,12 @@ from dotenv import load_dotenv
 import warnings
 import re
 from geopy.distance import geodesic
+from geopy.geocoders import Nominatim
 from flask_session import Session
 import uuid
 from datetime import timedelta, datetime, date
 from functools import wraps
+import time
 
 # Importações do Supabase
 from config.supabase_config import supabase
@@ -189,12 +191,26 @@ PALAVRAS_DESCARTAR = [
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        user = User.get_current_user()
-        if not user:
-            if request.is_json:
-                return jsonify({"error": "Autenticação necessária"}), 401
+        print(f"[DEBUG] @login_required checking authentication for {f.__name__}")
+        try:
+            user = User.get_current_user()
+            print(f"[DEBUG] User authenticated: {user is not None}")
+            if user:
+                print(f"[DEBUG] User ID: {user.id if hasattr(user, 'id') else 'N/A'}")
+
+            if not user:
+                print(f"[DEBUG] No user found, redirecting to login")
+                if request.is_json:
+                    return jsonify({"error": "Autenticação necessária"}), 401
+                return redirect(url_for('login'))
+
+            print(f"[DEBUG] Calling function {f.__name__}")
+            return f(*args, **kwargs)
+        except Exception as e:
+            print(f"[ERROR] Error in login_required: {e}")
+            import traceback
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
             return redirect(url_for('login'))
-        return f(*args, **kwargs)
     return decorated_function
 
 def get_current_user_id():
@@ -301,7 +317,7 @@ def get_ai_response(messages, origem=None, destino=None, datas=None):
                     "temperature": 0.7,
                     "topK": 40,
                     "topP": 0.95,
-                    "maxOutputTokens": 3072,  # Aumentei para roteiros mais completos
+                    "maxOutputTokens": 8192,  # Aumentado significativamente para roteiros completos
                 }
             }
             
@@ -313,16 +329,53 @@ def get_ai_response(messages, origem=None, destino=None, datas=None):
                 if response.status_code == 200:
                     resposta = response.json()
                     try:
-                        roteiro = resposta["candidates"][0]["content"]["parts"][0]["text"]
-                        print(f"[DEBUG] Resposta do Gemini recebida com sucesso. Tamanho: {len(roteiro)} caracteres")
-                        print(f"[DEBUG] Primeiros 200 caracteres: {roteiro[:200]}...")
-                    except Exception as e:
-                        print(f"[ERROR] Erro ao processar resposta do Gemini: {e}")
+                        # Verificar se há candidatos
+                        if not resposta.get("candidates") or len(resposta["candidates"]) == 0:
+                            print(f"[ERROR] Nenhum candidato retornado pela API")
+                            print(f"[DEBUG] Resposta completa: {resposta}")
+                            roteiro = "Desculpe, não consegui gerar um roteiro completo. Por favor, tente novamente."
+                        else:
+                            candidate = resposta["candidates"][0]
+
+                            # Verificar finish reason
+                            finish_reason = candidate.get("finishReason", "UNKNOWN")
+                            print(f"[DEBUG] Finish reason: {finish_reason}")
+
+                            if finish_reason == "MAX_TOKENS":
+                                print(f"[WARN] Resposta truncada por MAX_TOKENS")
+
+                            # Tentar extrair o conteúdo
+                            content = candidate.get("content", {})
+                            parts = content.get("parts", [])
+
+                            if parts and len(parts) > 0 and "text" in parts[0]:
+                                roteiro = parts[0]["text"]
+                                print(f"[DEBUG] Resposta do Gemini recebida. Tamanho: {len(roteiro)} caracteres")
+
+                                if finish_reason == "MAX_TOKENS":
+                                    roteiro += "\n\n*Nota: O roteiro pode estar incompleto devido ao limite de tokens. Para roteiros mais longos, considere solicitar informações mais específicas.*"
+                                    print(f"[WARN] Roteiro pode estar incompleto")
+
+                                print(f"[DEBUG] Primeiros 200 caracteres: {roteiro[:200]}...")
+                            else:
+                                print(f"[ERROR] Estrutura de resposta inválida - 'parts' não encontrado ou vazio")
+                                print(f"[DEBUG] Content: {content}")
+                                print(f"[DEBUG] Resposta completa: {resposta}")
+                                roteiro = "Desculpe, não consegui gerar um roteiro completo. A resposta da IA foi incompleta. Por favor, tente novamente com uma solicitação mais específica."
+
+                    except KeyError as e:
+                        print(f"[ERROR] Campo faltando na resposta do Gemini: {e}")
                         print(f"[DEBUG] Resposta completa: {resposta}")
-                        roteiro = "Desculpe, não consegui gerar um roteiro agora."
+                        roteiro = "Desculpe, ocorreu um erro ao processar a resposta da IA. Por favor, tente novamente."
+                    except Exception as e:
+                        print(f"[ERROR] Erro inesperado ao processar resposta do Gemini: {e}")
+                        print(f"[DEBUG] Resposta completa: {resposta}")
+                        import traceback
+                        print(f"[ERROR] Traceback: {traceback.format_exc()}")
+                        roteiro = "Desculpe, não consegui gerar um roteiro agora. Por favor, tente novamente."
                 else:
                     print(f"[ERROR] Erro na API Gemini: {response.status_code} - {response.text}")
-                    roteiro = "Desculpe, não consegui gerar um roteiro agora."
+                    roteiro = "Desculpe, a API de geração de roteiros está temporariamente indisponível. Por favor, tente novamente em alguns instantes."
             except requests.exceptions.Timeout:
                 print("[ERROR] Timeout na API Gemini")
                 roteiro = "Desculpe, a API demorou muito para responder. Por favor, tente novamente."
@@ -762,6 +815,187 @@ def format_flights_response(flights):
 
 # (Removida a versão antiga de format_flights_response com classes 'voo-*' e CSS inline)
 
+def extract_points_of_interest(text, destination):
+    """
+    Extrai pontos de interesse mencionados no roteiro gerado pela IA
+    """
+    try:
+        print(f"[DEBUG] Extraindo pontos de interesse para {destination}")
+        print(f"[DEBUG] Texto para análise (primeiros 500 chars): {text[:500]}")
+
+        # Padrões mais abrangentes para capturar nomes de lugares
+        patterns = [
+            # Nomes com palavras-chave de tipos de lugares (PT e EN)
+            r'\b([A-ZÀ-Ú][A-Za-zÀ-ú\'\-]+(?:\s+[A-Za-zÀ-ú\'\-]+)*)\s*(?:Museum|Museu|Torre|Tower|Catedral|Cathedral|Igreja|Church|Praça|Square|Parque|Park|Palácio|Palace|Teatro|Theatre|Theater|Centro|Center|Centre|Praia|Beach|Monumento|Monument|Memorial|Castelo|Castle|Forte|Fort|Jardim|Garden|Mercado|Market|Bairro|District|Avenue|Avenida|Basílica|Basilica|Galeria|Gallery|Aquário|Aquarium|Estádio|Stadium|Arena|Observatório|Observatory)\b',
+
+            # Padrão para lugares entre asteriscos (markdown bold)
+            r'\*\*([A-ZÀ-Ú][A-Za-zÀ-ú\'\-\s]{3,50}(?:Museum|Museu|Torre|Tower|Catedral|Cathedral|Igreja|Church|Praça|Square|Parque|Park|Palácio|Palace|Teatro|Theatre|Theater|Centro|Center|Centre|Praia|Beach|Monumento|Monument|Memorial|Castelo|Castle|Forte|Fort|Jardim|Garden|Mercado|Market|Basílica|Basilica|Galeria|Gallery))\*\*',
+
+            # Padrão para lugares famosos conhecidos (sem palavras-chave)
+            r'\b(Torre Eiffel|Louvre|Notre[- ]Dame|Arc de Triomphe|Arco do Triunfo|Sacré[- ]Cœur|Versailles|Montmartre|Champs[- ]Élysées|Musée d\'Orsay|Centre Pompidou|Panteão|Panthéon|Sorbonne|Opéra Garnier|Ópera Garnier|Coliseu|Colosseum|Vaticano|Vatican|Fontana di Trevi|Piazza Navona|Piazza di Spagna|Fórum Romano|Roman Forum|Sagrada Família|Park Güell|Parque Güell|La Rambla|Camp Nou|Big Ben|Tower Bridge|British Museum|Buckingham Palace|Westminster|London Eye|Statue of Liberty|Estátua da Liberdade|Times Square|Central Park|Empire State|Brooklyn Bridge|Christ the Redeemer|Cristo Redentor|Copacabana|Ipanema|Pão de Açúcar|Maracanã|Alhambra|Prado Museum|Reina Sofia|Plaza Mayor|Parque del Retiro|Retiro Park)\b',
+
+            # Padrão para verbos de ação seguidos de lugar
+            r'(?:visitar|conhecer|visite|explore|ver|vá para|ir para|dirija-se|caminhe até|passe por|não perca)\s+(?:o|a|os|as)?\s*([A-ZÀ-Ú][A-Za-zÀ-ú\'\-\s]{4,50})',
+
+            # Linhas que começam com bullet points e têm lugares
+            r'[•\-\*]\s+([A-ZÀ-Ú][A-Za-zÀ-ú\'\-]+(?:\s+[A-Za-zÀ-ú\'\-]+){1,5})\s*(?:\(|:|\-|–)',
+        ]
+
+        points = set()
+
+        for pattern in patterns:
+            matches = re.finditer(pattern, text, re.MULTILINE | re.IGNORECASE)
+            for match in matches:
+                point = match.group(1).strip()
+
+                # Limpar o ponto extraído
+                point = re.sub(r'\s+', ' ', point)  # Normalizar espaços
+                point = point.strip('.,;:!?')  # Remover pontuação no final
+
+                # Filtros de qualidade
+                if len(point) < 4:  # Muito curto
+                    continue
+                if len(point) > 60:  # Muito longo
+                    continue
+                if point.lower() == destination.lower():  # É o próprio destino
+                    continue
+                if point.lower() in ['manhã', 'tarde', 'noite', 'dia', 'hora', 'horas', 'minutos']:
+                    continue
+
+                # Validar que tem pelo menos uma letra maiúscula (nome próprio)
+                if not any(c.isupper() for c in point):
+                    continue
+
+                points.add(point)
+                print(f"[DEBUG] POI encontrado: '{point}'")
+
+        points_list = list(points)[:10]  # Limitar a 10 pontos
+        print(f"[DEBUG] Total de {len(points_list)} pontos de interesse extraídos")
+        return points_list
+
+    except Exception as e:
+        print(f"[ERROR] Erro ao extrair pontos de interesse: {e}")
+        import traceback
+        print(f"[ERROR] Traceback: {traceback.format_exc()}")
+        return []
+
+def geocode_location(location, city=None):
+    """
+    Obtém coordenadas (lat, lng) de um local usando geocoding
+    SEMPRE usa a cidade como contexto para garantir precisão
+    """
+    try:
+        geolocator = Nominatim(user_agent="atlas_travel_app", timeout=15)
+
+        # SEMPRE incluir cidade para contexto preciso
+        if city:
+            # Primeira tentativa: local completo com cidade
+            query = f"{location}, {city}"
+            print(f"[DEBUG] Geocodificando: '{query}'")
+
+            time.sleep(1)  # Rate limiting mais conservador para Nominatim
+            location_data = geolocator.geocode(query, exactly_one=True, addressdetails=True)
+
+            if location_data:
+                print(f"[DEBUG] ✓ Encontrado: {location_data.address} @ ({location_data.latitude}, {location_data.longitude})")
+                return {
+                    "name": location,
+                    "lat": location_data.latitude,
+                    "lng": location_data.longitude,
+                    "display_name": location_data.address
+                }
+
+            # Segunda tentativa: buscar apenas o local e filtrar por cidade
+            print(f"[DEBUG] Tentativa 2: Buscando '{location}' e filtrando por proximidade")
+            time.sleep(1)
+            results = geolocator.geocode(location, exactly_one=False, addressdetails=True, limit=5)
+
+            if results:
+                # Pegar o resultado que menciona a cidade no endereço
+                for result in results:
+                    address = result.address.lower() if hasattr(result, 'address') else ''
+                    if city.lower() in address:
+                        print(f"[DEBUG] ✓ Encontrado por filtro: {result.address}")
+                        return {
+                            "name": location,
+                            "lat": result.latitude,
+                            "lng": result.longitude,
+                            "display_name": result.address
+                        }
+
+        else:
+            # Sem cidade de contexto - geocode direto
+            print(f"[DEBUG] Geocodificando sem contexto: '{location}'")
+            time.sleep(1)
+            location_data = geolocator.geocode(location, timeout=10)
+
+            if location_data:
+                return {
+                    "name": location,
+                    "lat": location_data.latitude,
+                    "lng": location_data.longitude,
+                    "display_name": location_data.address
+                }
+
+        print(f"[WARN] Não foi possível geocodificar: {location}")
+        return None
+
+    except Exception as e:
+        print(f"[ERROR] Erro ao geocodificar '{location}': {e}")
+        return None
+
+def get_map_data(destination, points_of_interest):
+    """
+    Gera dados do mapa para exibição no frontend
+    """
+    try:
+        print(f"[DEBUG] Gerando dados do mapa para {destination}")
+
+        # Geocodificar destino principal
+        destination_coords = geocode_location(destination)
+        if not destination_coords:
+            print(f"[WARN] Não foi possível geocodificar o destino: {destination}")
+            return None
+
+        map_data = {
+            "center": {
+                "lat": destination_coords["lat"],
+                "lng": destination_coords["lng"]
+            },
+            "destination": destination,
+            "markers": [
+                {
+                    "name": destination,
+                    "lat": destination_coords["lat"],
+                    "lng": destination_coords["lng"],
+                    "type": "destination",
+                    "description": f"Destino principal: {destination}"
+                }
+            ]
+        }
+
+        # Geocodificar pontos de interesse
+        for i, poi in enumerate(points_of_interest[:8]):  # Limitar a 8 para não sobrecarregar
+            poi_coords = geocode_location(poi, destination)
+            if poi_coords:
+                map_data["markers"].append({
+                    "name": poi,
+                    "lat": poi_coords["lat"],
+                    "lng": poi_coords["lng"],
+                    "type": "poi",
+                    "description": poi_coords.get("display_name", poi)
+                })
+                print(f"[DEBUG] POI geocodificado: {poi}")
+
+        print(f"[DEBUG] Mapa gerado com {len(map_data['markers'])} marcadores")
+        return map_data
+
+    except Exception as e:
+        print(f"[ERROR] Erro ao gerar dados do mapa: {e}")
+        import traceback
+        print(f"[ERROR] Traceback: {traceback.format_exc()}")
+        return None
+
 def format_message_content(content):
     # Copia a função completa do app.py original
     try:
@@ -828,12 +1062,12 @@ def format_message_content(content):
         except Exception:
             pass
 
-        content = re.sub(r'^##\s*(.+)$', r'<br><h3 style="color: #4285f4; margin: 20px 0 10px 0; font-size: 1.3rem; font-weight: 600;">\1</h3>', content, flags=re.MULTILINE)
-        content = re.sub(r'\*\*(.+?)\*\*', r'<br><strong style="color: #333; font-size: 1.1rem; display: block; margin: 15px 0 8px 0;">\1</strong>', content)
+        content = re.sub(r'^##\s*(.+)$', r'<br><h3>\1</h3>', content, flags=re.MULTILINE)
+        content = re.sub(r'\*\*(.+?)\*\*', r'<br><strong>\1</strong>', content)
         # Itens de lista com '* ', '- ' e '1. ' (permitindo espaços iniciais) e evitando bullets vazios
-        content = re.sub(r'^\s*\*\s+(\S.+)$', r'<li style="margin: 8px 0; padding-left: 20px; position: relative;">\1</li>', content, flags=re.MULTILINE)
-        content = re.sub(r'^\s*-\s+(\S.+)$', r'<li style="margin: 8px 0; padding-left: 20px; position: relative;">\1</li>', content, flags=re.MULTILINE)
-        content = re.sub(r'^\d+\.\s+(\S.+)$', r'<li style="margin: 8px 0; padding-left: 20px; position: relative;">\1</li>', content, flags=re.MULTILINE)
+        content = re.sub(r'^\s*\*\s+(\S.+)$', r'<li>\1</li>', content, flags=re.MULTILINE)
+        content = re.sub(r'^\s*-\s+(\S.+)$', r'<li>\1</li>', content, flags=re.MULTILINE)
+        content = re.sub(r'^\d+\.\s+(\S.+)$', r'<li>\1</li>', content, flags=re.MULTILINE)
         
         lines = content.split('\n')
         formatted_lines = []
@@ -848,20 +1082,20 @@ def format_message_content(content):
                 list_items.append(line)
             else:
                 if in_list and list_items:
-                    formatted_lines.append('<ul style="margin: 15px 0; padding-left: 20px;">')
+                    formatted_lines.append('<ul>')
                     formatted_lines.extend(list_items)
                     formatted_lines.append('</ul>')
                     in_list = False
                     list_items = []
                 formatted_lines.append(line)
-        
+
         if in_list and list_items:
-            formatted_lines.append('<ul style="margin: 15px 0; padding-left: 20px;">')
+            formatted_lines.append('<ul>')
             formatted_lines.extend(list_items)
             formatted_lines.append('</ul>')
-        
+
         content = '\n'.join(formatted_lines)
-        # Primeiro transforma blocos de múltiplas quebras de linha em espaçamento maior
+        # Primeiro transforma blocos de múltiplas quebras de linha em espaçamento menor
         content = re.sub(r'\n{2,}', '<br><br>', content)
         # Depois converte quebras de linha simples em <br> para manter parágrafos
         content = content.replace('\n', '<br>')
@@ -964,29 +1198,58 @@ def chat_page():
 @login_required
 def historico():
     try:
+        print("[DEBUG] ===== INICIANDO CARREGAMENTO DO HISTÓRICO =====")
         user_id = get_current_user_id()
+        print(f"[DEBUG] User ID: {user_id}")
+
+        if not user_id:
+            print("[ERROR] User ID não encontrado")
+            return redirect(url_for('login'))
+
+        print("[DEBUG] Buscando conversas do usuário...")
         conversations = Conversation.get_user_conversations(user_id)
+        print(f"[DEBUG] Conversas encontradas: {len(conversations) if conversations else 0}")
+
+        # Adiciona informações de timestamp para cada conversa
+        for conv in conversations:
+            if 'created_at' in conv and conv['created_at']:
+                from datetime import datetime
+                if isinstance(conv['created_at'], str):
+                    try:
+                        conv['timestamp'] = datetime.fromisoformat(conv['created_at'].replace('Z', '+00:00'))
+                    except:
+                        conv['timestamp'] = datetime.now()
+                else:
+                    conv['timestamp'] = conv['created_at']
+            else:
+                from datetime import datetime
+                conv['timestamp'] = datetime.now()
+
+        print("[DEBUG] Renderizando template historico.html")
         return render_template('historico.html', conversations=conversations)
     except Exception as e:
-        print(f"Erro ao carregar histórico: {e}")
+        print(f"[ERROR] Erro ao carregar histórico: {e}")
+        import traceback
+        print(f"[ERROR] Traceback: {traceback.format_exc()}")
         return render_template('historico.html', conversations=[])
 
 @app.route('/conversation/<int:conversation_id>')
 @login_required
 def view_conversation(conversation_id):
     user_id = get_current_user_id()
+    user = User.get_current_user()
     conversation = Conversation.get_conversation_with_messages(conversation_id, user_id)
-    
+
     if not conversation:
         return redirect(url_for('historico'))
-    
+
     # Formata as mensagens
     for message in conversation.get('messages', []):
         if message.get('is_bot'):
             if not ('<div' in message['content'] or '<h3' in message['content'] or '<ul' in message['content']):
                 message['content'] = format_message_content(message['content'])
-    
-    return render_template('chat.html', conversation=conversation)
+
+    return render_template('chat.html', conversation=conversation, is_logged_in=True, user=user)
 
 @app.route('/search', methods=['POST'])
 def structured_search():
@@ -1095,6 +1358,19 @@ def structured_search():
         else:
             formatted_response = format_message_content(bot_response)
         
+        # Gerar dados do mapa em background (não bloqueia resposta)
+        map_data = None
+        try:
+            print(f"[DEBUG] Tentando gerar mapa para: {destination}")
+            points = extract_points_of_interest(bot_response, destination)
+            if points:
+                print(f"[DEBUG] Pontos extraídos do roteiro: {points}")
+                map_data = get_map_data(destination, points)
+                if map_data:
+                    print(f"[DEBUG] Mapa gerado com sucesso!")
+        except Exception as map_error:
+            print(f"[WARN] Erro ao gerar mapa (não crítico): {map_error}")
+
         response_data = {
             'success': True,
             'conversation_id': conversation['id'] if conversation else None,
@@ -1102,9 +1378,10 @@ def structured_search():
             'user_message': message,
             'bot_response': formatted_response,
             'is_logged_in': is_logged_in,
-            'requires_login': not is_logged_in  # Flag para mostrar aviso de login
+            'requires_login': not is_logged_in,  # Flag para mostrar aviso de login
+            'map_data': map_data  # Dados do mapa (pode ser None)
         }
-        
+
         return jsonify(response_data)
         
     except Exception as e:
@@ -1188,6 +1465,45 @@ def excluir_conversa(conversation_id):
         return jsonify({"success": True})
         
     except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/map_data', methods=['POST'])
+def api_map_data():
+    """API para gerar dados do mapa com base em um destino e pontos de interesse"""
+    try:
+        data = request.get_json()
+        destination = data.get('destination', '').strip()
+        bot_response = data.get('bot_response', '')
+
+        if not destination:
+            return jsonify({"success": False, "error": "Destino não informado"}), 400
+
+        print(f"[DEBUG] Gerando mapa para: {destination}")
+
+        # Extrair pontos de interesse do roteiro (se fornecido)
+        points_of_interest = []
+        if bot_response:
+            points_of_interest = extract_points_of_interest(bot_response, destination)
+            print(f"[DEBUG] Pontos extraídos: {points_of_interest}")
+
+        # Gerar dados do mapa
+        map_data = get_map_data(destination, points_of_interest)
+
+        if not map_data:
+            return jsonify({
+                "success": False,
+                "error": "Não foi possível gerar o mapa para este destino"
+            }), 404
+
+        return jsonify({
+            "success": True,
+            "map_data": map_data
+        })
+
+    except Exception as e:
+        print(f"[ERROR] Erro na API de mapa: {e}")
+        import traceback
+        print(f"[ERROR] Traceback: {traceback.format_exc()}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/images/<path:filename>')
