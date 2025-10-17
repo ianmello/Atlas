@@ -57,6 +57,8 @@ CITY_COORDINATES = {
 }
 
 CITY_IATA_CODES = {
+    # 🇧🇷 Brasil
+    "brasil": "BSB",
     "sao paulo": "GRU",
     "são paulo": "GRU",
     "campinas": "VCP",
@@ -75,111 +77,366 @@ CITY_IATA_CODES = {
     "florianópolis": "FLN",
     "goiania": "GYN",
     "goiânia": "GYN",
-    # Adicionando cidades internacionais comuns
-    "nova york": "JFK",
+    "foz do iguacu": "IGU",
+    "foz do iguaçu": "IGU",
+    "maceio": "MCZ",
+    "maceió": "MCZ",
+    "vitoria": "VIX",
+    "vitória": "VIX",
+    "aracaju": "AJU",
+    "belem": "BEL",
+    "belém": "BEL",
+    "joao pessoa": "JPA",
+    "joão pessoa": "JPA",
+    "campo grande": "CGR",
+    "cuiaba": "CGB",
+    "cuiabá": "CGB",
+    "londrina": "LDB",
+    "ribeirao preto": "RAO",
+    "ribeirão preto": "RAO",
+    "palmas": "PMW",
+    "porto seguro": "BPS",
+    "ilhéus": "IOS",
+
+    # 🇦🇷 Argentina
+    "argentina": "EZE",
+    "buenos aires": "EZE",
+    "cordoba": "COR",
+    "rosario": "ROS",
+
+    # 🇺🇾 Uruguai
+    "uruguai": "MVD",
+    "montevideo": "MVD",
+    "punta del este": "PDP",
+
+    # 🇨🇱 Chile
+    "chile": "SCL",
+    "santiago": "SCL",
+    "valparaiso": "VAP",
+
+    # 🇵🇪 Peru
+    "peru": "LIM",
+    "lima": "LIM",
+    "cusco": "CUZ",
+
+    # 🇪🇨 Equador
+    "equador": "UIO",
+    "quito": "UIO",
+    "guayaquil": "GYE",
+
+    # 🇨🇴 Colômbia
+    "colombia": "BOG",
+    "colômbia": "BOG",
+    "bogota": "BOG",
+    "bogotá": "BOG",
+    "medellin": "MDE",
+    "cartagena": "CTG",
+
+    # 🇻🇪 Venezuela
+    "venezuela": "CCS",
+    "caracas": "CCS",
+
+    # 🇵🇾 Paraguai
+    "paraguai": "ASU",
+    "assuncao": "ASU",
+    "assunção": "ASU",
+
+    # 🇧🇴 Bolívia
+    "bolivia": "LPB",
+    "bolívia": "LPB",
+    "la paz": "LPB",
+    "santa cruz de la sierra": "VVI",
+
+    # 🇲🇽 México
+    "mexico": "MEX",
+    "méxico": "MEX",
+    "cidade do mexico": "MEX",
+    "cancun": "CUN",
+    "cancún": "CUN",
+    "guadalajara": "GDL",
+    "monterrey": "MTY",
+
+    # 🇨🇦 Canadá
+    "canada": "YYZ",
+    "canadá": "YYZ",
+    "toronto": "YYZ",
+    "vancouver": "YVR",
+    "montreal": "YUL",
+    "ottawa": "YOW",
+    "calgary": "YYC",
+
+    # 🇺🇸 Estados Unidos
+    "estados unidos": "JFK",
+    "eua": "JFK",
+    "nova iorque": "JFK",
     "new york": "JFK",
-    "paris": "CDG",
-    "londres": "LHR",
-    "london": "LHR",
-    "roma": "FCO",
-    "rome": "FCO",
-    "tokyo": "HND",
-    "tóquio": "HND",
-    "madrid": "MAD",
-    "barcelona": "BCN",
-    "berlim": "BER",
-    "berlin": "BER",
-    "lisboa": "LIS",
-    "lisbon": "LIS",
     "miami": "MIA",
     "orlando": "MCO",
     "los angeles": "LAX",
-    "toronto": "YYZ",
-    "mexico": "MEX",
-    "mexico city": "MEX",
-    "cidade do méxico": "MEX",
-    "buenos aires": "EZE",
-    "santiago": "SCL",
-    "lima": "LIM",
-    "bogota": "BOG",
-    "bogotá": "BOG",
-    # Códigos IATA adicionais de países/cidades famosas
-    # Europa
-    "frança": "CDG", # Paris
-    "espanha": "MAD", # Madrid
-    "itália": "FCO", # Roma
-    "alemanha": "FRA", # Frankfurt
-    "reino unido": "LHR", # Londres
-    "turquia": "IST", # Istambul
-    "grécia": "ATH", # Atenas
-    "países baixos": "AMS", # Amsterdã
-    "áustria": "VIE", # Viena
-    "dublin": "DUB", # Irlanda
-    "zurique": "ZRH", # Suíça
-    "bruxelas": "BRU", # Bélgica
-    "copenhague": "CPH", # Dinamarca
-    "estocolmo": "ARN", # Suécia
-    "oslo": "OSL", # Noruega
-    "helsinque": "HEL", # Finlândia
-    "praga": "PRG", # República Tcheca
-    "budapeste": "BUD", # Hungria
-    "varsóvia": "WAW", # Polônia
-    "moscou": "SVO", # Rússia
-    # Ásia
-    "tailândia": "BKK", # Bangkok
-    "japão": "HND", # Tóquio
-    "china": "PEK", # Pequim
-    "malásia": "KUL", # Kuala Lumpur
-    "índia": "DEL", # Nova Deli
-    "indonésia": "CGK", # Jacarta
-    "vietnã": "SGN", # Ho Chi Minh
-    "coreia do sul": "ICN", # Seul
-    "singapura": "SIN", # Singapura
-    "emirados árabes unidos": "DXB", # Dubai
-    "hong kong": "HKG",
-    "xangai": "PVG",
-    "pequim": "PEK",
-    "seul": "ICN",
-    "deli": "DEL",
-    "bangkok": "BKK",
-    "kuala lumpur": "KUL",
-    "jacarta": "CGK",
-    "saigon": "SGN",
-    "ho chi minh": "SGN",
-    "manila": "MNL",
-    "taipei": "TPE",
-    "abu dhabi": "AUH",
-    "doha": "DOH",
-    # África
-    "áfrica do sul": "JNB", # Joanesburgo
-    "egito": "CAI", # Cairo
-    "marrocos": "CMN", # Casablanca
-    "quênia": "NBO", # Nairobi
-    "nigéria": "LOS", # Lagos
-    # América do Sul (mais algumas)
-    "colômbia": "BOG", # Bogotá
-    "peru": "LIM", # Lima
-    "argentina": "EZE", # Buenos Aires
-    "chile": "SCL", # Santiago
-    "uruguai": "MVD", # Montevidéu
-    "paraguai": "ASU", # Assunção
-    "equador": "UIO", # Quito
-    "venezuela": "CCS", # Caracas
-    # América do Norte (mais algumas)
-    "méxico": "MEX", # Cidade do México
-    "canadá": "YYZ", # Toronto
-    "estados unidos": "JFK", # Nova York
-    "vancouver": "YVR",
-    "montreal": "YUL",
+    "san francisco": "SFO",
     "chicago": "ORD",
-    "são francisco": "SFO",
+    "washington": "IAD",
+    "boston": "BOS",
+    "atlanta": "ATL",
+    "las vegas": "LAS",
+    "houston": "IAH",
+    "dallas": "DFW",
     "seattle": "SEA",
-    # Oceania
-    "austrália": "SYD", # Sydney
-    "nova zelândia": "AKL", # Auckland
+    "denver": "DEN",
+    "philadelphia": "PHL",
+
+    # 🇬🇧 Reino Unido
+    "reino unido": "LHR",
+    "inglaterra": "LHR",
+    "londres": "LHR",
+    "london": "LHR",
+    "manchester": "MAN",
+    "edinburgh": "EDI",
+    "liverpool": "LPL",
+
+    # 🇮🇪 Irlanda
+    "irlanda": "DUB",
+    "dublin": "DUB",
+
+    # 🇫🇷 França
+    "franca": "CDG",
+    "frança": "CDG",
+    "paris": "CDG",
+    "marselha": "MRS",
+    "nice": "NCE",
+    "lyon": "LYS",
+
+    # 🇪🇸 Espanha
+    "espanha": "MAD",
+    "madrid": "MAD",
+    "barcelona": "BCN",
+    "valencia": "VLC",
+    "sevilla": "SVQ",
+    "malaga": "AGP",
+
+    # 🇵🇹 Portugal
+    "portugal": "LIS",
+    "lisboa": "LIS",
+    "porto": "OPO",
+    "faro": "FAO",
+
+    # 🇮🇹 Itália
+    "italia": "FCO",
+    "itália": "FCO",
+    "roma": "FCO",
+    "veneza": "VCE",
+    "milao": "MXP",
+    "milão": "MXP",
+    "florenca": "FLR",
+    "florença": "FLR",
+    "napoles": "NAP",
+    "nápoles": "NAP",
+
+    # 🇩🇪 Alemanha
+    "alemanha": "FRA",
+    "berlim": "BER",
+    "frankfurt": "FRA",
+    "munique": "MUC",
+    "hamburgo": "HAM",
+    "colonia": "CGN",
+    "colônia": "CGN",
+
+    # 🇨🇭 Suíça
+    "suica": "ZRH",
+    "suíça": "ZRH",
+    "zurique": "ZRH",
+    "geneva": "GVA",
+    "genebra": "GVA",
+
+    # 🇧🇪 Bélgica
+    "belgica": "BRU",
+    "bélgica": "BRU",
+    "bruxelas": "BRU",
+
+    # 🇳🇱 Países Baixos
+    "paises baixos": "AMS",
+    "holanda": "AMS",
+    "amsterda": "AMS",
+    "amsterdã": "AMS",
+
+    # 🇦🇹 Áustria
+    "austria": "VIE",
+    "áustria": "VIE",
+    "viena": "VIE",
+
+    # 🇩🇰 Dinamarca
+    "dinamarca": "CPH",
+    "copenhague": "CPH",
+
+    # 🇸🇪 Suécia
+    "suecia": "ARN",
+    "suécia": "ARN",
+    "estocolmo": "ARN",
+
+    # 🇳🇴 Noruega
+    "noruega": "OSL",
+    "oslo": "OSL",
+
+    # 🇫🇮 Finlândia
+    "finlandia": "HEL",
+    "finlândia": "HEL",
+    "helsinque": "HEL",
+
+    # 🇨🇿 República Tcheca
+    "republica tcheca": "PRG",
+    "república tcheca": "PRG",
+    "praga": "PRG",
+
+    # 🇭🇺 Hungria
+    "hungria": "BUD",
+    "budapeste": "BUD",
+
+    # 🇵🇱 Polônia
+    "polonia": "WAW",
+    "polônia": "WAW",
+    "varsovia": "WAW",
+    "varsóvia": "WAW",
+    "cracovia": "KRK",
+
+    # 🇷🇺 Rússia
+    "russia": "SVO",
+    "rússia": "SVO",
+    "moscou": "SVO",
+    "são petersburgo": "LED",
+
+    # 🇬🇷 Grécia
+    "grecia": "ATH",
+    "grécia": "ATH",
+    "atenas": "ATH",
+    "santorini": "JTR",
+    "mykonos": "JMK",
+
+    # 🇹🇷 Turquia
+    "turquia": "IST",
+    "istambul": "IST",
+    "istanbul": "IST",
+    "ancara": "ESB",
+
+    # 🇮🇱 Israel
+    "israel": "TLV",
+    "tel aviv": "TLV",
+    "jerusalem": "TLV",
+
+    # 🇯🇵 Japão
+    "japao": "HND",
+    "japão": "HND",
+    "tokyo": "HND",
+    "tóquio": "HND",
+    "osaka": "KIX",
+    "kyoto": "ITM",
+
+    # 🇨🇳 China
+    "china": "PEK",
+    "pequim": "PEK",
+    "xangai": "PVG",
+    "hong kong": "HKG",
+
+    # 🇰🇷 Coreia do Sul
+    "coreia do sul": "ICN",
+    "seul": "ICN",
+
+    # 🇮🇳 Índia
+    "india": "DEL",
+    "índia": "DEL",
+    "nova deli": "DEL",
+    "mumbai": "BOM",
+
+    # 🇹🇭 Tailândia
+    "tailandia": "BKK",
+    "tailândia": "BKK",
+    "bangkok": "BKK",
+    "phuket": "HKT",
+
+    # 🇲🇾 Malásia
+    "malasia": "KUL",
+    "malásia": "KUL",
+    "kuala lumpur": "KUL",
+
+    # 🇸🇬 Singapura
+    "singapura": "SIN",
+
+    # 🇮🇩 Indonésia
+    "indonesia": "CGK",
+    "indonésia": "CGK",
+    "jacarta": "CGK",
+    "bali": "DPS",
+
+    # 🇦🇪 Emirados Árabes
+    "emirados arabes unidos": "DXB",
+    "emirados árabes unidos": "DXB",
+    "dubai": "DXB",
+    "abu dhabi": "AUH",
+
+    # 🇶🇦 Catar
+    "qatar": "DOH",
+    "catara": "DOH",
+    "doha": "DOH",
+
+    # 🇸🇦 Arábia Saudita
+    "arabia saudita": "RUH",
+    "arábia saudita": "RUH",
+    "riade": "RUH",
+    "jeddah": "JED",
+
+    # 🇪🇬 Egito
+    "egito": "CAI",
+    "cairo": "CAI",
+    "hurghada": "HRG",
+
+    # 🇿🇦 África do Sul
+    "africa do sul": "JNB",
+    "áfrica do sul": "JNB",
+    "johanesburgo": "JNB",
+    "cidade do cabo": "CPT",
+
+    # 🇲🇦 Marrocos
+    "marrocos": "CMN",
+    "casablanca": "CMN",
+    "marrakech": "RAK",
+
+    # 🇰🇪 Quênia
+    "quenia": "NBO",
+    "quênia": "NBO",
+    "nairobi": "NBO",
+
+    # 🇳🇬 Nigéria
+    "nigeria": "LOS",
+    "nigéria": "LOS",
+    "lagos": "LOS",
+
+    # 🇦🇺 Austrália
+    "australia": "SYD",
+    "austrália": "SYD",
     "sydney": "SYD",
     "melbourne": "MEL",
-    "auckland": "AKL"
+    "brisbane": "BNE",
+    "perth": "PER",
+
+    # 🇳🇿 Nova Zelândia
+    "nova zelandia": "AKL",
+    "nova zelândia": "AKL",
+    "auckland": "AKL",
+    "wellington": "WLG",
+    "christchurch": "CHC",
+
+    # 🌴 Ilhas e destinos turísticos
+    "maldivas": "MLE",
+    "seychelles": "SEZ",
+    "ilhas mauricio": "MRU",
+    "ilhas mauritio": "MRU",
+    "hawai": "HNL",
+    "havaí": "HNL",
+    "taiti": "PPT",
+    "fiji": "NAN",
+    "bahamas": "NAS",
+    "barbados": "BGI",
+    "aruba": "AUA",
+    "cabo verde": "RAI",
 }
 
 PALAVRAS_DESCARTAR = [
@@ -391,11 +648,52 @@ def get_ai_response(messages, origem=None, destino=None, datas=None):
             print(f"[DEBUG] Buscando voos para {origem} -> {destino}")
             try:
                 origem_iata = buscar_codigo_iata(origem)
-                destino_iata = buscar_codigo_iata(destino)
                 
-                print(f"[DEBUG] Códigos IATA: {origem_iata} -> {destino_iata}")
+                # NOVA LÓGICA: Extrair cidade principal do roteiro gerado
+                cidade_principal, codigo_iata_roteiro = extract_main_city_from_itinerary(roteiro, destino, origem)
+                
+                # Se encontrou uma cidade específica no roteiro, usa ela; senão usa o destino original
+                if codigo_iata_roteiro:
+                    destino_iata = codigo_iata_roteiro
+                    destino_para_busca = cidade_principal
+                    print(f"[DEBUG] Usando cidade do roteiro: {cidade_principal} -> {destino_iata}")
+                else:
+                    destino_iata = buscar_codigo_iata(destino)
+                    destino_para_busca = destino
+                    print(f"[DEBUG] Usando destino original: {destino} -> {destino_iata}")
+                
+                print(f"[DEBUG] Códigos IATA finais: {origem_iata} -> {destino_iata}")
                 
                 if origem_iata and destino_iata:
+                    # Buscar hotéis primeiro
+                    print(f"[DEBUG] Buscando hotéis para {destino_iata}")
+                    try:
+                        print(f"[DEBUG] Buscando hotéis para {destino_para_busca}")
+                        hoteis = buscar_hoteis(destino_iata)
+                        
+                        if hoteis and 'data' in hoteis and hoteis['data']:
+                            try:
+                                hoteis_html = format_hotels_response(hoteis['data'])
+                                # Adiciona hotéis ao roteiro
+                                if roteiro.strip():
+                                    roteiro += "\n\n---\n\n" + hoteis_html
+                                else:
+                                    roteiro = hoteis_html
+                                print(f"[DEBUG] Hotéis adicionados ao roteiro")
+                            except Exception as hotel_error:
+                                print(f"[ERROR] Erro ao formatar hotéis: {hotel_error}")
+                                roteiro += "\n\n---\n\n⚠️ Encontrei hotéis disponíveis, mas houve um erro ao exibir as informações detalhadas."
+                        elif hoteis and 'error' in hoteis:
+                            print(f"[WARN] Erro na busca de hotéis: {hoteis['error']}")
+                            roteiro += "\n\n---\n\n⚠️ Não foi possível buscar informações de hotéis no momento."
+                        else:
+                            print(f"[DEBUG] Nenhum hotel encontrado")
+                            roteiro += "\n\n---\n\n🏨 Não encontrei hotéis disponíveis para este destino."
+                    except Exception as hotel_error:
+                        print(f"[ERROR] Erro ao buscar hotéis: {hotel_error}")
+                        roteiro += "\n\n---\n\n⚠️ Houve um erro ao buscar informações de hotéis."
+                    
+                    # Buscar voos
                     voos = get_flights(origem_iata, destino_iata, datas.get('data_inicio') if datas else None)
                     
                     if voos and 'data' in voos and voos['data']:
@@ -655,6 +953,247 @@ def format_price(price_data):
 
 from dateutil import parser
 
+def buscar_hoteis(codigo_cidade):
+    """Busca hotéis usando a API Amadeus"""
+    try:
+        # Autenticação
+        auth_data = {
+            "grant_type": "client_credentials",
+            "client_id": os.getenv("AMADEUS_CLIENT_ID"),
+            "client_secret": os.getenv("AMADEUS_CLIENT_SECRET")
+        }
+        
+        auth_response = requests.post("https://test.api.amadeus.com/v1/security/oauth2/token", data=auth_data, verify=False, timeout=10)
+        if auth_response.status_code != 200:
+            return {"data": [], "error": "Erro na autenticação"}
+        
+        token = auth_response.json().get("access_token")
+        if not token:
+            return {"data": [], "error": "Token de acesso não encontrado"}
+
+        # Busca de hotéis
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/json"
+        }
+        
+        # Buscar hotéis por código da cidade
+        hotel_params = {
+            "cityCode": codigo_cidade,
+            "radius": 20,
+            "radiusUnit": "KM",
+            "hotelSource": "ALL"
+        }
+        
+        hotel_response = requests.get(
+            "https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city",
+            headers=headers,
+            params=hotel_params,
+            verify=False,
+            timeout=15
+        )
+        
+        if hotel_response.status_code != 200:
+            return {"data": [], "error": "Erro na busca de hotéis"}
+        
+        hotel_data = hotel_response.json()
+        hoteis = hotel_data.get("data", [])
+        
+        if not hoteis:
+            return {"data": [], "error": "Nenhum hotel encontrado"}
+        
+        # Limitar a 5 hotéis
+        hoteis = hoteis[:5]
+        
+        # Buscar preços dos hotéis
+        from datetime import datetime, timedelta
+        
+        # Data de check-in: 7 dias a partir de hoje
+        checkin_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+        # Data de check-out: 10 dias a partir de hoje (3 noites)
+        checkout_date = (datetime.now() + timedelta(days=10)).strftime("%Y-%m-%d")
+        
+        hoteis_com_preco = []
+        
+        for hotel in hoteis:
+            hotel_id = hotel.get("hotelId")
+            if not hotel_id:
+                continue
+            
+            # Buscar preços do hotel
+            offer_params = {
+                "hotelIds": hotel_id,
+                "adults": 1,
+                "checkInDate": checkin_date,
+                "checkOutDate": checkout_date,
+                "roomQuantity": 1,
+                "currency": "USD"
+            }
+            
+            try:
+                offer_response = requests.get(
+                    "https://test.api.amadeus.com/v3/shopping/hotel-offers",
+                    headers=headers,
+                    params=offer_params,
+                    verify=False,
+                    timeout=10
+                )
+                
+                if offer_response.status_code == 200:
+                    offer_data = offer_response.json()
+                    offers = offer_data.get("data", [])
+                    
+                    if offers and len(offers) > 0:
+                        # Pegar a primeira oferta
+                        offer = offers[0]
+                        hotel_info = offer.get("hotel", {})
+                        room_offers = offer.get("offers", [])
+                        
+
+        
+                        
+                        if room_offers:
+                            price_info = room_offers[0].get("price", {})
+                            total_price = price_info.get("total")
+                            
+                            if total_price:
+                                # Converter para BRL
+                                try:
+                                    cotacao_dolar = get_exchange_rate("USD")
+                                    if cotacao_dolar <= 0:
+                                        cotacao_dolar = 5.0
+                                    
+                                    preco_usd = float(total_price)
+                                    preco_brl = preco_usd * cotacao_dolar
+                                    preco_formatado = f"R$ {preco_brl:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+                                    
+                                    # Como a API Hotel List não retorna classificação por estrelas na resposta,
+                                    # vamos atribuir classificações baseadas no preço dos hotéis
+                                    preco_numerico = float(total_price)
+                                    
+                                    if preco_numerico > 700:
+                                        rating = 5
+                                    elif preco_numerico > 500:
+                                        rating = 4
+                                    elif preco_numerico > 300:
+                                        rating = 3
+                                    else:
+                                        # Para hotéis com preços baixos, atribuir baseado na posição (primeiros são melhores)
+                                        rating = max(3, 5 - len(hoteis_com_preco))
+                                    
+                                    print(f"Hotel: {hotel_info.get('name', hotel.get('name', 'Sem nome'))} - Rating: {rating} estrelas")
+                                    
+                                    hotel_completo = {
+                                        "hotelId": hotel_id,
+                                        "name": hotel_info.get("name", hotel.get("name", "Hotel sem nome")),
+                                        "rating": rating,
+                                        "price": preco_formatado,
+                                        "address": hotel_info.get("address", {}),
+                                        "contact": hotel_info.get("contact", {}),
+                                        "amenities": hotel_info.get("amenities", [])
+                                    }
+                                    hoteis_com_preco.append(hotel_completo)
+                                except Exception as e:
+                                    print(f"[ERROR] Erro ao converter preço: {e}")
+                                    continue
+            except Exception as e:
+                print(f"[ERROR] Erro ao buscar preços do hotel {hotel_id}: {e}")
+                continue
+        
+        return {"data": hoteis_com_preco, "error": None}
+        
+    except Exception as e:
+        print(f"[ERROR] Erro geral na busca de hotéis: {e}")
+        return {"data": [], "error": str(e)}
+
+def format_hotels_response(hotels):
+    """Formata a resposta dos hotéis em cards HTML com nomes e ratings em estrelas"""
+    try:
+        if not isinstance(hotels, (list, tuple)):
+            return "Erro ao processar dados dos hotéis. Por favor, tente novamente."
+        
+        if not hotels:
+            return "Desculpe, não encontrei hotéis disponíveis para este destino."
+        
+        response = '<div class="hotels-section">'
+        response += '<h3 style="color: #ff6b35; margin-bottom: 15px; font-size: 1.2rem; font-weight: 600;">🏨 Hotéis Disponíveis</h3>'
+        response += '<div class="hotels-grid">'
+        
+        for i, hotel in enumerate(hotels, 1):
+            try:
+                if not isinstance(hotel, dict):
+                    continue
+                
+                nome = hotel.get("name", "Hotel sem nome")
+                rating = hotel.get("rating", 0)
+                preco = hotel.get("price", "Preço não disponível")
+                
+                # Gerar estrelas baseado no rating
+                estrelas = ""
+                if rating and isinstance(rating, (int, float)) and rating > 0:
+                    rating_int = int(rating)
+                    for j in range(5):
+                        if j < rating_int:
+                            estrelas += "⭐"
+                        else:
+                            estrelas += "☆"
+                    estrelas += f" ({rating})"
+                else:
+                    estrelas = "Sem classificação"
+                
+                # Endereço
+                address = hotel.get("address", {})
+                endereco = ""
+                if isinstance(address, dict):
+                    city = address.get("cityName", "")
+                    country = address.get("countryCode", "")
+                    if city or country:
+                        endereco = f"{city}, {country}".strip(", ")
+                
+                response += f'''
+                <div class="hotel-card" style="
+                    background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+                    border: 1px solid #e9ecef;
+                    border-radius: 12px;
+                    padding: 16px;
+                    margin-bottom: 12px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    transition: all 0.3s ease;
+                    cursor: pointer;
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0 0 4px 0; color: #2c3e50; font-size: 1.1rem; font-weight: 600;">
+                                🏨 {nome}
+                            </h4>
+                            <div style="color: #f39c12; font-size: 0.9rem; margin-bottom: 4px;">
+                                {estrelas}
+                            </div>
+                            {f'<div style="color: #6c757d; font-size: 0.85rem; margin-bottom: 8px;">{endereco}</div>' if endereco else ''}
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="background: #ff6b35; color: white; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 0.9rem;">
+                                {preco}
+                            </div>
+                            <div style="color: #6c757d; font-size: 0.75rem; margin-top: 2px;">
+                                3 noites
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                '''
+                
+            except Exception as e:
+                print(f"[ERROR] Erro ao formatar hotel {i}: {e}")
+                continue
+        
+        response += '</div></div>'
+        return response
+        
+    except Exception as e:
+        print(f"[ERROR] Erro ao formatar resposta dos hotéis: {e}")
+        return "Erro ao exibir hotéis. Por favor, tente novamente."
+
 def format_flights_response(flights):
     """Formata a resposta dos voos em cards HTML horizontais e compactos"""
     try:
@@ -814,6 +1353,106 @@ def format_flights_response(flights):
         return "Erro ao processar dados dos voos. Por favor, tente novamente."
 
 # (Removida a versão antiga de format_flights_response com classes 'voo-*' e CSS inline)
+
+def extract_main_city_from_itinerary(roteiro_text, destino_original, origem=None):
+    """
+    Extrai a cidade principal mencionada no roteiro gerado pela IA
+    para usar na busca de voos e hotéis ao invés do destino original genérico
+    """
+    try:
+        print(f"[DEBUG] Extraindo cidade principal do roteiro para destino original: {destino_original}")
+        print(f"[DEBUG] Origem a ser excluída: {origem}")
+        
+        # Usar principalmente o array CITY_IATA_CODES existente
+        cidades_conhecidas = CITY_IATA_CODES.copy()
+        
+        # Complementar com cidades adicionais que não estão no CITY_IATA_CODES
+        cidades_adicionais = {
+            # Variações em inglês que podem não estar no array principal
+            "rome": "FCO", "milan": "MXP", "venice": "VCE", "florence": "FLR",
+            "berlin": "BER", "munich": "MUC", "hamburg": "HAM",
+            "vienna": "VIE", "prague": "PRG", "lisbon": "LIS",
+            "zurich": "ZRH", "geneva": "GVA",
+            "london": "LHR", "edinburgh": "EDI",
+            "marseille": "MRS", "lyon": "LYS",
+            "seville": "SVQ", "valencia": "VLC",
+            "naples": "NAP", "bologna": "BLQ",
+            "stockholm": "ARN", "copenhagen": "CPH", "oslo": "OSL",
+            "helsinki": "HEL", "budapest": "BUD", "warsaw": "WAW",
+            "krakow": "KRK", "athens": "ATH", "istanbul": "IST",
+            "tel aviv": "TLV", "jerusalem": "TLV",
+            "beijing": "PEK", "shanghai": "PVG", "seoul": "ICN",
+            "new delhi": "DEL", "mumbai": "BOM", "bangkok": "BKK",
+            "kuala lumpur": "KUL", "singapore": "SIN", "jakarta": "CGK",
+            "dubai": "DXB", "abu dhabi": "AUH", "doha": "DOH",
+            "riyadh": "RUH", "cairo": "CAI", "johannesburg": "JNB",
+            "cape town": "CPT", "casablanca": "CMN", "marrakech": "RAK",
+            "nairobi": "NBO", "lagos": "LOS", "sydney": "SYD",
+            "melbourne": "MEL", "brisbane": "BNE", "perth": "PER",
+            "auckland": "AKL", "wellington": "WLG", "christchurch": "CHC"
+        }
+        
+        # Adicionar cidades que não estão no array principal
+        for cidade, codigo in cidades_adicionais.items():
+            if cidade not in cidades_conhecidas:
+                cidades_conhecidas[cidade] = codigo
+        
+        # Criar lista de cidades a excluir (origem e variações)
+        cidades_excluir = set()
+        if origem:
+            origem_lower = origem.lower().strip()
+            cidades_excluir.add(origem_lower)
+            
+            # Adicionar variações da origem que podem estar no dicionário
+            for cidade_conhecida in cidades_conhecidas.keys():
+                if origem_lower in cidade_conhecida or cidade_conhecida in origem_lower:
+                    cidades_excluir.add(cidade_conhecida)
+            
+            print(f"[DEBUG] Cidades a excluir: {cidades_excluir}")
+        
+        # Padrões para encontrar cidades no texto
+        patterns = [
+            # Padrões diretos de menção de cidade
+            r'\b(?:em|para|de|visit|explore|conhecer|ir para|vá para|dirija-se)\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Ú][a-zà-ú]+)?)\b',
+            # Cidades no início de frases
+            r'^([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Ú][a-zà-ú]+)?)\s+(?:é|tem|possui|oferece|conta)',
+            # Padrões com "cidade de"
+            r'cidade de ([A-ZÀ-Ú][a-zà-ú]+)',
+            # Menções diretas de cidades conhecidas
+            r'\b(' + '|'.join(cidades_conhecidas.keys()) + r')\b'
+        ]
+        
+        cidades_encontradas = {}
+        
+        # Buscar por todas as cidades mencionadas
+        for pattern in patterns:
+            matches = re.finditer(pattern, roteiro_text, re.IGNORECASE | re.MULTILINE)
+            for match in matches:
+                cidade = match.group(1).lower().strip()
+                
+                # Verificar se a cidade está no dicionário e não é uma cidade a excluir
+                if cidade in cidades_conhecidas and cidade not in cidades_excluir:
+                    if cidade not in cidades_encontradas:
+                        cidades_encontradas[cidade] = 0
+                    cidades_encontradas[cidade] += 1
+                    print(f"[DEBUG] Cidade encontrada: {cidade} (menções: {cidades_encontradas[cidade]})")
+                elif cidade in cidades_excluir:
+                    print(f"[DEBUG] Cidade excluída (origem): {cidade}")
+        
+        # Se encontrou cidades, retorna a mais mencionada
+        if cidades_encontradas:
+            cidade_principal = max(cidades_encontradas, key=cidades_encontradas.get)
+            codigo_iata = cidades_conhecidas[cidade_principal]
+            print(f"[DEBUG] Cidade principal identificada: {cidade_principal} -> {codigo_iata}")
+            return cidade_principal, codigo_iata
+        
+        # Se não encontrou nenhuma cidade específica, retorna o destino original
+        print(f"[DEBUG] Nenhuma cidade específica encontrada, usando destino original: {destino_original}")
+        return destino_original, None
+        
+    except Exception as e:
+        print(f"[ERROR] Erro ao extrair cidade principal: {e}")
+        return destino_original, None
 
 def extract_points_of_interest(text, destination):
     """
@@ -996,13 +1635,49 @@ def get_map_data(destination, points_of_interest):
         print(f"[ERROR] Traceback: {traceback.format_exc()}")
         return None
 
+def clean_double_formatting(content):
+    """Remove formatação dupla de mensagens que foram formatadas múltiplas vezes"""
+    if not content or not isinstance(content, str):
+        return content or ""
+    
+    # Remove múltiplos <br> consecutivos
+    content = re.sub(r'(<br>){3,}', '<br><br>', content)
+    
+    # Remove espaços desnecessários entre tags
+    content = re.sub(r'<br>\s*<br>\s*<br>', '<br><br>', content)
+    
+    # Corrige parágrafos que foram unidos incorretamente
+    # Procura por padrões como "palavra<br><strong>Palavra" e adiciona quebra
+    content = re.sub(r'([a-záàâãéêíóôõúç])<br>(<strong>|<h3>)', r'\1<br><br>\2', content, flags=re.IGNORECASE)
+    
+    # Corrige listas que perderam formatação
+    content = re.sub(r'<br>(\*\s+)', r'<br><br>\1', content)
+    
+    # Adiciona quebras antes de títulos que estão grudados
+    content = re.sub(r'([.!?])\s*(<h3>)', r'\1<br><br>\2', content)
+    
+    # Adiciona quebras antes de listas que estão grudadas
+    content = re.sub(r'([.!?])\s*(<li>)', r'\1<br><br>\2', content)
+    
+    # Adiciona quebras antes de parágrafos em negrito que estão grudados
+    content = re.sub(r'([.!?])\s*(<strong>)', r'\1<br><br>\2', content)
+    
+    # Separa seções que estão muito próximas
+    content = re.sub(r'(<\/h3>)([A-ZÁÀÂÃÉÊÍÓÔÕÚÇ])', r'\1<br><br>\2', content)
+    content = re.sub(r'(<\/strong>)([A-ZÁÀÂÃÉÊÍÓÔÕÚÇ])', r'\1<br><br>\2', content)
+    content = re.sub(r'(<\/ul>)([A-ZÁÀÂÃÉÊÍÓÔÕÚÇ])', r'\1<br><br>\2', content)
+    
+    return content
+
 def format_message_content(content):
     # Copia a função completa do app.py original
     try:
         if not content or not isinstance(content, str):
             return content or ""
         
-        if '<div' in content or '<html' in content or '<body' in content or '<h3' in content or '<ul' in content:
+        # Verifica se já contém tags HTML (já foi formatado)
+        html_tags = ['<div', '<html', '<body', '<h3', '<ul', '<br>', '<strong>', '<em>', '<li>', '&nbsp;']
+        if any(tag in content for tag in html_tags):
             return content
         
         content = content.replace('\r\n', '\n').replace('\r', '\n')
@@ -1246,7 +1921,15 @@ def view_conversation(conversation_id):
     # Formata as mensagens
     for message in conversation.get('messages', []):
         if message.get('is_bot'):
-            if not ('<div' in message['content'] or '<h3' in message['content'] or '<ul' in message['content']):
+            # Verifica se a mensagem já foi formatada (contém tags HTML)
+            content = message['content']
+            has_html_tags = any(tag in content for tag in ['<div', '<html', '<body', '<h3', '<ul', '<br>', '<strong>', '<em>', '<li>', '&nbsp;'])
+            
+            if has_html_tags:
+                # Se já tem HTML, limpa formatação dupla
+                message['content'] = clean_double_formatting(content)
+            else:
+                # Se não tem HTML, aplica formatação
                 message['content'] = format_message_content(message['content'])
 
     return render_template('chat.html', conversation=conversation, is_logged_in=True, user=user)
@@ -1361,11 +2044,15 @@ def structured_search():
         # Gerar dados do mapa em background (não bloqueia resposta)
         map_data = None
         try:
-            print(f"[DEBUG] Tentando gerar mapa para: {destination}")
-            points = extract_points_of_interest(bot_response, destination)
+            # Extrair cidade principal do roteiro para usar na geocodificação
+            cidade_principal_mapa, codigo_iata_mapa = extract_main_city_from_itinerary(bot_response, destination, origin)
+            destino_para_mapa = cidade_principal_mapa if cidade_principal_mapa else destination
+            
+            print(f"[DEBUG] Tentando gerar mapa para: {destino_para_mapa} (extraído do roteiro)")
+            points = extract_points_of_interest(bot_response, destino_para_mapa)
             if points:
                 print(f"[DEBUG] Pontos extraídos do roteiro: {points}")
-                map_data = get_map_data(destination, points)
+                map_data = get_map_data(destino_para_mapa, points)
                 if map_data:
                     print(f"[DEBUG] Mapa gerado com sucesso!")
         except Exception as map_error:
@@ -1478,16 +2165,27 @@ def api_map_data():
         if not destination:
             return jsonify({"success": False, "error": "Destino não informado"}), 400
 
-        print(f"[DEBUG] Gerando mapa para: {destination}")
+        # Extrair cidade principal do roteiro para usar na geocodificação
+        destino_para_mapa = destination
+        if bot_response:
+            try:
+                cidade_principal_mapa, codigo_iata_mapa = extract_main_city_from_itinerary(bot_response, destination)
+                if cidade_principal_mapa:
+                    destino_para_mapa = cidade_principal_mapa
+                    print(f"[DEBUG] Cidade específica extraída do roteiro: {cidade_principal_mapa}")
+            except Exception as e:
+                print(f"[WARN] Erro ao extrair cidade do roteiro: {e}")
+        
+        print(f"[DEBUG] Gerando mapa para: {destino_para_mapa}")
 
         # Extrair pontos de interesse do roteiro (se fornecido)
         points_of_interest = []
         if bot_response:
-            points_of_interest = extract_points_of_interest(bot_response, destination)
+            points_of_interest = extract_points_of_interest(bot_response, destino_para_mapa)
             print(f"[DEBUG] Pontos extraídos: {points_of_interest}")
 
         # Gerar dados do mapa
-        map_data = get_map_data(destination, points_of_interest)
+        map_data = get_map_data(destino_para_mapa, points_of_interest)
 
         if not map_data:
             return jsonify({
